@@ -1,6 +1,6 @@
 // Custom types for the Conduct app
 
-export type AppRole = 'admin' | 'teacher' | 'parent' | 'student' | 'viewer' | 'stock_manager';
+export type AppRole = 'admin' | 'teacher' | 'parent' | 'student' | 'viewer' | 'stock_manager' | 'dos' | 'dod';
 
 export type BehaviorCategory = 'discipline' | 'respect' | 'attendance' | 'participation';
 
@@ -98,4 +98,79 @@ export interface StudentWithClass extends Student {
 export interface BehaviorScoreWithDetails extends BehaviorScore {
   student?: StudentWithClass;
   teacher?: Profile;
+}
+
+export interface DisciplineRule {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  marks_deduction: number;
+  severity: string;
+  is_active: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DisciplineIncident {
+  id: string;
+  student_id: string;
+  class_id: string | null;
+  rule_id: string | null;
+  reported_by: string;
+  incident_date: string;
+  description: string;
+  status: 'pending' | 'reviewed' | 'dismissed';
+  marks_deduction: number;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  follow_up: string | null;
+  behavior_score_id: string | null;
+  created_at: string;
+  updated_at: string;
+  student?: StudentWithClass;
+  rule?: DisciplineRule | null;
+}
+
+export interface Enrollment {
+  id: string;
+  student_id: string;
+  class_id: string;
+  academic_year: string;
+  status: 'active' | 'transferred' | 'removed';
+  enrolled_by: string;
+  created_at: string;
+  updated_at: string;
+  student?: StudentWithClass;
+}
+
+export interface EnrollmentHistory {
+  id: string;
+  enrollment_id: string;
+  action: string;
+  details: string | null;
+  performed_by: string | null;
+  created_at: string;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  audience: string;
+  is_published: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuditLog {
+  id: string;
+  user_id: string | null;
+  action: string;
+  entity: string;
+  entity_id: string | null;
+  details: Record<string, unknown> | null;
+  created_at: string;
 }
