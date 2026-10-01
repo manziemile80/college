@@ -1296,6 +1296,8 @@ export type Database = {
         | "viewer"
         | "student"
         | "stock_manager"
+        | "dos"
+        | "dod"
       attendance_status: "present" | "absent" | "late" | "excused"
       behavior_category:
         | "discipline"
@@ -1437,6 +1439,8 @@ export const Constants = {
         "viewer",
         "student",
         "stock_manager",
+        "dos",
+        "dod",
       ],
       attendance_status: ["present", "absent", "late", "excused"],
       behavior_category: [
