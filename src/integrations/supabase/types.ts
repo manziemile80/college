@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+          is_published: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          body: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_published?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_published?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assignment_submissions: {
         Row: {
           answer_text: string | null
@@ -206,6 +239,36 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity: string
+          entity_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity: string
+          entity_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       behavior_scores: {
         Row: {
           category: Database["public"]["Enums"]["behavior_category"]
@@ -393,6 +456,128 @@ export type Database = {
           },
         ]
       }
+      discipline_incidents: {
+        Row: {
+          behavior_score_id: string | null
+          class_id: string | null
+          created_at: string
+          description: string
+          follow_up: string | null
+          id: string
+          incident_date: string
+          marks_deducted: number
+          reported_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          rule_id: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          behavior_score_id?: string | null
+          class_id?: string | null
+          created_at?: string
+          description: string
+          follow_up?: string | null
+          id?: string
+          incident_date?: string
+          marks_deducted?: number
+          reported_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          rule_id?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          behavior_score_id?: string | null
+          class_id?: string | null
+          created_at?: string
+          description?: string
+          follow_up?: string | null
+          id?: string
+          incident_date?: string
+          marks_deducted?: number
+          reported_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          rule_id?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discipline_incidents_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discipline_incidents_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "discipline_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discipline_incidents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_cumulative_scores"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "discipline_incidents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discipline_rules: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          marks_deduction: number
+          severity: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          marks_deduction?: number
+          severity?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          marks_deduction?: number
+          severity?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_notifications: {
         Row: {
           behavior_score_id: string
@@ -449,6 +634,96 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "parents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enrollment_history: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          enrollment_id: string
+          id: string
+          performed_by: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          enrollment_id: string
+          id?: string
+          performed_by?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          enrollment_id?: string
+          id?: string
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollment_history_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enrollments: {
+        Row: {
+          academic_year: string
+          class_id: string
+          created_at: string
+          enrolled_by: string
+          id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          class_id: string
+          created_at?: string
+          enrolled_by: string
+          id?: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          class_id?: string
+          created_at?: string
+          enrolled_by?: string
+          id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_cumulative_scores"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -1286,7 +1561,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_academic_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_dod: { Args: { _user_id: string }; Returns: boolean }
+      is_dos: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      log_audit: {
+        Args: {
+          _action: string
+          _details?: Json
+          _entity: string
+          _entity_id?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
