@@ -1,10 +1,37 @@
+import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Bell, Shield, Database, MessageSquare } from 'lucide-react';
+import { Bell, Shield, Database, MessageSquare, ScrollText, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { AuditLog } from '@/types/database';
+import { format } from 'date-fns';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 export default function Settings() {
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [logsLoading, setLogsLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('audit_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100)
+      .then(({ data }) => {
+        setLogs((data as AuditLog[]) || []);
+        setLogsLoading(false);
+      });
+  }, []);
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
@@ -142,6 +169,59 @@ export default function Settings() {
                   </span>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Audit Logs */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
+                  <ScrollText className="h-5 w-5 text-warning" />
+                </div>
+                <div>
+                  <CardTitle>System Activity Logs</CardTitle>
+                  <CardDescription>
+                    Recent sensitive actions — role changes, enrollment changes and discipline reviews
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {logsLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : logs.length === 0 ? (
+                <p className="py-10 text-center text-sm text-muted-foreground">
+                  No activity recorded yet.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>When</TableHead>
+                        <TableHead>Action</TableHead>
+                        <TableHead>Record</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {logs.map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="whitespace-nowrap text-muted-foreground">
+                            {format(new Date(log.created_at), 'MMM d, yyyy HH:mm')}
+                          </TableCell>
+                          <TableCell className="font-medium capitalize">
+                            {log.action.replace(/_/g, ' ')}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{log.entity}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
