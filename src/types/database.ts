@@ -122,7 +122,7 @@ export interface DisciplineIncident {
   incident_date: string;
   description: string;
   status: 'pending' | 'reviewed' | 'dismissed';
-  marks_deduction: number;
+  marks_deducted: number;
   reviewed_by: string | null;
   reviewed_at: string | null;
   follow_up: string | null;
