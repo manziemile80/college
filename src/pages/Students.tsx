@@ -220,6 +220,22 @@ export default function Students() {
     );
   });
 
+  // Group students by class, ordered by class name; unassigned last
+  const groupedByClass = (() => {
+    const groups = new Map<string, { label: string; students: StudentWithClass[] }>();
+    for (const s of filteredStudents) {
+      const key = s.class?.id || '__none__';
+      const label = s.class ? `${s.class.name} (${s.class.grade_level})` : 'No class assigned';
+      if (!groups.has(key)) groups.set(key, { label, students: [] });
+      groups.get(key)!.students.push(s);
+    }
+    return [...groups.entries()].sort(([a], [b]) => {
+      if (a === '__none__') return 1;
+      if (b === '__none__') return -1;
+      return groups.get(a)!.label.localeCompare(groups.get(b)!.label);
+    });
+  })();
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
@@ -347,8 +363,17 @@ export default function Students() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredStudents.map((student) => (
+          <div className="space-y-8">
+            {groupedByClass.map(([key, group]) => (
+              <div key={key} className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold text-foreground">{group.label}</h2>
+                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                    {group.students.length} {group.students.length === 1 ? 'student' : 'students'}
+                  </span>
+                </div>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {group.students.map((student) => (
               <Card key={student.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -460,6 +485,9 @@ export default function Students() {
                   </>)}
                 </CardContent>
               </Card>
+            ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
