@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { Student, Class, Parent, StudentParent } from '@/types/database';
-import { Plus, Search, GraduationCap, Loader2, Users, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, GraduationCap, Loader2, Users, Pencil, Trash2, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { LinkParentsDialog } from '@/components/students/LinkParentsDialog';
@@ -50,6 +50,8 @@ export default function Students() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [classFilter, setClassFilter] = useState<string>('__all__');
+  const [collapsedClasses, setCollapsedClasses] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (searchParams.get('action') === 'new') {
@@ -214,11 +216,23 @@ export default function Students() {
 
   const filteredStudents = students.filter((student) => {
     const fullName = `${student.first_name} ${student.last_name}`.toLowerCase();
-    return (
+    const matchesSearch =
       fullName.includes(searchQuery.toLowerCase()) ||
-      student.student_id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+      student.student_id.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    if (classFilter === '__all__') return true;
+    if (classFilter === '__none__') return !student.class;
+    return student.class?.id === classFilter;
   });
+
+  const toggleClass = (key: string) => {
+    setCollapsedClasses((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   // Group students by class, ordered by class name; unassigned last
   const groupedByClass = (() => {
@@ -347,6 +361,53 @@ export default function Students() {
           />
         </div>
 
+        {/* Class filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setClassFilter('__all__')}
+            className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              classFilter === '__all__'
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-transparent text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            All ({students.length})
+          </button>
+          {classes.map((cls) => {
+            const count = students.filter((s) => s.class?.id === cls.id).length;
+            if (count === 0) return null;
+            return (
+              <button
+                key={cls.id}
+                type="button"
+                onClick={() => setClassFilter(cls.id)}
+                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  classFilter === cls.id
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-transparent text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                {cls.name} ({count})
+              </button>
+            );
+          })}
+          {students.some((s) => !s.class) && (
+            <button
+              type="button"
+              onClick={() => setClassFilter('__none__')}
+              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                classFilter === '__none__'
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-transparent text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              No class (
+              {students.filter((s) => !s.class).length})
+            </button>
+          )}
+        </div>
+
         {/* Students Grid */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -366,12 +427,23 @@ export default function Students() {
           <div className="space-y-8">
             {groupedByClass.map(([key, group]) => (
               <div key={key} className="space-y-3">
-                <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => toggleClass(key)}
+                  className="flex w-full items-center gap-3 text-left"
+                  aria-expanded={!collapsedClasses.has(key)}
+                >
+                  <ChevronDown
+                    className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
+                      collapsedClasses.has(key) ? '-rotate-90' : ''
+                    }`}
+                  />
                   <h2 className="text-lg font-semibold text-foreground">{group.label}</h2>
                   <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                     {group.students.length} {group.students.length === 1 ? 'student' : 'students'}
                   </span>
-                </div>
+                </button>
+                {collapsedClasses.has(key) ? null : (
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {group.students.map((student) => (
               <Card key={student.id} className="hover:shadow-md transition-shadow">
@@ -487,6 +559,7 @@ export default function Students() {
               </Card>
             ))}
                 </div>
+                )}
               </div>
             ))}
           </div>
