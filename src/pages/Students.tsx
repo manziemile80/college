@@ -361,6 +361,53 @@ export default function Students() {
           />
         </div>
 
+        {/* Class filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setClassFilter('__all__')}
+            className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              classFilter === '__all__'
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-transparent text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            All ({students.length})
+          </button>
+          {classes.map((cls) => {
+            const count = students.filter((s) => s.class?.id === cls.id).length;
+            if (count === 0) return null;
+            return (
+              <button
+                key={cls.id}
+                type="button"
+                onClick={() => setClassFilter(cls.id)}
+                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  classFilter === cls.id
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-transparent text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                {cls.name} ({count})
+              </button>
+            );
+          })}
+          {students.some((s) => !s.class) && (
+            <button
+              type="button"
+              onClick={() => setClassFilter('__none__')}
+              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                classFilter === '__none__'
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-transparent text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              No class (
+              {students.filter((s) => !s.class).length})
+            </button>
+          )}
+        </div>
+
         {/* Students Grid */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
