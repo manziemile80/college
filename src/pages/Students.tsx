@@ -486,6 +486,9 @@ export default function Students() {
                 </CardContent>
               </Card>
             ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
