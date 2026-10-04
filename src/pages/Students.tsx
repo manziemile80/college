@@ -50,6 +50,8 @@ export default function Students() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [classFilter, setClassFilter] = useState<string>('__all__');
+  const [collapsedClasses, setCollapsedClasses] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (searchParams.get('action') === 'new') {
