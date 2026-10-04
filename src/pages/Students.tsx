@@ -363,8 +363,17 @@ export default function Students() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredStudents.map((student) => (
+          <div className="space-y-8">
+            {groupedByClass.map(([key, group]) => (
+              <div key={key} className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold text-foreground">{group.label}</h2>
+                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                    {group.students.length} {group.students.length === 1 ? 'student' : 'students'}
+                  </span>
+                </div>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {group.students.map((student) => (
               <Card key={student.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
