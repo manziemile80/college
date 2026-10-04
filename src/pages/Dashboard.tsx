@@ -39,7 +39,7 @@ export default function Dashboard() {
     if (!role) return;
     setLoading(true);
     try {
-      const count = async (table: string, eq?: [string, string]) => {
+      const count = async (table: any, eq?: [string, string]) => {
         let q = supabase.from(table).select('*', { count: 'exact', head: true });
         if (eq) q = q.eq(eq[0], eq[1]);
         const { count: c } = await q;
@@ -242,7 +242,7 @@ export default function Dashboard() {
         </Card>
       );
     }
-    if (role === 'stock_manager' || role === 'dod') return null;
+    if (role === 'stock_manager') return null;
     return (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
