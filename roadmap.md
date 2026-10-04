@@ -6,4 +6,4 @@
 - [x] Role-specific dashboards (all roles incl. DOS, DOD, stock manager, parent, student, viewer)
 - [x] Nav + role badges for DOS/DOD; Stock Dashboard sidebar link added
 - [x] Users page: DOS/DOD assignable; Settings: audit log viewer
-- [ ] Verify typecheck/build and end-to-end role access
+- [x] Verify typecheck/build and end-to-end role access (admin: Discipline, Enrollment, Settings audit log all load cleanly)
