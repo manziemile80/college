@@ -220,6 +220,22 @@ export default function Students() {
     );
   });
 
+  // Group students by class, ordered by class name; unassigned last
+  const groupedByClass = (() => {
+    const groups = new Map<string, { label: string; students: StudentWithClass[] }>();
+    for (const s of filteredStudents) {
+      const key = s.class?.id || '__none__';
+      const label = s.class ? `${s.class.name} (${s.class.grade_level})` : 'No class assigned';
+      if (!groups.has(key)) groups.set(key, { label, students: [] });
+      groups.get(key)!.students.push(s);
+    }
+    return [...groups.entries()].sort(([a], [b]) => {
+      if (a === '__none__') return 1;
+      if (b === '__none__') return -1;
+      return groups.get(a)!.label.localeCompare(groups.get(b)!.label);
+    });
+  })();
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
