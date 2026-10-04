@@ -216,11 +216,23 @@ export default function Students() {
 
   const filteredStudents = students.filter((student) => {
     const fullName = `${student.first_name} ${student.last_name}`.toLowerCase();
-    return (
+    const matchesSearch =
       fullName.includes(searchQuery.toLowerCase()) ||
-      student.student_id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+      student.student_id.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    if (classFilter === '__all__') return true;
+    if (classFilter === '__none__') return !student.class;
+    return student.class?.id === classFilter;
   });
+
+  const toggleClass = (key: string) => {
+    setCollapsedClasses((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   // Group students by class, ordered by class name; unassigned last
   const groupedByClass = (() => {
