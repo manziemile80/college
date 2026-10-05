@@ -1533,6 +1533,19 @@ export type Database = {
     Functions: {
       can_manage_stock: { Args: { _user_id: string }; Returns: boolean }
       get_current_student_id: { Args: { _user_id: string }; Returns: string }
+      get_marks_by_reg_number: {
+        Args: { _reg: string }
+        Returns: {
+          academic_year: string
+          cat_score: number
+          class_name: string
+          exam_score: number
+          student_name: string
+          subject: string
+          term: Database["public"]["Enums"]["school_term"]
+          total: number
+        }[]
+      }
       get_parent_student_ids: { Args: { _user_id: string }; Returns: string[] }
       get_student_cumulative_score: {
         Args: { _student_id: string }

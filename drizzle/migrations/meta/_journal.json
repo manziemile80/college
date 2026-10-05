@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791207575813,
+      "tag": "0000_marks_lookup_by_reg",
+      "breakpoints": true
+    }
+  ]
+}
