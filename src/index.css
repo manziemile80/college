@@ -26,7 +26,7 @@
     --popover-foreground: 222 47% 11%;
 
     /* Muted surfaces */
-    --muted: 210 40% 96%;
+    --muted: 150 25% 95%;
     --muted-foreground: 215 16% 47%;
 
     /* Accent - Primary dark */
@@ -53,8 +53,8 @@
     --score-poor: 0 72% 51%;
 
     /* UI Elements */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 150 18% 90%;
+    --input: 150 18% 90%;
     --ring: 145 85% 34%;
     --radius: 0.75rem;
 
