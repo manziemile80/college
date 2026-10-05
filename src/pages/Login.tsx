@@ -119,6 +119,11 @@ export default function Login() {
                 Sign up
               </Link>
             </p>
+            <p className="text-center text-sm">
+              <Link to="/check-marks" className="font-medium text-primary hover:underline">
+                Student? Check your marks with your registration number
+              </Link>
+            </p>
           </div>
         </div>
       </div>
