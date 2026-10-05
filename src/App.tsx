@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import CheckMarks from "./pages/CheckMarks";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
@@ -24,7 +25,6 @@ import AcademicReports from "./pages/AcademicReports";
 import Courses from "./pages/Courses";
 import Materials from "./pages/Materials";
 import Assignments from "./pages/Assignments";
-import Quizzes from "./pages/Quizzes";
 import Stock from "./pages/Stock";
 import StockDashboard from "./pages/StockDashboard";
 import Discipline from "./pages/Discipline";
@@ -43,6 +43,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/check-marks" element={<CheckMarks />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/students" element={<Students />} />
@@ -57,7 +58,6 @@ const App = () => (
             <Route path="/courses" element={<Courses />} />
             <Route path="/materials" element={<Materials />} />
             <Route path="/assignments" element={<Assignments />} />
-            <Route path="/quizzes" element={<Quizzes />} />
             <Route path="/stock" element={<Stock />} />
             <Route path="/stock-dashboard" element={<StockDashboard />} />
             <Route path="/discipline" element={<Discipline />} />
