@@ -41,6 +41,7 @@ export const navItems: NavItem[] = [
   { label: 'Courses', href: '/courses', icon: NotebookPen, roles: ['admin', 'teacher', 'parent', 'student'], group: 'E-Learning' },
   { label: 'Materials', href: '/materials', icon: FolderOpen, roles: ['admin', 'teacher', 'parent', 'student'], group: 'E-Learning' },
   { label: 'Assignments', href: '/assignments', icon: ClipboardList, roles: ['admin', 'teacher', 'parent', 'student'], group: 'E-Learning' },
+  { label: 'Quizzes', href: '/quizzes', icon: HelpCircle, roles: ['admin', 'teacher', 'parent', 'student'], group: 'E-Learning' },
 
   { label: 'Behavior Scores', href: '/scores', icon: ClipboardList, roles: ['admin', 'teacher', 'parent', 'student', 'dos', 'dod'], group: 'Records' },
   { label: 'Discipline', href: '/discipline', icon: Gavel, roles: ['admin', 'teacher', 'dod', 'parent', 'student'], group: 'Records' },

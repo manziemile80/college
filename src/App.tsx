@@ -25,6 +25,7 @@ import AcademicReports from "./pages/AcademicReports";
 import Courses from "./pages/Courses";
 import Materials from "./pages/Materials";
 import Assignments from "./pages/Assignments";
+import Quizzes from "./pages/Quizzes";
 import Stock from "./pages/Stock";
 import StockDashboard from "./pages/StockDashboard";
 import Discipline from "./pages/Discipline";
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/courses" element={<Courses />} />
             <Route path="/materials" element={<Materials />} />
             <Route path="/assignments" element={<Assignments />} />
+            <Route path="/quizzes" element={<Quizzes />} />
             <Route path="/stock" element={<Stock />} />
             <Route path="/stock-dashboard" element={<StockDashboard />} />
             <Route path="/discipline" element={<Discipline />} />
