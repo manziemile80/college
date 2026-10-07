@@ -21,8 +21,19 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, ListChecks, Loader2, PenLine, BarChart3, UserCheck } from 'lucide-react';
+import { Plus, Trash2, ListChecks, Loader2, PenLine, BarChart3, UserCheck, Sparkles } from 'lucide-react';
 import { ClaimStudentRecordDialog } from '@/components/students/ClaimStudentRecordDialog';
+
+interface DraftQuestion {
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_option: string;
+  explanation?: string;
+}
+
 
 interface Quiz {
   id: string;
@@ -86,6 +97,79 @@ export default function Quizzes() {
 
   const [resultsQuiz, setResultsQuiz] = useState<Quiz | null>(null);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
+
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiMaterial, setAiMaterial] = useState('');
+  const [aiCount, setAiCount] = useState('5');
+  const [aiLevel, setAiLevel] = useState('');
+  const [aiSubject, setAiSubject] = useState('');
+  const [aiClass, setAiClass] = useState('');
+  const [aiDraft, setAiDraft] = useState<{ title: string; description: string; questions: DraftQuestion[] } | null>(null);
+
+  const updateDraftQ = (i: number, patch: Partial<DraftQuestion>) =>
+    setAiDraft((d) => d && { ...d, questions: d.questions.map((q, j) => (j === i ? { ...q, ...patch } : q)) });
+
+  const generateWithAI = async () => {
+    if (aiMaterial.trim().length < 3) {
+      toast({ title: 'Enter a lesson topic or paste material', variant: 'destructive' });
+      return;
+    }
+    setAiBusy(true);
+    const { data, error } = await supabase.functions.invoke('generate-quiz', {
+      body: { material: aiMaterial, count: Number(aiCount) || 5, level: aiLevel },
+    });
+    setAiBusy(false);
+    if (error || data?.error) {
+      let msg = data?.error as string | undefined;
+      if (!msg && error && 'context' in error) {
+        try { msg = (await (error as { context: Response }).context.json())?.error; } catch { /* ignore */ }
+      }
+      toast({ title: 'Could not generate quiz', description: msg || error?.message, variant: 'destructive' });
+      return;
+    }
+    setAiDraft({ title: data.title ?? '', description: data.description ?? '', questions: data.questions ?? [] });
+  };
+
+  const saveAiQuiz = async () => {
+    if (!aiDraft) return;
+    if (!aiDraft.title.trim()) return toast({ title: 'Title is required', variant: 'destructive' });
+    const bad = aiDraft.questions.findIndex((q) => !q.question_text.trim() || !q.option_a.trim() || !q.option_b.trim());
+    if (bad >= 0) return toast({ title: `Question ${bad + 1} needs text and options A/B`, variant: 'destructive' });
+    setAiBusy(true);
+    const { data: quiz, error } = await supabase.from('quizzes').insert({
+      title: aiDraft.title.trim().slice(0, 150),
+      description: aiDraft.description.trim().slice(0, 1000) || null,
+      subject_id: aiSubject || null,
+      class_id: aiClass || null,
+      is_published: false,
+      created_by: user!.id,
+    }).select('id').single();
+    if (error || !quiz) {
+      setAiBusy(false);
+      return toast({ title: 'Could not save quiz', description: error?.message, variant: 'destructive' });
+    }
+    const { error: qErr } = await supabase.from('quiz_questions').insert(
+      aiDraft.questions.map((q, i) => ({
+        quiz_id: quiz.id,
+        question_text: q.question_text.trim().slice(0, 1000),
+        option_a: q.option_a.trim().slice(0, 300),
+        option_b: q.option_b.trim().slice(0, 300),
+        option_c: q.option_c?.trim().slice(0, 300) || null,
+        option_d: q.option_d?.trim().slice(0, 300) || null,
+        correct_option: ['a', 'b', 'c', 'd'].includes(q.correct_option) ? q.correct_option : 'a',
+        points: 1,
+        sort_order: i + 1,
+      })),
+    );
+    setAiBusy(false);
+    if (qErr) return toast({ title: 'Quiz saved, but questions failed', description: qErr.message, variant: 'destructive' });
+    toast({ title: 'Quiz saved as draft', description: 'Review it under Questions, then publish when ready.' });
+    setAiOpen(false);
+    setAiDraft(null);
+    setAiMaterial('');
+    fetchAll();
+  };
 
   useEffect(() => {
     fetchAll();
@@ -245,9 +329,14 @@ export default function Quizzes() {
         }
         actions={
           isStaff ? (
-            <Button className="gap-2" onClick={() => setQuizOpen(true)}>
-              <Plus className="h-4 w-4" /> New Quiz
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="gap-2" onClick={() => { setAiDraft(null); setAiOpen(true); }}>
+                <Sparkles className="h-4 w-4" /> Generate with AI
+              </Button>
+              <Button className="gap-2" onClick={() => setQuizOpen(true)}>
+                <Plus className="h-4 w-4" /> New Quiz
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -417,6 +506,110 @@ export default function Quizzes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI quiz generator */}
+      <Dialog open={aiOpen} onOpenChange={(o) => { if (!aiBusy) setAiOpen(o); }}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Generate quiz with AI</DialogTitle>
+          </DialogHeader>
+          {!aiDraft ? (
+            <div className="space-y-3">
+              <div>
+                <Label>Lesson topic or course material</Label>
+                <Textarea
+                  rows={8}
+                  maxLength={20000}
+                  placeholder="e.g. Photosynthesis — or paste your lesson notes here"
+                  value={aiMaterial}
+                  onChange={(e) => setAiMaterial(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">{aiMaterial.length}/20000</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>Number of questions</Label>
+                  <Input type="number" min={1} max={20} value={aiCount} onChange={(e) => setAiCount(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Class level (optional)</Label>
+                  <Input placeholder="e.g. Senior 2" maxLength={100} value={aiLevel} onChange={(e) => setAiLevel(e.target.value)} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAiOpen(false)} disabled={aiBusy}>Cancel</Button>
+                <Button className="gap-2" onClick={generateWithAI} disabled={aiBusy}>
+                  {aiBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {aiBusy ? 'Generating…' : 'Generate'}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <Label>Title</Label>
+                  <Input value={aiDraft.title} maxLength={150} onChange={(e) => setAiDraft({ ...aiDraft, title: e.target.value })} />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label>Description</Label>
+                  <Textarea value={aiDraft.description} maxLength={1000} onChange={(e) => setAiDraft({ ...aiDraft, description: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Subject</Label>
+                  <Select value={aiSubject} onValueChange={setAiSubject}>
+                    <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
+                    <SelectContent>{subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Class</Label>
+                  <Select value={aiClass} onValueChange={setAiClass}>
+                    <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+                    <SelectContent>{classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <p className="text-sm font-medium text-foreground">Questions & answer key — edit anything before saving</p>
+              {aiDraft.questions.map((q, i) => (
+                <div key={i} className="space-y-2 rounded-xl border border-border p-3">
+                  <div className="flex items-start gap-2">
+                    <span className="pt-2 text-sm font-semibold text-foreground">{i + 1}.</span>
+                    <Textarea rows={2} value={q.question_text} onChange={(e) => updateDraftQ(i, { question_text: e.target.value })} />
+                    <Button variant="ghost" size="icon" aria-label="Remove question"
+                      onClick={() => setAiDraft({ ...aiDraft, questions: aiDraft.questions.filter((_, j) => j !== i) })}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {(['a', 'b', 'c', 'd'] as const).map((k) => (
+                      <div key={k} className="flex items-center gap-2">
+                        <span className={`w-5 text-xs font-bold ${q.correct_option === k ? 'text-success' : 'text-muted-foreground'}`}>{k.toUpperCase()}</span>
+                        <Input value={q[`option_${k}`]} maxLength={300} onChange={(e) => updateDraftQ(i, { [`option_${k}`]: e.target.value } as Partial<DraftQuestion>)} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Label className="text-xs">Correct answer</Label>
+                    <Select value={q.correct_option} onValueChange={(v) => updateDraftQ(i, { correct_option: v })}>
+                      <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
+                      <SelectContent>{['a', 'b', 'c', 'd'].map((k) => <SelectItem key={k} value={k}>{k.toUpperCase()}</SelectItem>)}</SelectContent>
+                    </Select>
+                    {q.explanation && <p className="text-xs text-muted-foreground">{q.explanation}</p>}
+                  </div>
+                </div>
+              ))}
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setAiDraft(null)} disabled={aiBusy}>Back</Button>
+                <Button onClick={saveAiQuiz} disabled={aiBusy || aiDraft.questions.length === 0}>
+                  {aiBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save as draft quiz
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
 
       {/* Manage questions */}
       <Dialog open={!!manageQuiz} onOpenChange={(o) => !o && setManageQuiz(null)}>
