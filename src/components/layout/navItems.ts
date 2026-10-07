@@ -3,6 +3,7 @@ import {
   Users,
   GraduationCap,
   UserCheck,
+  HelpCircle,
   ClipboardList,
   BarChart3,
   Settings,
