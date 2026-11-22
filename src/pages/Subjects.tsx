@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { BookOpen, Loader2, Plus, Pencil, Trash2 } from 'lucide-react';
+import { BookOpen, Loader2, Plus, Pencil, Trash2 } from '@/lib/icons';
 import { toast } from 'sonner';
 
 interface Subject { id: string; name: string; code: string; description: string | null; }
@@ -159,4 +159,5 @@ export default function Subjects() {
     </DashboardLayout>
   );
 }
+
 

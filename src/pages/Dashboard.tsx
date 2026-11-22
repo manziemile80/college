@@ -9,7 +9,7 @@ import { Announcement, BehaviorScoreWithDetails, DisciplineIncident } from '@/ty
 import {
   GraduationCap, Users, ClipboardList, TrendingUp, AlertTriangle,
   CheckCircle, BookOpen, Gavel, Boxes, Pencil, UserPlus,
-} from 'lucide-react';
+} from '@/lib/icons';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -425,5 +425,6 @@ export default function Dashboard() {
     </DashboardLayout>
   );
 }
+
 
 

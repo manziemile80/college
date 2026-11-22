@@ -21,7 +21,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Profile, AppRole } from '@/types/database';
-import { Users, Loader2, ShieldCheck, Shield, ShieldAlert, Trash2, Pencil } from 'lucide-react';
+import { Users, Loader2, ShieldCheck, Shield, ShieldAlert, Trash2, Pencil } from '@/lib/icons';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -306,5 +306,6 @@ export default function UsersPage() {
     </DashboardLayout>
   );
 }
+
 
 

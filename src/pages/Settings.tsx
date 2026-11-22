@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Bell, Shield, Database, MessageSquare, ScrollText, Loader2 } from 'lucide-react';
+import { Bell, Shield, Database, MessageSquare, ScrollText, Loader2 } from '@/lib/icons';
 import { supabase } from '@/integrations/supabase/client';
 import { AuditLog } from '@/types/database';
 import { format } from 'date-fns';
@@ -200,5 +200,6 @@ export default function Settings() {
     </DashboardLayout>
   );
 }
+
 
 

@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserCheck } from 'lucide-react';
+import { Loader2, UserCheck } from '@/lib/icons';
 
 interface Row {
   id: string;
@@ -122,4 +122,5 @@ export function ClaimStudentRecordDialog({ open, onOpenChange, onLinked }: Props
     </Dialog>
   );
 }
+
 

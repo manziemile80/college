@@ -22,7 +22,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Student, Class, BehaviorCategory, BehaviorScoreWithDetails } from '@/types/database';
-import { Plus, Search, ClipboardList, Loader2, Send, Eye, Check, ChevronsUpDown, RotateCcw, Bell } from 'lucide-react';
+import { Plus, Search, ClipboardList, Loader2, Send, Eye, Check, ChevronsUpDown, RotateCcw, Bell } from '@/lib/icons';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ScoreBadge } from '@/components/dashboard/ScoreBadge';
@@ -511,5 +511,6 @@ export default function Scores() {
     </DashboardLayout>
   );
 }
+
 
 

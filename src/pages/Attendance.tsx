@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { CalendarCheck, Loader2, Save, Search } from 'lucide-react';
+import { CalendarCheck, Loader2, Save, Search } from '@/lib/icons';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -206,5 +206,6 @@ export default function Attendance() {
     </DashboardLayout>
   );
 }
+
 
 

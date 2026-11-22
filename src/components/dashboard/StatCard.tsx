@@ -1,4 +1,4 @@
-﻿import { LucideIcon } from 'lucide-react';
+﻿import { LucideIcon } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 
 interface StatCardProps {
@@ -70,4 +70,5 @@ export function StatCard({ title, value, subtitle, icon: Icon, variant = 'primar
     </div>
   );
 }
+
 

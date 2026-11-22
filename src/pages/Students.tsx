@@ -15,7 +15,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { Student, Class, Parent, StudentParent } from '@/types/database';
-import { Plus, Search, GraduationCap, Loader2, Users, Pencil, Trash2, Eye, ArrowUp } from 'lucide-react';
+import { Plus, Search, GraduationCap, Loader2, Users, Pencil, Trash2, Eye, ArrowUp } from '@/lib/icons';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { LinkParentsDialog } from '@/components/students/LinkParentsDialog';
@@ -483,5 +483,6 @@ export default function Students() {
     </DashboardLayout>
   );
 }
+
 
 

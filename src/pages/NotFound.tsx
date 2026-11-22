@@ -1,6 +1,6 @@
 ﻿import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
-import { SearchX, ArrowLeft } from "lucide-react";
+import { SearchX, ArrowLeft } from '@/lib/icons';
 import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
@@ -32,5 +32,6 @@ const NotFound = () => {
 };
 
 export default NotFound;
+
 
 

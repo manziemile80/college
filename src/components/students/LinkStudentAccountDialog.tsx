@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Link2Off } from 'lucide-react';
+import { Loader2, Link2Off } from '@/lib/icons';
 import { toast } from 'sonner';
 
 interface Props {
@@ -140,4 +140,5 @@ export function LinkStudentAccountDialog({
     </Dialog>
   );
 }
+
 

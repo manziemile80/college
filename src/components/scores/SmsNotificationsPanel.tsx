@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { SmsStatusBadge } from './SmsStatusBadge';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageSquare, RefreshCw } from 'lucide-react';
+import { Loader2, MessageSquare, RefreshCw } from '@/lib/icons';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -161,4 +161,5 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
     </div>
   );
 }
+
 

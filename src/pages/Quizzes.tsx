@@ -22,7 +22,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, ListChecks, Loader2, PenLine, BarChart3, UserCheck, Sparkles, CheckCircle2, Send } from 'lucide-react';
+import { Plus, Trash2, ListChecks, Loader2, PenLine, BarChart3, UserCheck, Sparkles, CheckCircle2, Send } from '@/lib/icons';
 import { ClaimStudentRecordDialog } from '@/components/students/ClaimStudentRecordDialog';
 
 interface DraftQuestion {
@@ -820,5 +820,6 @@ export default function Quizzes() {
     </DashboardLayout>
   );
 }
+
 
 

@@ -1,13 +1,16 @@
-﻿import { useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Loader2, GraduationCap, Mail, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Loader2, GraduationCap, Mail, Lock, CheckCircle2, ArrowRight, BookOpen, CalendarCheck } from '@/lib/icons';
 import { toast } from 'sonner';
 import schoolLogo from '@/assets/college-rebero-logo.png';
 import schoolImage from '@/assets/landing-school.jpg';
+
+interface PromoStats { students: number; classes: number; attendanceRate: number; }
 
 export default function Login() {
   const { user, loading: authLoading, signIn } = useAuth();
@@ -15,6 +18,34 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [promoStats, setPromoStats] = useState<PromoStats | null>(null);
+
+  // Verified real statistics from the database, shown as promotional stats.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const yearStart = `${new Date().getFullYear()}-01-01`;
+        const [studentsRes, classesRes, attRes] = await Promise.all([
+          supabase.from('students').select('*', { count: 'exact', head: true }),
+          supabase.from('classes').select('*', { count: 'exact', head: true }),
+          supabase.from('attendance').select('status').gte('attendance_date', yearStart),
+        ]);
+        const attRows = (attRes.data as { status: string }[]) || [];
+        const present = attRows.filter((r) => r.status === 'present').length;
+        if (!cancelled) {
+          setPromoStats({
+            students: studentsRes.count ?? 0,
+            classes: classesRes.count ?? 0,
+            attendanceRate: attRows.length ? Math.round((present / attRows.length) * 100) : 0,
+          });
+        }
+      } catch (error) {
+        console.error('Login promo stats error:', error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   if (authLoading) {
     return (
@@ -179,6 +210,32 @@ export default function Login() {
           <p className="mt-7 fs-18 leading-relaxed text-white/90 drop-shadow-sm">
             Track student behavior, engage parents with instant notifications, and foster a positive learning environment with our comprehensive management system.
           </p>
+
+          {promoStats && (
+            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-3">
+              <div className="d-flex flex-column gap-2 rounded-[16px] border border-white/20 bg-white/10 px-4 py-5">
+                <div className="rounded-circle d-inline-flex h-10 w-10 align-items-center justify-content-center bg-white/20">
+                  <GraduationCap className="h-5 w-5 text-golden" />
+                </div>
+                <p className="mt-2 fs-28 fw-bold text-white">{promoStats.students}</p>
+                <p className="fs-13 fw-medium text-white/80">Students</p>
+              </div>
+              <div className="d-flex flex-column gap-2 rounded-[16px] border border-white/20 bg-white/10 px-4 py-5">
+                <div className="rounded-circle d-inline-flex h-10 w-10 align-items-center justify-content-center bg-white/20">
+                  <BookOpen className="h-5 w-5 text-golden" />
+                </div>
+                <p className="mt-2 fs-28 fw-bold text-white">{promoStats.classes}</p>
+                <p className="fs-13 fw-medium text-white/80">Classes</p>
+              </div>
+              <div className="d-flex flex-column gap-2 rounded-[16px] border border-white/20 bg-white/10 px-4 py-5">
+                <div className="rounded-circle d-inline-flex h-10 w-10 align-items-center justify-content-center bg-white/20">
+                  <CalendarCheck className="h-5 w-5 text-golden" />
+                </div>
+                <p className="mt-2 fs-28 fw-bold text-white">{promoStats.attendanceRate}%</p>
+                <p className="fs-13 fw-medium text-white/80">Attendance Rate</p>
+              </div>
+            </div>
+          )}
           <p className="mt-10 fs-15 fw-semibold text-white/95">
             Better Learning. Brighter Future.
           </p>
@@ -192,5 +249,6 @@ export default function Login() {
     </div>
   );
 }
+
 
 

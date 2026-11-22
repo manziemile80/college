@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, BookOpen, PlayCircle, Loader2, FileText, Search, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, BookOpen, PlayCircle, Loader2, FileText, Search, X } from '@/lib/icons';
 
 interface Course {
   id: string;
@@ -359,5 +359,6 @@ export default function Courses() {
     </DashboardLayout>
   );
 }
+
 
 

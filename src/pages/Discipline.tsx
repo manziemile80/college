@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { Gavel, Loader2, Plus, ShieldCheck, XCircle, CheckCircle2, Users2 } from 'lucide-react';
+import { Gavel, Loader2, Plus, ShieldCheck, XCircle, CheckCircle2, Users2 } from '@/lib/icons';
 
 const MAX_SCORE = 40;
 
@@ -610,5 +610,6 @@ export default function Discipline() {
     </DashboardLayout>
   );
 }
+
 
 

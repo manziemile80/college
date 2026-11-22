@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { BehaviorCategory } from '@/types/database';
-import { BarChart3, Loader2, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
+import { BarChart3, Loader2, TrendingUp, TrendingDown, Calendar } from '@/lib/icons';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, ComposedChart, Area } from 'recharts';
 
 const categoryLabels: Record<BehaviorCategory, string> = {
@@ -279,4 +279,5 @@ export default function Reports() {
     </DashboardLayout>
   );
 }
+
 

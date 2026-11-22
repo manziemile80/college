@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Loader2, Download, Search, Users } from 'lucide-react';
+import { FileText, Loader2, Download, Search, Users } from '@/lib/icons';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -423,4 +423,5 @@ export default function AcademicReports() {
     </DashboardLayout>
   );
 }
+
 

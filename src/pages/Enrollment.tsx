@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { History, Loader2, Search, UserPlus, UserMinus, ArrowLeftRight, CheckCircle } from 'lucide-react';
+import { History, Loader2, Search, UserPlus, UserMinus, ArrowLeftRight, CheckCircle } from '@/lib/icons';
 
 const currentYear = () => {
   const now = new Date();
@@ -421,5 +421,6 @@ export default function EnrollmentPage() {
     </DashboardLayout>
   );
 }
+
 
 

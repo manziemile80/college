@@ -1,4 +1,4 @@
-﻿import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+﻿import { CheckCircle, XCircle, Clock, AlertCircle } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 
 interface SmsStatusBadgeProps {
@@ -46,4 +46,5 @@ export function SmsStatusBadge({ status, className }: SmsStatusBadgeProps) {
     </span>
   );
 }
+
 

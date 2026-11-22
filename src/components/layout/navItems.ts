@@ -19,7 +19,7 @@ import {
   Boxes,
   UserPlus,
   Gavel,
-} from 'lucide-react';
+} from '@/lib/icons';
 import { AppRole } from '@/types/database';
 
 export interface NavItem {

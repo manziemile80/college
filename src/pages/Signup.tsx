@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Loader2, ShieldCheck, GraduationCap } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ShieldCheck, GraduationCap } from '@/lib/icons';
 import schoolLogo from '@/assets/college-rebero-logo.png';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -232,5 +232,6 @@ export default function Signup() {
     </div>
   );
 }
+
 
 

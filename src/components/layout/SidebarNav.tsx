@@ -2,7 +2,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
-import { LogOut, Sun, Moon, UserCog } from 'lucide-react';
+import { LogOut, Sun, Moon, UserCog } from '@/lib/icons';
 import { Button } from '@/components/ui/button';
 import schoolLogo from '@/assets/college-rebero-logo.png';
 import { navItems, roleBadges, NavItem } from './navItems';
@@ -144,5 +144,6 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
     </>
   );
 }
+
 
 

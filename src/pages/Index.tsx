@@ -16,7 +16,7 @@ import {
   LogIn,
   Building2,
   ArrowRight,
-} from 'lucide-react';
+} from '@/lib/icons';
 import { supabase } from '@/integrations/supabase/client';
 import landingStudents from '@/assets/landing-students.jpg';
 import schoolLogo from '@/assets/college-rebero-logo.png';
@@ -241,5 +241,6 @@ export default function Index() {
     </div>
   );
 }
+
 
 

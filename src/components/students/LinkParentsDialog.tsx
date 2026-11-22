@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { Parent, StudentParent } from '@/types/database';
-import { Loader2, UserPlus, Trash2 } from 'lucide-react';
+import { Loader2, UserPlus, Trash2 } from '@/lib/icons';
 import { toast } from 'sonner';
 
 interface LinkParentsDialogProps {
@@ -309,4 +309,5 @@ export function LinkParentsDialog({
     </Dialog>
   );
 }
+
 

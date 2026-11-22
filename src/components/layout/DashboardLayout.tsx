@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Sidebar } from './Sidebar';
 import { AppTopBar } from './AppTopBar';
 import { Footer } from './Footer';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/lib/icons';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -57,5 +57,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     </div>
   );
 }
+
 
 

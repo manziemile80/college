@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, FolderOpen, Download, Search, Loader2, Pencil, X } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Download, Search, Loader2, Pencil, X } from '@/lib/icons';
 
 interface Material {
   id: string;
@@ -221,5 +221,6 @@ export default function Materials() {
     </DashboardLayout>
   );
 }
+
 
 

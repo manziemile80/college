@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Package, AlertTriangle, ClipboardList, Loader2, ArrowRight,
   CheckCircle2, Truck, Coins,
-} from 'lucide-react';
+} from '@/lib/icons';
 
 interface StockItem {
   id: string;
@@ -348,5 +348,6 @@ export default function StockDashboard() {
     </DashboardLayout>
   );
 }
+
 
 

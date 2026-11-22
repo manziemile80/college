@@ -11,7 +11,7 @@ import {
   UserCircle,
   Settings,
   Mail,
-} from 'lucide-react';
+} from '@/lib/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -178,5 +178,6 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
     </header>
   );
 }
+
 
 

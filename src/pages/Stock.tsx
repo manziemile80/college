@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Pencil, Search, Loader2, Package, ArrowDownCircle, ArrowUpCircle, History, X } from 'lucide-react';
+import { Plus, Trash2, Pencil, Search, Loader2, Package, ArrowDownCircle, ArrowUpCircle, History, X } from '@/lib/icons';
 
 interface StockItem {
   id: string;
@@ -393,5 +393,6 @@ export default function Stock() {
     </DashboardLayout>
   );
 }
+
 
 

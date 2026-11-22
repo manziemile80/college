@@ -458,3 +458,24 @@ body {
 .space-y-1\.5 > :not(:first-child) { margin-top: .375rem; }
 .empty-state { display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .toaster, .toast { display: flex; align-items: center; }
+
+/* ── App badge classes (College De Rebero spec palette) ── */
+.badge-active { background-color: #DCFCE7; color: #047857; }
+.badge-pending { background-color: #FEF3C7; color: #D97706; }
+.badge-rejected { background-color: #FEE2E2; color: #991B1B; }
+.badge-completed { background-color: #DBEAFE; color: #1E3A8A; }
+.text-accent { color: #475569; }
+.bg-accent\/20 { background-color: rgba(71,85,105,.2); }
+
+/* ── Dark mode (ThemeContext applies .dark/.light on <html>) ── */
+html.dark, html.dark body { background-color: #0F172A; color: #E2E8F0; }
+html.dark .card, html.dark .card-body, html.dark .table, html.dark .form-control,
+html.dark .modal-content, html.dark .dropdown-menu { background-color: #1E293B; color: #E2E8F0; border-color: #334155; }
+html.dark .table thead th, html.dark .card-title, html.dark .dropdown-item,
+html.dark .badge-secondary { color: #E2E8F0; }
+html.dark .table-hover tbody tr:hover { background-color: #334155; }
+html.dark .dropdown-item:hover { background-color: #334155; }
+html.dark .text-white { color: #F1F5F9; }
+html.dark .bg-white { background-color: #1E293B; }
+html.dark .border { border-color: #334155; }
+html.dark .form-control:focus { box-shadow: 0 0 0 .25rem rgba(5,150,105,.25); }

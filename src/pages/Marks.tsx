@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { ClipboardList, Loader2, Save, Search } from 'lucide-react';
+import { ClipboardList, Loader2, Save, Search } from '@/lib/icons';
 import { toast } from 'sonner';
 
 interface Student { id: string; first_name: string; last_name: string; student_id: string; class_id: string | null; }
@@ -239,5 +239,6 @@ export default function Marks() {
     </DashboardLayout>
   );
 }
+
 
 

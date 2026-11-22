@@ -1,5 +1,5 @@
 ﻿import schoolLogo from '@/assets/college-rebero-logo.png';
-import { MapPin, Phone, Mail, Building2 } from 'lucide-react';
+import { MapPin, Phone, Mail, Building2 } from '@/lib/icons';
 
 export function Footer() {
   return (
@@ -41,5 +41,6 @@ export function Footer() {
     </footer>
   );
 }
+
 
 

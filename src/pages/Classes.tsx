@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Class } from '@/types/database';
-import { Plus, Search, BookOpen, Loader2, Users, Trash2, Pencil, ArrowUpRight } from 'lucide-react';
+import { Plus, Search, BookOpen, Loader2, Users, Trash2, Pencil, ArrowUpRight } from '@/lib/icons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
@@ -331,5 +331,6 @@ export default function Classes() {
     </DashboardLayout>
   );
 }
+
 
 

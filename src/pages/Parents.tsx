@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Parent, StudentParent, Student } from '@/types/database';
-import { Plus, Search, UserCheck, Loader2, Phone, Mail, Pencil } from 'lucide-react';
+import { Plus, Search, UserCheck, Loader2, Phone, Mail, Pencil } from '@/lib/icons';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -305,5 +305,6 @@ export default function Parents() {
     </DashboardLayout>
   );
 }
+
 
 
