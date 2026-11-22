@@ -15,6 +15,13 @@
       "when": 1795330170537,
       "tag": "0001_stock_unit_price",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795331472357,
+      "tag": "0002_restrict_learning_data_read_access",
+      "breakpoints": true
     }
   ]
 }

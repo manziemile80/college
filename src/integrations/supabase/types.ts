@@ -1536,6 +1536,7 @@ export type Database = {
     Functions: {
       can_manage_stock: { Args: { _user_id: string }; Returns: boolean }
       get_current_student_id: { Args: { _user_id: string }; Returns: string }
+      get_current_user_class_ids: { Args: never; Returns: string[] }
       get_marks_by_reg_number: {
         Args: { _reg: string }
         Returns: {
