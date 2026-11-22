@@ -70,14 +70,14 @@ export default function Signup() {
           <div className="mb-8 flex items-center gap-3">
             <img src={schoolLogo} alt="College De Rebero" className="h-14 w-14 object-contain" />
             <div>
-              <h1 className="text-[26px] font-bold text-slate-900">College De Rebero</h1>
+              <h1 className="text-[32px] font-bold text-slate-900">College De Rebero</h1>
               <p className="text-[13px] text-slate-500">Behavior Management System</p>
             </div>
           </div>
 
           <div className="space-y-6">
             <div>
-              <h2 className="text-[28px] font-bold tracking-tight text-slate-900">Create an account</h2>
+              <h2 className="text-[32px] font-bold tracking-tight text-slate-900">Create an account</h2>
               <p className="mt-2 text-[13.5px] text-slate-500">
                 Get started with College De Rebero today
               </p>
@@ -161,7 +161,11 @@ export default function Signup() {
                 />
               </div>
 
-              <Button type="submit" className="w-full h-11 gap-2" disabled={loading}>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="h-12 w-full gap-2 bg-gradient-to-br from-emerald-600 to-green-600 text-white shadow-md hover:from-emerald-700 hover:to-green-500"
+              >
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />

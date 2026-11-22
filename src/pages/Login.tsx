@@ -4,9 +4,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Loader2, GraduationCap, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Loader2, GraduationCap, Mail, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import schoolLogo from '@/assets/college-rebero-logo.png';
+import schoolImage from '@/assets/landing-school.jpg';
 
 export default function Login() {
   const { user, loading: authLoading, signIn } = useAuth();
@@ -43,49 +44,51 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen overflow-hidden">
-      {/* Left section — form */}
-      <div className="flex flex-1 flex-col justify-center px-6 py-12 sm:px-10 lg:px-16">
-        <div className="mx-auto w-full max-w-md">
-          {/* Logo */}
-          <div className="mb-8 flex items-center gap-3">
-            <img src={schoolLogo} alt="College De Rebero" className="h-14 w-14 object-contain" />
+    <div className="flex min-h-screen overflow-hidden bg-background">
+      {/* Left section — login form (first on mobile) */}
+      <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6 lg:px-10">
+        <div className="w-full max-w-lg">
+          {/* Institution header */}
+          <div className="mb-7 flex items-center gap-3">
+            <img src={schoolLogo} alt="College De Rebero" className="h-16 w-16 object-contain" />
             <div>
-              <h1 className="text-[26px] font-bold text-slate-900">College De Rebero</h1>
-              <p className="text-[13px] text-slate-500">Behavior Management System</p>
+              <h1 className="text-[32px] font-bold text-slate-900">College De Rebero</h1>
+              <p className="text-[13.5px] text-slate-500">Behavior Management System</p>
             </div>
           </div>
 
-          <div className="space-y-6">
+          {/* Large white rounded login container */}
+          <div className="rounded-[22px] border border-slate-200 bg-white px-6 py-8 shadow-lg sm:px-8">
             <div>
-              <h2 className="text-[28px] font-bold tracking-tight text-slate-900">Welcome back</h2>
-              <p className="mt-2 text-[13.5px] text-slate-500">
-                Sign in to your account to continue
+              <h2 className="text-[34px] font-bold text-slate-900">Welcome back</h2>
+              <p className="mt-2 text-[14px] text-slate-500">
+                Sign in to your account to continue.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
+            <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+              {/* Email input with email icon */}
+              <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@school.edu"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-11"
-                />
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@school.edu"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-12 pl-10"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link to="/check-marks" className="text-[12.5px] font-medium text-emerald-600 hover:underline">
-                    Student? Check your marks
-                  </Link>
-                </div>
+              {/* Password input with lock icon + visibility toggle */}
+              <div className="space-y-1.5">
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -93,7 +96,7 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-11 pr-10"
+                    className="h-12 pr-11 pl-10"
                   />
                   <button
                     type="button"
@@ -106,78 +109,84 @@ export default function Login() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-11 gap-2" disabled={loading}>
+              {/* Large green gradient Sign In button */}
+              <Button
+                type="submit"
+                disabled={loading}
+                className="h-12 w-full gap-2 bg-gradient-to-br from-emerald-600 to-green-600 text-white shadow-md hover:from-emerald-700 hover:to-green-500"
+              >
                 {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  <>
-                    <GraduationCap className="h-5 w-5" />
-                    Sign In
-                  </>
+                  <GraduationCap className="h-5 w-5" />
                 )}
+                Sign In
               </Button>
             </form>
 
-            <p className="text-center text-[13px] text-slate-500">
-              Don't have an account?{' '}
-              <Link to="/signup" className="font-medium text-emerald-600 hover:underline">
-                Sign up
+            <div className="mt-6 text-center">
+              <Link to="/signup" className="inline-flex items-center gap-2 text-[14px] font-medium text-emerald-700 hover:underline">
+                Sign Up
               </Link>
-            </p>
-            <p className="text-center text-[13px] text-slate-500">
-              Need your registration number?{' '}
-              <Link to="/check-marks" className="font-medium text-emerald-600 hover:underline">
-                Check your marks here
-              </Link>
-            </p>
-            <p className="text-center text-[12.5px] text-slate-400">
-              College De Rebero · Excellence · Discipline · Integrity
-            </p>
+            </div>
+
+            {/* Student marks checking information panel */}
+            <div className="mt-5 flex gap-3 rounded-[14px] border border-slate-200 bg-emerald-50 p-4">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+              <div className="min-w-0">
+                <p className="text-[14px] font-semibold text-slate-900">Student Marks Checking</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
+                  View your behavior records, attendance and academic progress from anywhere.
+                </p>
+                <Link to="/check-marks" className="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-emerald-600 hover:underline">
+                  Check your marks
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </div>
           </div>
+
+          <p className="mt-6 text-center text-[12.5px] text-slate-400">
+            College De Rebero · Excellence · Discipline · Integrity
+          </p>
         </div>
       </div>
 
-      {/* Right section — promo */}
-      <div className="relative hidden flex-1 bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-500 lg:flex items-center justify-center overflow-hidden p-10">
-        {/* Decorative geometric shapes */}
-        <div className="absolute -left-20 top-20 h-64 w-64 rounded-full bg-white/10" />
-        <div className="absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-white/5" />
+      {/* Right section — promo (large school image + dark green overlay) */}
+      <div className="relative hidden flex-1 lg:flex items-center justify-center overflow-hidden bg-[#064E3B]">
+        <div className="absolute inset-0">
+          <img src={schoolImage} alt="School building at College De Rebero" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-[#064E3B] opacity-60" />
+        </div>
 
-        <div className="relative max-w-lg text-white text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
-            <ShieldCheck className="h-8 w-8 text-white" />
-          </div>
-          <h2 className="text-[34px] font-bold tracking-tight drop-shadow-sm sm:text-[36px]">
-            Empowering Schools to Build Better Students
+        {/* Decorative curved shapes */}
+        <svg className="pointer-events-none absolute left-6 top-6 h-64 w-64" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="120" cy="120" r="115" fill="#D1FAE5" opacity="0.3" />
+          <circle cx="70" cy="190" r="40" fill="#ECFDF5" opacity="0.35" />
+          <ellipse cx="190" cy="90" rx="35" ry="18" fill="#F0FDF4" opacity="0.2" />
+        </svg>
+        <svg className="pointer-events-none absolute bottom-8 right-8 h-72 w-72" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="120" cy="95" r="100" fill="#ECFDF5" opacity="0.2" />
+        </svg>
+
+        <div className="relative max-w-xl px-8 text-white">
+          <h2 className="text-[34px] font-bold tracking-tight drop-shadow-sm">
+            Empowering Schools to{' '}
+            <span className="rounded-full bg-golden px-3 py-1 font-bold text-slate-900">
+              Build Better Students
+            </span>
           </h2>
-          <p className="mt-6 text-[18px] opacity-90 drop-shadow-sm">
-            Track student behavior, engage parents with instant notifications, and foster a positive
-            learning environment with our comprehensive management system.
+          <p className="mt-7 text-[18px] leading-relaxed text-white/90 drop-shadow-sm">
+            Track student behavior, engage parents with instant notifications, and foster a positive learning environment with our comprehensive management system.
           </p>
-          <div className="mt-10 grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-[30px] font-bold">500+</p>
-              <p className="mt-1 text-[13px] opacity-80">Schools</p>
-            </div>
-            <div>
-              <p className="text-[30px] font-bold">50K+</p>
-              <p className="mt-1 text-[13px] opacity-80">Students</p>
-            </div>
-            <div>
-              <p className="text-[30px] font-bold">98%</p>
-              <p className="mt-1 text-[13px] opacity-80">Satisfaction</p>
-            </div>
-          </div>
-          <div className="mt-10 flex flex-col gap-2 sm:flex-row sm:justify-center">
-            <Link to="/signup">
-              <Button className="h-11 gap-2 bg-white text-emerald-700 hover:bg-emerald-50">
-                <GraduationCap className="h-5 w-5" />Create Account
-              </Button>
-            </Link>
-          </div>
+          <p className="mt-10 text-[15px] font-semibold text-white/95">
+            Better Learning. Brighter Future.
+          </p>
+          <Link to="/signup">
+            <Button className="h-11 gap-2 bg-white text-emerald-700 hover:bg-slate-50">
+              <GraduationCap className="h-5 w-5" /> Create Account
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

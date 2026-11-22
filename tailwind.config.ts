@@ -85,6 +85,8 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        /* Golden yellow #FACC15 — spec palette; Tailwind v3 has no matching shade. */
+        golden: "#FACC15",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

@@ -22,8 +22,8 @@
     --secondary-foreground: 222.2 47% 11%;
 
     /* ── Backgrounds ───────────────────────────────────── */
-    --background: 210 40% 98%;          /* #F8FAFC Main background */
-    --foreground: 222.2 47% 11%;        /* #0F172A Primary text */
+    --background: 138.5 76.5% 96.7%;    /* #F0FDF4 Main background (spec palette) */
+    --foreground: 222.2 47.4% 11.2%;    /* #0F172A Deep navy */
     --card: 0 0% 100%;                  /* #FFFFFF Card background */
     --card-foreground: 222.2 47% 11%;
     --popover: 0 0% 100%;
@@ -31,7 +31,7 @@
 
     /* ── Muted ─────────────────────────────────────────── */
     --muted: 214.3 30.7% 95.5%;         /* #F1F5F9 — table headers, subtle areas */
-    --muted-foreground: 215.4 16% 47%;  /* #64748B Secondary text */
+    --muted-foreground: 215.4 16.3% 46.9%;  /* #64748B Muted text */
 
     /* ── Status colors ─────────────────────────────────── */
     --success: 142.1 71% 45%;
@@ -44,8 +44,8 @@
     --info-foreground: 0 0% 100%;
 
     /* ── UI elements ───────────────────────────────────── */
-    --border: 214.3 32% 91%;            /* #E2E8F0 Border */
-    --input: 214.3 32% 91%;             /* input border #CBD5E1-ish */
+    --border: 214.3 31.8% 91.4%;        /* #E2E8F0 Border */
+    --input: 214.3 31.8% 91.4%;          /* #E2E8F0 Border */
     --ring: 161.4 94% 30%;
     --radius: 0.75rem;
 
