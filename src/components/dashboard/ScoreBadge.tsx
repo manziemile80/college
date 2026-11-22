@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+﻿import { cn } from '@/lib/utils';
 
 interface ScoreBadgeProps {
   score: number;
@@ -20,20 +20,22 @@ export function ScoreBadge({ score, size = 'md' }: ScoreBadgeProps) {
 
   const sizeClasses = {
     sm: 'px-2 py-0.5 text-xs',
-    md: 'px-3 py-1 text-sm',
-    lg: 'px-4 py-1.5 text-base',
+    md: 'px-3 py-1 fs-sm',
+    lg: 'px-4 py-1.5 fs-base',
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border font-medium',
+        'd-inline-flex align-items-center gap-1.5 rounded-circle border fw-medium',
         getScoreClass(score),
         sizeClasses[size],
       )}
     >
-      <span className="font-bold">{score > 0 ? `+${score}` : score}</span>
-      <span className="opacity-80">• {getScoreLabel(score)}</span>
+      <span className="fw-bold">{score > 0 ? `+${score}` : score}</span>
+      <span className="opacity-80">â€¢ {getScoreLabel(score)}</span>
     </span>
   );
 }
+
+

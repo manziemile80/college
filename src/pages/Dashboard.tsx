@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
@@ -165,7 +165,7 @@ export default function Dashboard() {
       case 'teacher':
       case 'viewer':
         return (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="row gap-5 sm:col-6 lg:col-3">
             <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="secondary" />
             <StatCard title="Total Classes" value={stats.totalClasses || 0} icon={Users} variant="tertiary" />
             {role !== 'viewer' && (
@@ -184,7 +184,7 @@ export default function Dashboard() {
         );
       case 'dos':
         return (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="row gap-5 sm:col-6 lg:col-3">
             <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="secondary" />
             <StatCard title="Classes" value={stats.totalClasses || 0} icon={Users} variant="tertiary" />
             <StatCard title="Subjects" value={stats.totalSubjects || 0} icon={BookOpen} variant="secondary" />
@@ -193,7 +193,7 @@ export default function Dashboard() {
         );
       case 'dod':
         return (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="row gap-5 sm:col-6 lg:col-3">
             <StatCard title="Pending Reviews" value={stats.pendingIncidents || 0} icon={AlertTriangle} variant="warning" />
             <StatCard title="Reviewed Incidents" value={stats.reviewedIncidents || 0} icon={CheckCircle} variant="secondary" />
             <StatCard title="Total Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} variant="tertiary" />
@@ -202,19 +202,19 @@ export default function Dashboard() {
         );
       case 'stock_manager':
         return (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="row gap-5 sm:col-6 lg:col-3">
             <StatCard title="Stock Items" value={stats.stockItems || 0} icon={Boxes} />
           </div>
         );
       case 'parent':
         return (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="row gap-5 sm:col-6 lg:col-3">
             <StatCard title="Linked Child" value={stats.myChildren || 0} icon={GraduationCap} />
           </div>
         );
       case 'student':
         return (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="row gap-5 sm:col-6 lg:col-3">
             <StatCard title="Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} />
           </div>
         );
@@ -255,14 +255,14 @@ export default function Dashboard() {
     }
     if (actions.length === 0) return null;
     return (
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <div className="row gap-5 md:col-6 lg:col-4">
         {actions.map((a) => (
           <Link key={a.to} to={a.to}>
-            <Card className="h-full cursor-pointer transition-colors hover:border-emerald-300">
-              <CardContent className="flex flex-col items-center justify-center py-8">
+            <Card className="h-100 cursor-pointer transition-colors hover:border-emerald-300">
+              <CardContent className="d-flex d-flex flex-column align-items-center justify-content-center py-8">
                 <a.icon className="mb-3 h-10 w-10 text-emerald-600" />
-                <h3 className="text-[16px] font-semibold text-slate-900">{a.title}</h3>
-                <p className="mt-1 text-[13px] text-slate-500 text-center">{a.desc}</p>
+                <h3 className="fs-16 fw-semibold text-slate-900">{a.title}</h3>
+                <p className="mt-1 fs-13 text-slate-500 text-center">{a.desc}</p>
               </CardContent>
             </Card>
           </Link>
@@ -276,13 +276,13 @@ export default function Dashboard() {
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Dashboard</p>
+          <p className="fs-11 fw-semibold text-uppercase tracking-[0.16em] text-muted-foreground">Dashboard</p>
           <h1 className="page-h1">
             {getGreeting()}, {profile?.full_name?.split(' ')[0] || 'there'}
           </h1>
-          <p className="max-w-2xl text-[12.5px] text-muted-foreground">
-            {roleCopy[role || ''] ? `${roleCopy[role || '']} dashboard — ` : ''}
-            Your school at a glance — students, conduct records, academics and e-learning activity.
+          <p className="max-w-2xl fs-12.5 text-muted-foreground">
+            {roleCopy[role || ''] ? `${roleCopy[role || '']} dashboard â€” ` : ''}
+            Your school at a glance â€” students, conduct records, academics and e-learning activity.
           </p>
         </div>
 
@@ -291,10 +291,10 @@ export default function Dashboard() {
         {/* Attendance statistics (real data) */}
         <Card>
           <CardHeader>
-            <CardTitle>Attendance Statistics {totalAttendance > 0 ? `· ${totalAttendance} days this year` : ''}</CardTitle>
+            <CardTitle>Attendance Statistics {totalAttendance > 0 ? `Â· ${totalAttendance} days this year` : ''}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="row gap-4 sm:col-6 lg:col-3">
               {[
                 { label: 'Present', value: attendanceStats.present, cls: 'text-emerald-600' },
                 { label: 'Absent', value: attendanceStats.absent, cls: 'text-red-600' },
@@ -302,7 +302,7 @@ export default function Dashboard() {
                 { label: 'Excused', value: attendanceStats.excused, cls: 'text-blue-600' },
               ].map((s) => (
                 <div key={s.label} className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[13px] font-medium text-slate-500">{s.label}</p>
+                  <p className="fs-13 fw-medium text-slate-500">{s.label}</p>
                   <p className={cn('stat-value', s.cls)}>{s.value}</p>
                 </div>
               ))}
@@ -328,23 +328,23 @@ export default function Dashboard() {
               <CardTitle>Discipline Statistics</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="row gap-4 sm:col-6 lg:col-3">
                 <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[13px] font-medium text-slate-500">Pending reviews</p>
+                  <p className="fs-13 fw-medium text-slate-500">Pending reviews</p>
                   <p className="stat-value text-amber-600">{stats.pendingIncidents || 0}</p>
                 </div>
                 <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[13px] font-medium text-slate-500">Reviewed incidents</p>
+                  <p className="fs-13 fw-medium text-slate-500">Reviewed incidents</p>
                   <p className="stat-value text-emerald-600">{stats.reviewedIncidents || 0}</p>
                 </div>
               </div>
               {recentIncidents.length > 0 && (
                 <div className="space-y-2">
                   {recentIncidents.map((i) => (
-                    <div key={i.id} className="flex items-center justify-between gap-3 rounded-[10px] border border-slate-200 p-3">
-                      <p className="truncate text-[13px] font-medium text-slate-900">
+                    <div key={i.id} className="d-flex align-items-center justify-content-between gap-3 rounded-[10px] border border-slate-200 p-3">
+                      <p className="truncate fs-13 fw-medium text-slate-900">
                         {i.student ? `${i.student.first_name} ${i.student.last_name}` : 'Student'}
-                        {i.rule?.title ? ` · ${i.rule.title}` : ''}
+                        {i.rule?.title ? ` Â· ${i.rule.title}` : ''}
                       </p>
                       <Badge className={i.status === 'pending' ? 'badge-pending' : i.status === 'reviewed' ? 'badge-completed' : 'badge-rejected'}>
                         {i.status}
@@ -360,19 +360,19 @@ export default function Dashboard() {
         {/* Academic performance (real data: avg marks + pass rate) */}
         <Card>
           <CardHeader>
-            <CardTitle>Academic Performance — {new Date().getFullYear()}</CardTitle>
+            <CardTitle>Academic Performance â€” {new Date().getFullYear()}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="row gap-5 sm:col-6">
               <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                <p className="text-[13px] font-medium text-slate-500">Average Marks (/100)</p>
+                <p className="fs-13 fw-medium text-slate-500">Average Marks (/100)</p>
                 <p className="stat-value text-emerald-600">{stats.avgMarks ?? 0}</p>
-                <p className="mt-1 text-[12.5px] text-slate-500">Average CAT + Exam total this year</p>
+                <p className="mt-1 fs-12.5 text-slate-500">Average CAT + Exam total this year</p>
               </div>
               <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                <p className="text-[13px] font-medium text-slate-500">Pass Rate</p>
+                <p className="fs-13 fw-medium text-slate-500">Pass Rate</p>
                 <p className="stat-value text-emerald-600">{stats.passRate ?? 0}%</p>
-                <p className="mt-1 text-[12.5px] text-slate-500">Students with total ≥ 50 this year</p>
+                <p className="mt-1 fs-12.5 text-slate-500">Students with total â‰¥ 50 this year</p>
               </div>
             </div>
             <div className="h-[220px]">
@@ -399,8 +399,8 @@ export default function Dashboard() {
             <CardContent className="space-y-3">
               {announcements.map((a) => (
                 <div key={a.id} className="rounded-[10px] border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-[14px] font-medium text-slate-900">{a.title}</p>
-                  <p className="mt-1 text-[13px] text-slate-500">{a.body}</p>
+                  <p className="fs-14 fw-medium text-slate-900">{a.title}</p>
+                  <p className="mt-1 fs-13 text-slate-500">{a.body}</p>
                 </div>
               ))}
             </CardContent>
@@ -425,3 +425,5 @@ export default function Dashboard() {
     </DashboardLayout>
   );
 }
+
+

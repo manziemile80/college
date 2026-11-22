@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -94,7 +94,7 @@ export default function Marks() {
         Number(m.exam_score) > 60
     );
     if (invalid) {
-      return toast.error('Invalid marks: CAT must be 0–40 and Exam must be 0–60');
+      return toast.error('Invalid marks: CAT must be 0â€“40 and Exam must be 0â€“60');
     }
     setSaving(true);
     const rows = Object.values(marks).map((m) => ({
@@ -131,9 +131,9 @@ export default function Marks() {
 
         {/* Filters */}
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2 text-[16px]"><ClipboardList className="h-5 w-5 text-emerald-600" /> Filters</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="d-flex align-items-center gap-2 fs-16"><ClipboardList className="h-5 w-5 text-emerald-600" /> Filters</CardTitle></CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="row gap-4 sm:col-6 lg:col-3">
               <div className="space-y-2">
                 <Label>Class</Label>
                 <Select value={classId} onValueChange={setClassId}>
@@ -170,11 +170,11 @@ export default function Marks() {
         {classId && subjectId && (
           <Card>
             <CardHeader>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <CardTitle className="text-[16px]">Students — {TERM_LABELS[term]} {year}</CardTitle>
-                <div className="flex gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
+              <div className="d-flex d-flex flex-column gap-3 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
+                <CardTitle className="fs-16">Students â€” {TERM_LABELS[term]} {year}</CardTitle>
+                <div className="d-flex gap-2">
+                  <div className="position-relative">
+                    <Search className="position-absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
                     <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student..." className="w-44 pl-8" />
                   </div>
                   {canEdit && <Button onClick={saveAll} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save All</Button>}
@@ -183,9 +183,9 @@ export default function Marks() {
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
-                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+                <div className="d-flex justify-content-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
               ) : filteredStudents.length === 0 ? (
-                <div className="empty-state"><Loader2 className="h-10 w-10 text-slate-400" /><p className="text-[14px] text-slate-500">No students in this class</p></div>
+                <div className="empty-state"><Loader2 className="h-10 w-10 text-slate-400" /><p className="fs-14 text-slate-500">No students in this class</p></div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -194,7 +194,7 @@ export default function Marks() {
                       <TableHead>ID</TableHead>
                       <TableHead className="text-center">CAT (/40)</TableHead>
                       <TableHead className="text-center">Exam (/60)</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-end">Total</TableHead>
                       <TableHead>Remarks</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -204,8 +204,8 @@ export default function Marks() {
                       const total = Number(m.cat_score || 0) + Number(m.exam_score || 0);
                       return (
                         <TableRow key={s.id}>
-                          <TableCell className="font-medium text-slate-900">{s.first_name} {s.last_name}</TableCell>
-                          <TableCell className="text-[12.5px] text-slate-500">{s.student_id}</TableCell>
+                          <TableCell className="fw-medium text-slate-900">{s.first_name} {s.last_name}</TableCell>
+                          <TableCell className="fs-12.5 text-slate-500">{s.student_id}</TableCell>
                           <TableCell>
                             <Input type="number" min={0} max={40} step={0.5} value={m.cat_score} disabled={!canEdit}
                               onChange={(e) => {
@@ -220,7 +220,7 @@ export default function Marks() {
                                 updateMark(s.id, 'exam_score', v);
                               }} className="h-9 w-24" />
                           </TableCell>
-                          <TableCell className="text-right font-bold">
+                          <TableCell className="text-end fw-bold">
                             <span className={total >= 50 ? 'text-emerald-700' : total > 0 ? 'text-amber-700' : 'text-slate-500'}>{total.toFixed(1)}</span>
                           </TableCell>
                           <TableCell>
@@ -239,3 +239,5 @@ export default function Marks() {
     </DashboardLayout>
   );
 }
+
+

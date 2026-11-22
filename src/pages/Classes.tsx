@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -165,7 +165,7 @@ export default function Classes() {
           title="Classes"
           description="Manage class sections, grades, student counts and year assignments."
           actions={canManage ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="d-flex flex-wrap gap-2">
               <Dialog open={promoteOpen} onOpenChange={setPromoteOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="secondary" className="gap-2"><ArrowUpRight className="h-4 w-4" />Promote Students</Button>
@@ -195,10 +195,10 @@ export default function Classes() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-3 text-[13px] text-slate-600">
+                    <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-3 fs-13 text-slate-600">
                       <strong>{eligibleCount}</strong> eligible student(s) will be moved.
                     </div>
-                    <div className="flex justify-end gap-2">
+                    <div className="d-flex justify-content-end gap-2">
                       <Button variant="outline" onClick={() => setPromoteOpen(false)}>Cancel</Button>
                       <Button onClick={handlePromote} disabled={promoting || !fromClass || !toClass}>
                         {promoting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpRight className="h-4 w-4" />}Promote
@@ -226,7 +226,7 @@ export default function Classes() {
                       <Label htmlFor="academicYear">Academic Year</Label>
                       <Input id="academicYear" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} placeholder="e.g., 2024-2025" required />
                     </div>
-                    <div className="flex justify-end gap-3 pt-2">
+                    <div className="d-flex justify-content-end gap-3 pt-2">
                       <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
                       <Button type="submit" disabled={formLoading}>
                         {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Creating...</> : 'Create Class'}
@@ -239,18 +239,18 @@ export default function Classes() {
           ) : undefined}
         />
 
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <div className="position-relative w-100 sm:max-w-xs">
+          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search classes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+          <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
         ) : filteredClasses.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center justify-center py-12">
+          <Card><CardContent className="d-flex d-flex flex-column align-items-center justify-content-center py-12">
             <BookOpen className="h-12 w-12 text-slate-400 mb-4" />
-            <h3 className="text-[18px] font-semibold text-slate-900">No classes found</h3>
-            <p className="text-[13px] text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Create your first class to get started'}</p>
+            <h3 className="fs-18 fw-semibold text-slate-900">No classes found</h3>
+            <p className="fs-13 text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Create your first class to get started'}</p>
           </CardContent></Card>
         ) : (
           <Card>
@@ -260,34 +260,34 @@ export default function Classes() {
                   <TableHead>Class</TableHead>
                   <TableHead>Grade Level</TableHead>
                   <TableHead>Academic Year</TableHead>
-                  <TableHead className="text-right">Students</TableHead>
-                  {canManage && <TableHead className="text-right">Actions</TableHead>}
+                  <TableHead className="text-end">Students</TableHead>
+                  {canManage && <TableHead className="text-end">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredClasses.map((cls) => (
                   <TableRow key={cls.id}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                      <div className="d-flex align-items-center gap-3">
+                        <div className="d-flex h-9 w-9 align-items-center justify-content-center rounded-lg bg-emerald-50 text-emerald-600">
                           <BookOpen className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">{cls.name}</p>
-                          <p className="text-[12.5px] text-slate-500">{cls.grade_level}</p>
+                          <p className="fw-medium text-slate-900">{cls.name}</p>
+                          <p className="fs-12.5 text-slate-500">{cls.grade_level}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-slate-600">{cls.grade_level}</TableCell>
                     <TableCell className="text-slate-600">{cls.academic_year}</TableCell>
-                    <TableCell className="text-right">
-                      <span className="inline-flex items-center gap-1.5 text-[13px] text-slate-600">
+                    <TableCell className="text-end">
+                      <span className="d-inline-flex align-items-center gap-1.5 fs-13 text-slate-600">
                         <Users className="h-4 w-4 text-emerald-600" />{studentCounts[cls.id] || 0} students
                       </span>
                     </TableCell>
                     {canManage && (
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1.5">
+                      <TableCell className="text-end">
+                        <div className="d-flex justify-content-end gap-1.5">
                           <Button variant="edit" size="sm" onClick={() => openEdit(cls)} className="gap-1.5">
                             <Pencil className="h-4 w-4" />Edit
                           </Button>
@@ -320,7 +320,7 @@ export default function Classes() {
                 <Label>Academic Year</Label>
                 <Input value={editYear} onChange={(e) => setEditYear(e.target.value)} />
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="d-flex justify-content-end gap-2">
                 <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
                 <Button onClick={handleEditSave}>Save</Button>
               </div>
@@ -331,3 +331,5 @@ export default function Classes() {
     </DashboardLayout>
   );
 }
+
+

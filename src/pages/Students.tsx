@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -227,16 +227,16 @@ export default function Students() {
         <PageHeader
           eyebrow="School"
           title="Students"
-          description="Manage student records — names, classes, enrollment dates and conduct summary."
+          description="Manage student records â€” names, classes, enrollment dates and conduct summary."
           actions={canManage ? (
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-2"><Plus className="h-4 w-4" />Add Student</Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-1rem)]">
-                <DialogHeader><DialogTitle className="text-[20px] font-semibold">Add New Student</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle className="fs-20 fw-semibold">Add New Student</DialogTitle></DialogHeader>
                 <form onSubmit={handleAddStudent} className="mt-4 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="row col-12 sm:col-6 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First Name</Label>
                       <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
@@ -265,7 +265,7 @@ export default function Students() {
                     <Label htmlFor="dateOfBirth">Date of Birth</Label>
                     <Input id="dateOfBirth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
                   </div>
-                  <div className="flex justify-end gap-3 pt-2">
+                  <div className="d-flex justify-content-end gap-3 pt-2">
                     <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
                     <Button type="submit" disabled={formLoading}>
                       {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Adding...</> : 'Add Student'}
@@ -278,16 +278,16 @@ export default function Students() {
         />
 
         {/* Search + filters */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <div className="d-flex d-flex flex-column gap-3 sm:d-flex flex-row sm:align-items-center">
+          <div className="position-relative w-100 sm:max-w-xs">
+            <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input placeholder="Search students..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="d-flex flex-wrap align-items-center gap-2">
             <button
               type="button"
               onClick={() => setClassFilter('__all__')}
-              className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+              className={`rounded-circle border px-3.5 py-1.5 fs-13 fw-medium transition-colors ${
                 classFilter === '__all__' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
               }`}
             >
@@ -301,7 +301,7 @@ export default function Students() {
                   key={cls.id}
                   type="button"
                   onClick={() => setClassFilter(cls.id)}
-                  className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                  className={`rounded-circle border px-3.5 py-1.5 fs-13 fw-medium transition-colors ${
                     classFilter === cls.id ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
                   }`}
                 >
@@ -313,12 +313,12 @@ export default function Students() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+          <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
         ) : filteredStudents.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center justify-center py-12">
+          <Card><CardContent className="d-flex d-flex flex-column align-items-center justify-content-center py-12">
             <GraduationCap className="h-12 w-12 text-slate-400 mb-4" />
-            <h3 className="text-[18px] font-semibold text-slate-900">No students found</h3>
-            <p className="text-[13px] text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Add your first student to get started'}</p>
+            <h3 className="fs-18 fw-semibold text-slate-900">No students found</h3>
+            <p className="fs-13 text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Add your first student to get started'}</p>
           </CardContent></Card>
         ) : (
           <Card>
@@ -329,40 +329,40 @@ export default function Students() {
                   <TableHead>Class</TableHead>
                   <TableHead>Grade</TableHead>
                   <TableHead>DOB</TableHead>
-                  <TableHead className="text-right">Total Conduct</TableHead>
-                  <TableHead className="text-right">Remaining</TableHead>
-                  {canManage && <TableHead className="text-right">Actions</TableHead>}
+                  <TableHead className="text-end">Total Conduct</TableHead>
+                  <TableHead className="text-end">Remaining</TableHead>
+                  {canManage && <TableHead className="text-end">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white">
+                      <div className="d-flex align-items-center gap-3">
+                        <div className="d-flex h-9 w-9 align-items-center justify-content-center rounded-circle bg-emerald-600 fs-sm fw-semibold text-white">
                           {student.first_name.charAt(0)}{student.last_name.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">{student.first_name} {student.last_name}</p>
-                          <p className="text-[12.5px] text-slate-500">{student.student_id}</p>
+                          <p className="fw-medium text-slate-900">{student.first_name} {student.last_name}</p>
+                          <p className="fs-12.5 text-slate-500">{student.student_id}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>{student.class?.name || 'Not assigned'}</TableCell>
                     <TableCell className="text-slate-600">{student.class?.grade_level || '-'}</TableCell>
-                    <TableCell className="text-slate-500">{student.date_of_birth ? format(new Date(student.date_of_birth), 'MMM d, yyyy') : '—'}</TableCell>
-                    <TableCell className="text-right font-semibold text-emerald-600">
+                    <TableCell className="text-slate-500">{student.date_of_birth ? format(new Date(student.date_of_birth), 'MMM d, yyyy') : 'â€”'}</TableCell>
+                    <TableCell className="text-end fw-semibold text-emerald-600">
                       {student.cumulative_score ?? 0}
-                      <span className="ml-1 text-[12px] font-normal text-slate-500">({student.entries_count ?? 0})</span>
+                      <span className="ml-1 fs-12 fw-normal text-slate-500">({student.entries_count ?? 0})</span>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <span className={`font-bold ${remainingCls(student.remaining_marks ?? 100)}`}>
+                    <TableCell className="text-end">
+                      <span className={`fw-bold ${remainingCls(student.remaining_marks ?? 100)}`}>
                         {student.remaining_marks ?? 100} / 100
                       </span>
                     </TableCell>
                     {canManage && (
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1.5">
+                      <TableCell className="text-end">
+                        <div className="d-flex justify-content-end gap-1.5">
                           <Button variant="outline" size="sm" onClick={() => handleOpenLinkDialog(student)} className="gap-1.5">
                             <Users className="h-4 w-4" />Link
                           </Button>
@@ -390,14 +390,14 @@ export default function Students() {
 
         {/* Status badges preview row */}
         {students.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-[12.5px] text-slate-600">
+          <div className="d-flex flex-wrap gap-2">
+            <span className="rounded-circle bg-slate-100 px-3 py-1 fs-12.5 text-slate-600">
               Total: {students.length} students
             </span>
-            <span className={cn('rounded-full px-3 py-1 text-[12.5px] font-medium', badgeForStatus('active'))}>Active</span>
-            <span className={cn('rounded-full px-3 py-1 text-[12.5px] font-medium', badgeForStatus('inactive'))}>Inactive</span>
-            {isAdmin && <span className={cn('rounded-full px-3 py-1 text-[12.5px] font-medium', badgeForStatus('graduated'))}>Graduated</span>}
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[12.5px] text-slate-600">
+            <span className={cn('rounded-circle px-3 py-1 fs-12.5 fw-medium', badgeForStatus('active'))}>Active</span>
+            <span className={cn('rounded-circle px-3 py-1 fs-12.5 fw-medium', badgeForStatus('inactive'))}>Inactive</span>
+            {isAdmin && <span className={cn('rounded-circle px-3 py-1 fs-12.5 fw-medium', badgeForStatus('graduated'))}>Graduated</span>}
+            <span className="d-inline-flex align-items-center gap-1 rounded-circle bg-slate-100 px-3 py-1 fs-12.5 text-slate-600">
               <ArrowUp className="h-3 w-3 text-emerald-600" /> In conduct review
             </span>
           </div>
@@ -411,7 +411,7 @@ export default function Students() {
           <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-1rem)]">
             <DialogHeader><DialogTitle>Edit Student</DialogTitle></DialogHeader>
             <form onSubmit={handleEditStudent} className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="row col-12 sm:col-6 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="editFirstName">First Name</Label>
                   <Input id="editFirstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
@@ -451,7 +451,7 @@ export default function Students() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="d-flex justify-content-end gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={formLoading}>{formLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Changes'}</Button>
               </div>
@@ -483,3 +483,5 @@ export default function Students() {
     </DashboardLayout>
   );
 }
+
+

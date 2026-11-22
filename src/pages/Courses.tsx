@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
@@ -193,26 +193,26 @@ export default function Courses() {
           ) : undefined}
         />
 
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <div className="position-relative w-100 sm:max-w-xs">
+          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search courses..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+          <div className="d-flex justify-content-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
         ) : filtered.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center py-14 text-center">
+          <Card><CardContent className="d-flex d-flex flex-column align-items-center py-14 text-center">
             <BookOpen className="mb-3 h-10 w-10 text-slate-400" />
-            <p className="font-medium text-slate-900">No courses yet</p>
-            <p className="mt-1 text-[13px] text-slate-500">{isStaff ? 'Create your first course to start publishing lessons.' : 'Courses will appear here once published.'}</p>
+            <p className="fw-medium text-slate-900">No courses yet</p>
+            <p className="mt-1 fs-13 text-slate-500">{isStaff ? 'Create your first course to start publishing lessons.' : 'Courses will appear here once published.'}</p>
           </CardContent></Card>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="row gap-5 sm:col-6 xl:col-4">
             {filtered.map((course) => (
-              <Card key={course.id} className="flex flex-col">
-                <CardContent className="flex flex-1 flex-col gap-3 p-5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-emerald-50 text-emerald-600">
+              <Card key={course.id} className="d-flex d-flex flex-column">
+                <CardContent className="d-flex flex-1 d-flex flex-column gap-3 p-5">
+                  <div className="d-flex align-items-start justify-content-between gap-2">
+                    <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
                       <BookOpen className="h-5 w-5" />
                     </div>
                     <Badge className={course.is_published ? 'bg-green-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}>
@@ -220,23 +220,23 @@ export default function Courses() {
                     </Badge>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900">{course.title}</h3>
-                    <p className="mt-1 line-clamp-2 text-[13px] text-slate-500">
+                    <h3 className="fw-semibold text-slate-900">{course.title}</h3>
+                    <p className="mt-1 line-clamp-2 fs-13 text-slate-500">
                       {course.description || 'No description provided.'}
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="d-flex flex-wrap gap-1.5">
                     {subjectName(course.subject_id) && (
-                      <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11.5px] text-slate-600">{subjectName(course.subject_id)}</span>
+                      <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{subjectName(course.subject_id)}</span>
                     )}
                     {className(course.class_id) && (
-                      <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11.5px] text-slate-600">{className(course.class_id)}</span>
+                      <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{className(course.class_id)}</span>
                     )}
-                    <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11.5px] text-slate-600">
-                      {course.term?.replace('term', 'Term ') || '—'} · {course.academic_year}
+                    <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">
+                      {course.term?.replace('term', 'Term ') || 'â€”'} Â· {course.academic_year}
                     </span>
                   </div>
-                  <div className="mt-auto flex items-center gap-2 pt-2">
+                  <div className="mt-auto d-flex align-items-center gap-2 pt-2">
                     <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openLessons(course)}>
                       <PlayCircle className="h-4 w-4" /> Lessons
                     </Button>
@@ -266,7 +266,7 @@ export default function Courses() {
                 <Label>Description</Label>
                 <Textarea value={form.description} maxLength={2000} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What learners will cover in this course" />
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="row gap-3 sm:col-6">
                 <div>
                   <Label>Subject</Label>
                   <Select value={form.subject_id} onValueChange={(v) => setForm({ ...form, subject_id: v })}>
@@ -301,10 +301,10 @@ export default function Courses() {
                   <Input value={form.academic_year} maxLength={9} onChange={(e) => setForm({ ...form, academic_year: e.target.value })} />
                 </div>
               </div>
-              <div className="flex items-center justify-between rounded-[10px] border border-slate-200 p-3">
+              <div className="d-flex align-items-center justify-content-between rounded-[10px] border border-slate-200 p-3">
                 <div>
-                  <p className="text-[14px] font-medium text-slate-900">Published</p>
-                  <p className="text-[13px] text-slate-500">Visible to students and parents</p>
+                  <p className="fs-14 fw-medium text-slate-900">Published</p>
+                  <p className="fs-13 text-slate-500">Visible to students and parents</p>
                 </div>
                 <Switch checked={form.is_published} onCheckedChange={(v) => setForm({ ...form, is_published: v })} />
               </div>
@@ -319,19 +319,19 @@ export default function Courses() {
         {/* Lessons dialog */}
         <Dialog open={!!lessonCourse} onOpenChange={(o) => !o && setLessonCourse(null)}>
           <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-            <DialogHeader><DialogTitle>{lessonCourse?.title} — Lessons</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{lessonCourse?.title} â€” Lessons</DialogTitle></DialogHeader>
             <div className="space-y-3">
               {lessons.length === 0 && (
-                <p className="text-[13px] text-slate-500">No lessons added yet.</p>
+                <p className="fs-13 text-slate-500">No lessons added yet.</p>
               )}
               {lessons.map((lesson, i) => (
                 <div key={lesson.id} className="rounded-[10px] border border-slate-200 p-3">
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="d-flex align-items-start justify-content-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-[14px] font-semibold text-slate-900">{i + 1}. {lesson.title}</p>
-                      {lesson.content && <p className="mt-1 whitespace-pre-wrap text-[13px] text-slate-500">{lesson.content}</p>}
+                      <p className="fs-14 fw-semibold text-slate-900">{i + 1}. {lesson.title}</p>
+                      {lesson.content && <p className="mt-1 text-wrap fs-13 text-slate-500">{lesson.content}</p>}
                       {lesson.video_url && (
-                        <a href={lesson.video_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-emerald-600 underline">
+                        <a href={lesson.video_url} target="_blank" rel="noreferrer" className="mt-2 d-inline-flex align-items-center gap-1.5 fs-13 text-emerald-600 underline">
                           <PlayCircle className="h-4 w-4" />Watch lesson video
                         </a>
                       )}
@@ -346,7 +346,7 @@ export default function Courses() {
 
             {isStaff && (
               <div className="space-y-3 rounded-[10px] border border-dashed border-slate-300 bg-slate-50 p-3">
-                <p className="flex items-center gap-2 text-[14px] font-medium text-slate-900"><FileText className="h-4 w-4 text-emerald-600" /> Add a lesson</p>
+                <p className="d-flex align-items-center gap-2 fs-14 fw-medium text-slate-900"><FileText className="h-4 w-4 text-emerald-600" /> Add a lesson</p>
                 <Input placeholder="Lesson title" maxLength={150} value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} />
                 <Textarea placeholder="Lesson content / notes" maxLength={5000} value={lessonForm.content} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} />
                 <Input placeholder="Video link (optional)" maxLength={500} value={lessonForm.video_url} onChange={(e) => setLessonForm({ ...lessonForm, video_url: e.target.value })} />
@@ -359,3 +359,5 @@ export default function Courses() {
     </DashboardLayout>
   );
 }
+
+

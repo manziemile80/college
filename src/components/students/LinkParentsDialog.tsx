@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -160,16 +160,16 @@ export function LinkParentsDialog({
         </DialogHeader>
 
         {loading ? (
-          <div className="flex items-center justify-center py-8">
+          <div className="d-flex align-items-center justify-content-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
           <div className="space-y-6">
             {/* Current linked parents */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Linked Parents</Label>
+              <Label className="fs-sm fw-medium">Linked Parents</Label>
               {linkedParents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="fs-sm text-muted-foreground">
                   No parents linked yet
                 </p>
               ) : (
@@ -177,23 +177,23 @@ export function LinkParentsDialog({
                   {linkedParents.map((link) => (
                     <div
                       key={link.id}
-                      className="flex items-center justify-between rounded-lg border p-3"
+                      className="d-flex align-items-center justify-content-between rounded-lg border p-3"
                     >
                       <div className="space-y-1">
-                        <p className="font-medium">{link.parent?.full_name}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <p className="fw-medium">{link.parent?.full_name}</p>
+                        <div className="d-flex align-items-center gap-2 fs-sm text-muted-foreground">
                           <span className="capitalize">{link.relationship}</span>
                           {link.is_primary_contact && (
-                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                            <span className="rounded-circle bg-primary/10 px-2 py-0.5 text-xs fw-medium text-primary">
                               Primary
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="fs-sm text-muted-foreground">
                           {link.parent?.phone}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="d-flex align-items-center gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -223,8 +223,8 @@ export function LinkParentsDialog({
             {/* Add new link */}
             {availableParents.length > 0 && (
               <div className="space-y-4 border-t pt-4">
-                <Label className="text-sm font-medium">Link New Parent</Label>
-                <div className="grid gap-4">
+                <Label className="fs-sm fw-medium">Link New Parent</Label>
+                <div className="row gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="parent">Parent</Label>
                     <Select
@@ -259,7 +259,7 @@ export function LinkParentsDialog({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="d-flex align-items-center gap-2">
                     <Checkbox
                       id="primary"
                       checked={isPrimaryContact}
@@ -267,14 +267,14 @@ export function LinkParentsDialog({
                         setIsPrimaryContact(checked === true)
                       }
                     />
-                    <Label htmlFor="primary" className="text-sm font-normal">
+                    <Label htmlFor="primary" className="fs-sm fw-normal">
                       Set as primary contact for SMS notifications
                     </Label>
                   </div>
                   <Button
                     onClick={handleLinkParent}
                     disabled={saving || !selectedParentId}
-                    className="w-full"
+                    className="w-100"
                   >
                     {saving ? (
                       <>
@@ -293,13 +293,13 @@ export function LinkParentsDialog({
             )}
 
             {availableParents.length === 0 && parents.length > 0 && (
-              <p className="text-sm text-muted-foreground border-t pt-4">
+              <p className="fs-sm text-muted-foreground border-t pt-4">
                 All available parents have been linked to this student.
               </p>
             )}
 
             {parents.length === 0 && (
-              <p className="text-sm text-muted-foreground border-t pt-4">
+              <p className="fs-sm text-muted-foreground border-t pt-4">
                 No parents available. Please add parents first on the Parents page.
               </p>
             )}
@@ -309,3 +309,4 @@ export function LinkParentsDialog({
     </Dialog>
   );
 }
+

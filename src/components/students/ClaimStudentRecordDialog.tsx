@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -88,19 +88,19 @@ export function ClaimStudentRecordDialog({ open, onOpenChange, onLinked }: Props
           onChange={(e) => setSearch(e.target.value)}
         />
         {loading ? (
-          <div className="flex justify-center py-8">
+          <div className="d-flex justify-content-center py-8">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
         ) : filtered.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
+          <p className="py-6 text-center fs-sm text-muted-foreground">
             No matching profile found. Ask your school administrator to add you.
           </p>
         ) : (
           <div className="space-y-2">
             {filtered.map((r) => (
-              <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-border p-3">
+              <div key={r.id} className="d-flex align-items-center justify-content-between gap-2 rounded-xl border border-border p-3">
                 <div>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="fs-sm fw-medium text-foreground">
                     {r.first_name} {r.last_name}
                   </p>
                   <p className="text-xs text-muted-foreground">{r.student_id}</p>
@@ -122,3 +122,4 @@ export function ClaimStudentRecordDialog({ open, onOpenChange, onLinked }: Props
     </Dialog>
   );
 }
+

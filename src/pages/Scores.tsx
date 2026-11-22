@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -179,7 +179,7 @@ export default function Scores() {
       }
 
       toast.success(existing ? 'Deduction updated for this date' : 'Marks deducted', {
-        description: `${combinedDeduction}/${MAX_SCORE} deducted · Parents notified via SMS`,
+        description: `${combinedDeduction}/${MAX_SCORE} deducted Â· Parents notified via SMS`,
       });
       setIsAddDialogOpen(false);
       resetForm();
@@ -273,7 +273,7 @@ export default function Scores() {
           title="Behavior Scores"
           description="Record and manage student behavior assessments."
           actions={canManage ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="d-flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={handleResetAllScores} disabled={resetLoading}>
                 {resetLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                 Reset Marks (New Term)
@@ -289,9 +289,9 @@ export default function Scores() {
                 <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[calc(100%-1rem)]">
                   <DialogHeader><DialogTitle>Record Behavior Score</DialogTitle></DialogHeader>
                   <form onSubmit={handleAddScore} className="space-y-3 mt-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="row col-12 sm:col-6 gap-3">
                       <div className="space-y-1.5">
-                        <Label htmlFor="student" className="text-[14px]">Student</Label>
+                        <Label htmlFor="student" className="fs-14">Student</Label>
                         <Popover open={studentPickerOpen} onOpenChange={setStudentPickerOpen}>
                           <PopoverTrigger asChild>
                             <Button
@@ -299,10 +299,10 @@ export default function Scores() {
                               variant="outline"
                               role="combobox"
                               aria-expanded={studentPickerOpen}
-                              className="w-full justify-between font-normal"
+                              className="w-100 justify-content-between fw-normal"
                             >
                               {selectedStudentObj
-                                ? `${selectedStudentObj.first_name} ${selectedStudentObj.last_name}${selectedStudentObj.class?.name ? ' · ' + selectedStudentObj.class.name : ''}`
+                                ? `${selectedStudentObj.first_name} ${selectedStudentObj.last_name}${selectedStudentObj.class?.name ? ' Â· ' + selectedStudentObj.class.name : ''}`
                                 : 'Search and select a student...'}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -331,14 +331,14 @@ export default function Scores() {
                                             selectedStudent === student.id ? 'opacity-100' : 'opacity-0'
                                           )}
                                         />
-                                        <div className="flex flex-1 items-center justify-between gap-2">
+                                        <div className="d-flex flex-1 align-items-center justify-content-between gap-2">
                                           <span>
                                             {student.first_name} {student.last_name}
-                                            <span className="ml-1 text-[12.5px] text-slate-500">
+                                            <span className="ml-1 fs-12.5 text-slate-500">
                                               {student.class?.name || 'No class'}
                                             </span>
                                           </span>
-                                          <span className="text-[13px] font-medium text-emerald-600">
+                                          <span className="fs-13 fw-medium text-emerald-600">
                                             {remaining} pts
                                           </span>
                                         </div>
@@ -353,7 +353,7 @@ export default function Scores() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="category" className="text-[14px]">Category</Label>
+                        <Label htmlFor="category" className="fs-14">Category</Label>
                         <Select value={category} onValueChange={(v) => setCategory(v as BehaviorCategory)}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -365,16 +365,16 @@ export default function Scores() {
                       </div>
                     </div>
 
-                    <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-3 text-[13px] text-slate-500">
-                      Every student starts the term with <span className="font-semibold text-slate-900">40/40</span> in each category. You can only <span className="font-semibold text-red-600">deduct</span> marks for misconduct.
+                    <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-3 fs-13 text-slate-500">
+                      Every student starts the term with <span className="fw-semibold text-slate-900">40/40</span> in each category. You can only <span className="fw-semibold text-red-600">deduct</span> marks for misconduct.
                     </div>
 
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-[14px]">Points to deduct</Label>
-                        <span className="text-[30px] font-bold text-red-600">-{Math.abs(score[0])}</span>
+                      <div className="d-flex align-items-center justify-content-between">
+                        <Label className="fs-14">Points to deduct</Label>
+                        <span className="fs-30 fw-bold text-red-600">-{Math.abs(score[0])}</span>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="d-flex align-items-center gap-3">
                         <Slider value={score} onValueChange={setScore} min={1} max={MAX_SCORE} step={1} className="flex-1" />
                         <Input
                           type="number"
@@ -391,36 +391,36 @@ export default function Scores() {
                           aria-label="Marks"
                         />
                       </div>
-                      <p className="text-[11.5px] text-slate-500">
-                        Drag the slider or type marks (1–{MAX_SCORE}). Max is {MAX_SCORE}/{MAX_SCORE}.
+                      <p className="fs-11.5 text-slate-500">
+                        Drag the slider or type marks (1â€“{MAX_SCORE}). Max is {MAX_SCORE}/{MAX_SCORE}.
                       </p>
                       {selectedStudent && (
-                        <div className="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2 text-[12.5px] text-slate-500">
-                          <span>Current: <span className="font-semibold text-slate-900">{remainingMap[selectedStudent] ?? 100}</span> pts</span>
-                          <span>After: <span className={`font-semibold ${(previewRemaining ?? 0) >= 50 ? 'text-emerald-600' : (previewRemaining ?? 0) >= 25 ? 'text-amber-600' : 'text-red-600'}`}>{previewRemaining}</span> pts</span>
+                        <div className="d-flex align-items-center justify-content-between rounded-[10px] bg-slate-50 px-3 py-2 fs-12.5 text-slate-500">
+                          <span>Current: <span className="fw-semibold text-slate-900">{remainingMap[selectedStudent] ?? 100}</span> pts</span>
+                          <span>After: <span className={`fw-semibold ${(previewRemaining ?? 0) >= 50 ? 'text-emerald-600' : (previewRemaining ?? 0) >= 25 ? 'text-amber-600' : 'text-red-600'}`}>{previewRemaining}</span> pts</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="row col-12 sm:col-6 gap-3">
                       <div className="space-y-1.5">
-                        <Label htmlFor="date" className="text-[14px]">Date</Label>
+                        <Label htmlFor="date" className="fs-14">Date</Label>
                         <Input id="date" type="date" value={scoreDate} onChange={(e) => setScoreDate(e.target.value)} required />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="notes" className="text-[14px]">Notes (Optional)</Label>
+                        <Label htmlFor="notes" className="fs-14">Notes (Optional)</Label>
                         <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add notes..." rows={2} />
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 rounded-[10px] bg-blue-50 p-2 text-[12.5px] text-blue-700">
+                    <div className="d-flex align-items-center gap-2 rounded-[10px] bg-blue-50 p-2 fs-12.5 text-blue-700">
                       <Bell className="h-3.5 w-3.5" />
                       <span>Parents will be notified via SMS</span>
                     </div>
 
-                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
-                      <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} className="w-full sm:w-auto">Cancel</Button>
-                      <Button type="submit" disabled={formLoading || !selectedStudent} className="w-full sm:w-auto">
+                    <div className="d-flex d-flex flex-column-reverse sm:d-flex flex-row sm:justify-content-end gap-2 pt-1">
+                      <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} className="w-100 sm:w-auto">Cancel</Button>
+                      <Button type="submit" disabled={formLoading || !selectedStudent} className="w-100 sm:w-auto">
                         {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Recording...</> : 'Record Score'}
                       </Button>
                     </div>
@@ -432,8 +432,8 @@ export default function Scores() {
         />
 
         {/* Search */}
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <div className="position-relative w-100 sm:max-w-xs">
+          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             placeholder="Search by student name..."
             value={searchQuery}
@@ -444,12 +444,12 @@ export default function Scores() {
 
         {/* Scores list */}
         {loading ? (
-          <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+          <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
         ) : filteredScores.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center justify-center py-12">
+          <Card><CardContent className="d-flex d-flex flex-column align-items-center justify-content-center py-12">
             <ClipboardList className="h-12 w-12 text-slate-400 mb-4" />
-            <h3 className="text-[18px] font-semibold text-slate-900">No scores found</h3>
-            <p className="text-[13px] text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Record your first behavior score to get started'}</p>
+            <h3 className="fs-18 fw-semibold text-slate-900">No scores found</h3>
+            <p className="fs-13 text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Record your first behavior score to get started'}</p>
           </CardContent></Card>
         ) : (
           <Card>
@@ -469,18 +469,18 @@ export default function Scores() {
                   <TableRow key={score.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium text-slate-900">
+                        <p className="fw-medium text-slate-900">
                           {score.student?.first_name} {score.student?.last_name}
                         </p>
-                        <p className="text-[12.5px] text-slate-500">{score.student?.class?.name || 'No class'}</p>
+                        <p className="fs-12.5 text-slate-500">{score.student?.class?.name || 'No class'}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge className="bg-slate-100 text-slate-700">{categoryLabels[score.category]}</Badge>
                     </TableCell>
                     <TableCell><ScoreBadge score={score.score} /></TableCell>
-                    <TableCell className="text-[13px] text-slate-500">{format(new Date(score.score_date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell className="text-[13px] text-slate-500">{score.teacher?.full_name || 'Unknown'}</TableCell>
+                    <TableCell className="fs-13 text-slate-500">{format(new Date(score.score_date), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="fs-13 text-slate-500">{score.teacher?.full_name || 'Unknown'}</TableCell>
                     <TableCell className="text-center">
                       <Button
                         variant="ghost"
@@ -511,3 +511,5 @@ export default function Scores() {
     </DashboardLayout>
   );
 }
+
+

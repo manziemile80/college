@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -127,7 +127,7 @@ export default function AcademicReports() {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
     doc.text('COLLEGE DE REBERO', pageW / 2, 10, { align: 'center' });
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.text('Excellence in Education • Rwanda', pageW / 2, 15, { align: 'center' });
+    doc.text('Excellence in Education â€¢ Rwanda', pageW / 2, 15, { align: 'center' });
 
     doc.setDrawColor(0); doc.setLineWidth(0.5);
     doc.rect(pageW / 2 - 60, 19, 120, 8);
@@ -136,11 +136,11 @@ export default function AcademicReports() {
 
     autoTable(doc, {
       startY: 30,
-      theme: 'grid',
+      theme: 'row',
       styles: { fontSize: 9, cellPadding: 1.5, textColor: 0, lineColor: 0, lineWidth: 0.2 },
       body: [
         [{ content: 'School Name: COLLEGE DE REBERO', colSpan: 2, styles: { fontStyle: 'bold' } }],
-        [`Class: ${cls ? cls.name : '—'}`, `Grade Level: ${cls?.grade_level || '—'}`],
+        [`Class: ${cls ? cls.name : 'â€”'}`, `Grade Level: ${cls?.grade_level || 'â€”'}`],
         [`Academic Year: ${year}`, `Class Size: ${totalStudents}`],
         [{ content: `Student Name: ${agg.student.first_name} ${agg.student.last_name}    |    Reg. No: ${agg.student.student_id}`, colSpan: 2, styles: { fontStyle: 'bold' } }],
       ],
@@ -161,7 +161,7 @@ export default function AcademicReports() {
       const annual = counted > 0 ? (totals.reduce((s, v) => s + v, 0) / counted).toFixed(1) : '';
       subjectRows.push([
         idx + 1,
-        `${subj?.code || ''} | ${subj?.name || '—'}`,
+        `${subj?.code || ''} | ${subj?.name || 'â€”'}`,
         ...t1, ...t2, ...t3,
         annual,
         annual ? `${annual}%` : '',
@@ -180,7 +180,7 @@ export default function AcademicReports() {
 
     autoTable(doc, {
       startY: y,
-      theme: 'grid',
+      theme: 'row',
       tableWidth: 'wrap',
       margin: { left: 14, right: 14 },
       styles: { fontSize: 7.5, cellPadding: 1, textColor: 0, lineColor: 0, lineWidth: 0.2, halign: 'center' },
@@ -212,7 +212,7 @@ export default function AcademicReports() {
     const annualCell = (txt: string) => ({ content: txt, colSpan: 3 });
     autoTable(doc, {
       startY: y,
-      theme: 'grid',
+      theme: 'row',
       tableWidth: 'wrap',
       margin: { left: 14, right: 14 },
       styles: { fontSize: 8.5, cellPadding: 1.5, textColor: 0, lineColor: 0, lineWidth: 0.2, halign: 'center', fontStyle: 'bold' },
@@ -257,8 +257,8 @@ export default function AcademicReports() {
     doc.setDrawColor(150); doc.setLineWidth(0.2);
     doc.line(10, pageH - 14, pageW - 10, pageH - 14);
     doc.setFontSize(8); doc.setTextColor(100);
-    doc.text('College De Rebero • P.O. Box 000 Kigali, Rwanda • Tel: +250 000 000 000 • info@collegederebero.rw', pageW / 2, pageH - 9, { align: 'center' });
-    doc.text(`College Report Manager • Generated on ${new Date().toLocaleString()} • This is a computer-generated document.`, pageW / 2, pageH - 5, { align: 'center' });
+    doc.text('College De Rebero â€¢ P.O. Box 000 Kigali, Rwanda â€¢ Tel: +250 000 000 000 â€¢ info@collegederebero.rw', pageW / 2, pageH - 9, { align: 'center' });
+    doc.text(`College Report Manager â€¢ Generated on ${new Date().toLocaleString()} â€¢ This is a computer-generated document.`, pageW / 2, pageH - 5, { align: 'center' });
     doc.setTextColor(0);
   };
 
@@ -306,14 +306,14 @@ export default function AcademicReports() {
 
         <Card>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="row gap-4 sm:col-6 lg:col-3">
               <div className="space-y-2">
                 <Label>Class</Label>
                 <Select value={classId} onValueChange={setClassId}>
                   <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
                   <SelectContent>
                     {classes.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name} — {c.grade_level} ({c.academic_year})</SelectItem>
+                      <SelectItem key={c.id} value={c.id}>{c.name} â€” {c.grade_level} ({c.academic_year})</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -324,13 +324,13 @@ export default function AcademicReports() {
               </div>
               <div className="space-y-2">
                 <Label>Search Student</Label>
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
+                <div className="position-relative">
+                  <Search className="position-absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
                   <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name or ID..." className="pl-8" />
                 </div>
               </div>
-              <div className="flex items-end">
-                <Button onClick={generateClassBatch} disabled={aggregates.length === 0} className="gap-2 w-full sm:w-auto">
+              <div className="d-flex align-items-end">
+                <Button onClick={generateClassBatch} disabled={aggregates.length === 0} className="gap-2 w-100 sm:w-auto">
                   <Download className="h-4 w-4" /> Download All Reports
                 </Button>
               </div>
@@ -340,13 +340,13 @@ export default function AcademicReports() {
 
         {/* Class ranking summary */}
         {classId && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="row gap-4 sm:col-6 lg:col-4">
             <Card>
               <CardContent className="p-5">
-                <div className="flex items-center justify-between">
+                <div className="d-flex align-items-center justify-content-between">
                   <div>
-                    <p className="text-[13px] text-slate-500">Class Average</p>
-                    <p className={`text-[32px] font-bold tracking-tight ${avg >= 50 ? 'text-emerald-700' : 'text-red-700'}`}>{avg.toFixed(1)}%</p>
+                    <p className="fs-13 text-slate-500">Class Average</p>
+                    <p className={`fs-32 fw-bold tracking-tight ${avg >= 50 ? 'text-emerald-700' : 'text-red-700'}`}>{avg.toFixed(1)}%</p>
                   </div>
                   <FileText className="h-9 w-9 text-emerald-600" />
                 </div>
@@ -354,11 +354,11 @@ export default function AcademicReports() {
             </Card>
             <Card>
               <CardContent className="p-5">
-                <div className="flex items-center justify-between">
+                <div className="d-flex align-items-center justify-content-between">
                   <div>
-                    <p className="text-[13px] text-slate-500">Top Performer</p>
-                    <p className="text-[32px] font-bold text-slate-900 truncate">{top?.student.first_name} {top?.student.last_name}</p>
-                    <p className="text-[13px] text-emerald-600">{top ? top.annualPct.toFixed(1) + '%' : '—'}</p>
+                    <p className="fs-13 text-slate-500">Top Performer</p>
+                    <p className="fs-32 fw-bold text-slate-900 truncate">{top?.student.first_name} {top?.student.last_name}</p>
+                    <p className="fs-13 text-emerald-600">{top ? top.annualPct.toFixed(1) + '%' : 'â€”'}</p>
                   </div>
                   <Users className="h-9 w-9 text-emerald-600" />
                 </div>
@@ -366,11 +366,11 @@ export default function AcademicReports() {
             </Card>
             <Card>
               <CardContent className="p-5">
-                <div className="flex items-center justify-between">
+                <div className="d-flex align-items-center justify-content-between">
                   <div>
-                    <p className="text-[13px] text-slate-500">Needs Attention</p>
-                    <p className="text-[32px] font-bold text-slate-900 truncate">{bottom?.student.first_name} {bottom?.student.last_name}</p>
-                    <p className="text-[13px] text-amber-700">{bottom ? bottom.annualPct.toFixed(1) + '%' : '—'}</p>
+                    <p className="fs-13 text-slate-500">Needs Attention</p>
+                    <p className="fs-32 fw-bold text-slate-900 truncate">{bottom?.student.first_name} {bottom?.student.last_name}</p>
+                    <p className="fs-13 text-amber-700">{bottom ? bottom.annualPct.toFixed(1) + '%' : 'â€”'}</p>
                   </div>
                   <FileText className="h-9 w-9 text-amber-600" />
                 </div>
@@ -391,23 +391,23 @@ export default function AcademicReports() {
                     <TableHead className="text-center">Term 1 %</TableHead>
                     <TableHead className="text-center">Term 2 %</TableHead>
                     <TableHead className="text-center">Term 3 %</TableHead>
-                    <TableHead className="text-center font-semibold">Annual %</TableHead>
-                    <TableHead className="w-32 text-right">Action</TableHead>
+                    <TableHead className="text-center fw-semibold">Annual %</TableHead>
+                    <TableHead className="w-32 text-end">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((a) => (
                     <TableRow key={a.student.id}>
-                      <TableCell className="font-bold text-slate-900">{a.position}</TableCell>
-                      <TableCell className="font-medium text-slate-900">{a.student.first_name} {a.student.last_name}</TableCell>
-                      <TableCell className="text-[12.5px] text-slate-500">{a.student.student_id}</TableCell>
+                      <TableCell className="fw-bold text-slate-900">{a.position}</TableCell>
+                      <TableCell className="fw-medium text-slate-900">{a.student.first_name} {a.student.last_name}</TableCell>
+                      <TableCell className="fs-12.5 text-slate-500">{a.student.student_id}</TableCell>
                       <TableCell className="text-center">{a.termPct.term1 > 0 ? a.termPct.term1.toFixed(1) : '-'}</TableCell>
                       <TableCell className="text-center">{a.termPct.term2 > 0 ? a.termPct.term2.toFixed(1) : '-'}</TableCell>
                       <TableCell className="text-center">{a.termPct.term3 > 0 ? a.termPct.term3.toFixed(1) : '-'}</TableCell>
-                      <TableCell className={`text-center font-bold ${a.annualPct >= 50 ? 'text-emerald-700' : 'text-red-700'}`}>
+                      <TableCell className={`text-center fw-bold ${a.annualPct >= 50 ? 'text-emerald-700' : 'text-red-700'}`}>
                         {a.annualPct.toFixed(2)}%
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Button size="sm" variant="outline" onClick={() => generateOne(a)} disabled={generating === a.student.id} className="gap-2">
                           {generating === a.student.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} PDF
                         </Button>
@@ -423,3 +423,4 @@ export default function AcademicReports() {
     </DashboardLayout>
   );
 }
+

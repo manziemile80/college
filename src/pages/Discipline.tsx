@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
@@ -234,7 +234,7 @@ export default function Discipline() {
         _entity_id: reviewIncident.id,
         _details: { marks_deducted: status === 'reviewed' ? marks : 0 },
       });
-      toast.success(status === 'reviewed' ? `Incident approved — ${marks} mark(s) deducted` : 'Incident dismissed');
+      toast.success(status === 'reviewed' ? `Incident approved â€” ${marks} mark(s) deducted` : 'Incident dismissed');
       setReviewIncident(null);
       fetchAll();
     } catch (e: any) {
@@ -297,8 +297,8 @@ export default function Discipline() {
                   <div className="space-y-4 mt-2">
                     <div className="space-y-2">
                       <Label>Student</Label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <div className="position-relative">
+                        <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                         <Input
                           placeholder="Search student by name or ID..."
                           value={search}
@@ -324,7 +324,7 @@ export default function Discipline() {
                         <SelectContent>
                           {rules.filter((r) => r.is_active).map((r) => (
                             <SelectItem key={r.id} value={r.id}>
-                              {r.title} (−{r.marks_deduction})
+                              {r.title} (âˆ’{r.marks_deduction})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -338,7 +338,7 @@ export default function Discipline() {
                       <Label>Description</Label>
                       <Textarea rows={3} placeholder="What happened?" value={reportDesc} onChange={(e) => setReportDesc(e.target.value)} />
                     </div>
-                    <div className="flex justify-end gap-3">
+                    <div className="d-flex justify-content-end gap-3">
                       <Button variant="outline" onClick={() => setReportOpen(false)}>Cancel</Button>
                       <Button onClick={handleReport} disabled={reportSaving}>
                         {reportSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'}
@@ -352,8 +352,8 @@ export default function Discipline() {
 
         {canManageRules && (
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-[18px]">
+            <CardHeader className="d-flex d-flex flex-row align-items-center justify-content-between">
+              <CardTitle className="d-flex align-items-center gap-2 fs-18">
                 <Gavel className="h-5 w-5 text-emerald-600" /> Discipline Rules
               </CardTitle>
               <Button size="sm" onClick={() => setRuleOpen(true)} className="gap-1.5">
@@ -362,20 +362,20 @@ export default function Discipline() {
             </CardHeader>
             <CardContent>
               {rules.length === 0 ? (
-                <p className="text-[13px] text-slate-500 py-4 text-center">
+                <p className="fs-13 text-slate-500 py-4 text-center">
                   No rules yet. Add rules so teachers can report incidents against them.
                 </p>
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="row gap-3 sm:col-6 lg:col-4">
                   {rules.map((r) => (
                     <div key={r.id} className="rounded-[10px] border border-slate-200 bg-slate-50 p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-[14px] font-medium text-slate-900">{r.title}</p>
+                      <div className="d-flex align-items-start justify-content-between gap-2">
+                        <p className="fs-14 fw-medium text-slate-900">{r.title}</p>
                         {severityBadge(r.severity)}
                       </div>
-                      <p className="mt-1 text-[12.5px] text-slate-500 line-clamp-2">{r.description || 'No description'}</p>
-                      <p className="mt-2 text-[12.5px] font-medium text-red-600">
-                        −{r.marks_deduction} mark{r.marks_deduction > 1 ? 's' : ''} · {r.category}
+                      <p className="mt-1 fs-12.5 text-slate-500 line-clamp-2">{r.description || 'No description'}</p>
+                      <p className="mt-2 fs-12.5 fw-medium text-red-600">
+                        âˆ’{r.marks_deduction} mark{r.marks_deduction > 1 ? 's' : ''} Â· {r.category}
                       </p>
                     </div>
                   ))}
@@ -386,11 +386,11 @@ export default function Discipline() {
         )}
 
         <Card>
-          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="flex items-center gap-2 text-[18px]">
+          <CardHeader className="d-flex d-flex flex-column gap-3 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
+            <CardTitle className="d-flex align-items-center gap-2 fs-18">
               <ShieldCheck className="h-5 w-5 text-emerald-600" /> Incidents
               {isStaff && pendingCount > 0 && (
-                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[12px] font-medium text-amber-800">{pendingCount} pending</span>
+                <span className="rounded-circle bg-amber-100 px-2.5 py-0.5 fs-12 fw-medium text-amber-800">{pendingCount} pending</span>
               )}
             </CardTitle>
             <Tabs value={statusFilter} onValueChange={setStatusFilter}>
@@ -404,39 +404,39 @@ export default function Discipline() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+              <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
             ) : filteredIncidents.length === 0 ? (
-              <div className="empty-state"><XCircle className="h-10 w-10 text-slate-400 mb-3" /><p className="text-[14px] text-slate-500">No incidents found.</p></div>
+              <div className="empty-state"><XCircle className="h-10 w-10 text-slate-400 mb-3" /><p className="fs-14 text-slate-500">No incidents found.</p></div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Student</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead className="hidden md:table-cell">Rule</TableHead>
-                    <TableHead className="hidden lg:table-cell">Description</TableHead>
+                    <TableHead className="d-none md:table-cell">Rule</TableHead>
+                    <TableHead className="d-none lg:table-cell">Description</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Marks</TableHead>
-                    {canReview && <TableHead className="text-right">Actions</TableHead>}
+                    <TableHead className="text-end">Marks</TableHead>
+                    {canReview && <TableHead className="text-end">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredIncidents.map((i) => (
                     <TableRow key={i.id}>
-                      <TableCell className="font-medium text-slate-900">
-                        {i.student ? `${i.student.first_name} ${i.student.last_name}` : '—'}
+                      <TableCell className="fw-medium text-slate-900">
+                        {i.student ? `${i.student.first_name} ${i.student.last_name}` : 'â€”'}
                       </TableCell>
-                      <TableCell className="text-[13px] text-slate-500">{format(new Date(i.incident_date), 'MMM d, yyyy')}</TableCell>
-                      <TableCell className="hidden max-w-[160px] truncate md:table-cell">{i.rule?.title || '—'}</TableCell>
-                      <TableCell className="hidden max-w-[240px] truncate lg:table-cell">{i.description}</TableCell>
+                      <TableCell className="fs-13 text-slate-500">{format(new Date(i.incident_date), 'MMM d, yyyy')}</TableCell>
+                      <TableCell className="d-none max-w-[160px] truncate md:table-cell">{i.rule?.title || 'â€”'}</TableCell>
+                      <TableCell className="d-none max-w-[240px] truncate lg:table-cell">{i.description}</TableCell>
                       <TableCell>{statusBadge(i.status)}</TableCell>
-                      <TableCell className="text-right font-medium text-slate-600">
-                        {i.marks_deducted > 0 ? `−${i.marks_deducted}` : '—'}
+                      <TableCell className="text-end fw-medium text-slate-600">
+                        {i.marks_deducted > 0 ? `âˆ’${i.marks_deducted}` : 'â€”'}
                       </TableCell>
                       {canReview && (
-                        <TableCell className="text-right">
+                        <TableCell className="text-end">
                           {i.status === 'pending' ? (
-                            <div className="flex justify-end gap-2">
+                            <div className="d-flex justify-content-end gap-2">
                               <Button size="sm" variant="edit" onClick={() => openReview(i)} className="gap-1.5">
                                 <CheckCircle2 className="h-4 w-4" /> Review
                               </Button>
@@ -449,7 +449,7 @@ export default function Discipline() {
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-[12.5px] text-slate-500">{i.follow_up || '—'}</span>
+                            <span className="fs-12.5 text-slate-500">{i.follow_up || 'â€”'}</span>
                           )}
                         </TableCell>
                       )}
@@ -468,8 +468,8 @@ export default function Discipline() {
             <div className="space-y-4 mt-2">
               <div className="space-y-2">
                 <Label>Student</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <div className="position-relative">
+                  <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     placeholder="Search student by name or ID..."
                     value={search}
@@ -494,7 +494,7 @@ export default function Discipline() {
                   <SelectTrigger><SelectValue placeholder="No specific rule" /></SelectTrigger>
                   <SelectContent>
                     {rules.filter((r) => r.is_active).map((r) => (
-                      <SelectItem key={r.id} value={r.id}>{r.title} (−{r.marks_deduction})</SelectItem>
+                      <SelectItem key={r.id} value={r.id}>{r.title} (âˆ’{r.marks_deduction})</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -507,7 +507,7 @@ export default function Discipline() {
                 <Label>Description</Label>
                 <Textarea rows={3} placeholder="What happened?" value={reportDesc} onChange={(e) => setReportDesc(e.target.value)} />
               </div>
-              <div className="flex justify-end gap-3">
+              <div className="d-flex justify-content-end gap-3">
                 <Button variant="outline" onClick={() => setReportOpen(false)}>Cancel</Button>
                 <Button onClick={handleReport} disabled={reportSaving}>
                   {reportSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'}
@@ -523,16 +523,16 @@ export default function Discipline() {
             <DialogHeader><DialogTitle>Review Incident</DialogTitle></DialogHeader>
             {reviewIncident && (
               <div className="space-y-4 mt-2">
-                <div className="rounded-[10px] bg-slate-50 p-3 text-[13px] text-slate-900">
-                  <p className="font-medium">
+                <div className="rounded-[10px] bg-slate-50 p-3 fs-13 text-slate-900">
+                  <p className="fw-medium">
                     {reviewIncident.student
                       ? `${reviewIncident.student.first_name} ${reviewIncident.student.last_name}`
                       : 'Student'}
                   </p>
                   <p className="mt-1 text-slate-500">{reviewIncident.description}</p>
                   {reviewIncident.rule && (
-                    <p className="mt-1 text-[12.5px] text-slate-500">
-                      Rule: {reviewIncident.rule.title} (suggested −{reviewIncident.rule.marks_deduction})
+                    <p className="mt-1 fs-12.5 text-slate-500">
+                      Rule: {reviewIncident.rule.title} (suggested âˆ’{reviewIncident.rule.marks_deduction})
                     </p>
                   )}
                 </div>
@@ -544,7 +544,7 @@ export default function Discipline() {
                   <Label>Follow-up action (optional)</Label>
                   <Textarea rows={2} placeholder="e.g. Parent contacted, warning issued..." value={reviewFollowUp} onChange={(e) => setReviewFollowUp(e.target.value)} />
                 </div>
-                <div className="flex justify-end gap-3">
+                <div className="d-flex justify-content-end gap-3">
                   <Button variant="outline" onClick={() => setReviewIncident(null)}>Cancel</Button>
                   <Button onClick={() => applyReview('reviewed')} disabled={reviewSaving}>
                     {reviewSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : `Approve & Deduct ${Math.max(0, Math.min(MAX_SCORE, parseInt(reviewMarks, 10) || 0))}`}
@@ -564,7 +564,7 @@ export default function Discipline() {
                 <Label>Title</Label>
                 <Input placeholder="e.g. Late coming without excuse" value={ruleTitle} onChange={(e) => setRuleTitle(e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="row col-6 gap-3">
                 <div className="space-y-2">
                   <Label>Category</Label>
                   <Select value={ruleCategory} onValueChange={setRuleCategory}>
@@ -597,7 +597,7 @@ export default function Discipline() {
                 <Label>Description</Label>
                 <Textarea rows={2} value={ruleDesc} onChange={(e) => setRuleDesc(e.target.value)} />
               </div>
-              <div className="flex justify-end gap-3">
+              <div className="d-flex justify-content-end gap-3">
                 <Button variant="outline" onClick={() => setRuleOpen(false)}>Cancel</Button>
                 <Button onClick={handleSaveRule} disabled={ruleSaving}>
                   {ruleSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Rule'}
@@ -610,3 +610,5 @@ export default function Discipline() {
     </DashboardLayout>
   );
 }
+
+

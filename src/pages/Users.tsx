@@ -1,4 +1,4 @@
-import { PageHeader } from '@/components/layout/PageHeader';
+﻿import { PageHeader } from '@/components/layout/PageHeader';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -149,8 +149,8 @@ export default function UsersPage() {
   const getRoleBadge = (role?: AppRole | null) => {
     if (!role) return <Badge variant="secondary">No role</Badge>;
     return (
-      <Badge variant="secondary" className="flex items-center gap-1.5">
-        <span className="text-[13px] font-semibold text-slate-700 uppercase">{role}</span>
+      <Badge variant="secondary" className="d-flex align-items-center gap-1.5">
+        <span className="fs-13 fw-semibold text-slate-700 text-uppercase">{role}</span>
       </Badge>
     );
   };
@@ -180,20 +180,20 @@ export default function UsersPage() {
           description="Manage user accounts and role assignments across the school system."
         />
 
-        <div className="relative w-full sm:max-w-xs">
-          <span className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+        <div className="position-relative w-100 sm:max-w-xs">
+          <span className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
             <Users className="h-4 w-4" />
           </span>
           <Input placeholder="Search users by name or email..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+          <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
         ) : filteredUsers.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center justify-center py-12">
+          <Card><CardContent className="d-flex d-flex flex-column align-items-center justify-content-center py-12">
             <Users className="h-12 w-12 text-slate-400 mb-4" />
-            <h3 className="text-[18px] font-semibold text-slate-900">No users found</h3>
-            <p className="text-[13px] text-slate-500">Users will appear here when they sign up</p>
+            <h3 className="fs-18 fw-semibold text-slate-900">No users found</h3>
+            <p className="fs-13 text-slate-500">Users will appear here when they sign up</p>
           </CardContent></Card>
         ) : (
           <Card>
@@ -204,7 +204,7 @@ export default function UsersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-end">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -214,17 +214,17 @@ export default function UsersPage() {
                   return (
                     <TableRow key={user.id}>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-medium">
+                        <div className="d-flex align-items-center gap-3">
+                          <div className="d-flex h-9 w-9 align-items-center justify-content-center rounded-circle bg-emerald-100 text-emerald-700 fw-medium">
                             {user.full_name?.charAt(0)}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-medium text-slate-900">{user.full_name}</p>
-                            <p className="text-[12.5px] text-slate-500">{user.role ? meta?.label : 'No role'}</p>
+                            <p className="fw-medium text-slate-900">{user.full_name}</p>
+                            <p className="fs-12.5 text-slate-500">{user.role ? meta?.label : 'No role'}</p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-[13px] text-slate-500">{user.email}</TableCell>
+                      <TableCell className="fs-13 text-slate-500">{user.email}</TableCell>
                       <TableCell>
                         {user.role ? (
                           <Badge className={meta?.badge}>
@@ -235,12 +235,12 @@ export default function UsersPage() {
                           <Badge variant="secondary">No Role</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-[13px] text-slate-500">
+                      <TableCell className="fs-13 text-slate-500">
                         {format(new Date(user.created_at), 'MMM d, yyyy')}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         {isAdmin ? (
-                          <div className="flex justify-end gap-1.5">
+                          <div className="d-flex justify-content-end gap-1.5">
                             <Dialog
                               open={isAssignDialogOpen && selectedUser?.id === user.id}
                               onOpenChange={(open) => {
@@ -280,7 +280,7 @@ export default function UsersPage() {
                                       </SelectContent>
                                     </Select>
                                   </div>
-                                  <div className="flex justify-end gap-3">
+                                  <div className="d-flex justify-content-end gap-3">
                                     <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
                                     <Button onClick={handleAssignRole} disabled={formLoading}>
                                       {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : 'Save'}
@@ -292,7 +292,7 @@ export default function UsersPage() {
                             <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user)} aria-label="Delete user"><Trash2 className="h-4 w-4" /></Button>
                           </div>
                         ) : (
-                          <span className="text-[13px] text-slate-500">View only</span>
+                          <span className="fs-13 text-slate-500">View only</span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -306,3 +306,5 @@ export default function UsersPage() {
     </DashboardLayout>
   );
 }
+
+

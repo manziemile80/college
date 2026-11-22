@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ export default function Signup() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="d-flex min-h-screen align-items-center justify-content-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
       </div>
     );
@@ -63,22 +63,22 @@ export default function Signup() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row overflow-hidden">
-      {/* Left section — form (form first on mobile) */}
-      <div className="order-2 flex flex-1 flex-col justify-center px-6 py-12 sm:px-10 lg:order-1 lg:px-16">
-        <div className="mx-auto w-full max-w-md">
-          <div className="mb-8 flex items-center gap-3">
+    <div className="d-flex min-h-screen d-flex flex-column lg:d-flex flex-row overflow-hidden">
+      {/* Left section â€” form (form first on mobile) */}
+      <div className="order-2 d-flex flex-1 d-flex flex-column justify-content-center px-6 py-12 sm:px-10 lg:order-1 lg:px-16">
+        <div className="mx-auto w-100 max-w-md">
+          <div className="mb-8 d-flex align-items-center gap-3">
             <img src={schoolLogo} alt="College De Rebero" className="h-14 w-14 object-contain" />
             <div>
-              <h1 className="text-[32px] font-bold text-slate-900">College De Rebero</h1>
-              <p className="text-[13px] text-slate-500">Behavior Management System</p>
+              <h1 className="fs-32 fw-bold text-slate-900">College De Rebero</h1>
+              <p className="fs-13 text-slate-500">Behavior Management System</p>
             </div>
           </div>
 
           <div className="space-y-6">
             <div>
-              <h2 className="text-[32px] font-bold tracking-tight text-slate-900">Create an account</h2>
-              <p className="mt-2 text-[13.5px] text-slate-500">
+              <h2 className="fs-32 fw-bold tracking-tight text-slate-900">Create an account</h2>
+              <p className="mt-2 fs-13.5 text-slate-500">
                 Get started with College De Rebero today
               </p>
             </div>
@@ -107,7 +107,7 @@ export default function Signup() {
                     <SelectItem value="viewer">Staff / other (view only)</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-[12.5px] text-slate-500">
+                <p className="fs-12.5 text-slate-500">
                   Students get access to quizzes and assignments after signing in.
                 </p>
               </div>
@@ -127,7 +127,7 @@ export default function Signup() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <div className="relative">
+                <div className="position-relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -140,7 +140,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="position-absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -164,7 +164,7 @@ export default function Signup() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="h-12 w-full gap-2 bg-gradient-to-br from-emerald-600 to-green-600 text-white shadow-md hover:from-emerald-700 hover:to-green-500"
+                className="h-12 w-100 gap-2 bg-gradient-to-br from-emerald-600 to-green-600 text-white shadow-md hover:from-emerald-700 hover:to-green-500"
               >
                 {loading ? (
                   <>
@@ -180,43 +180,43 @@ export default function Signup() {
               </Button>
             </form>
 
-            <p className="text-center text-[13px] text-slate-500">
+            <p className="text-center fs-13 text-slate-500">
               Already have an account?{' '}
-              <Link to="/login" className="font-medium text-emerald-600 hover:underline">
+              <Link to="/login" className="fw-medium text-emerald-600 hover:underline">
                 Sign in
               </Link>
             </p>
-            <p className="text-center text-[12.5px] text-slate-400">
-              College De Rebero · Excellence · Discipline · Integrity
+            <p className="text-center fs-12.5 text-slate-400">
+              College De Rebero Â· Excellence Â· Discipline Â· Integrity
             </p>
           </div>
         </div>
       </div>
 
-      {/* Right section — promotional (simplified on mobile) */}
-      <div className="relative order-1 hidden flex-1 bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-500 lg:flex items-center justify-center overflow-hidden p-10">
-        <div className="absolute -left-20 top-20 h-64 w-64 rounded-full bg-white/10" />
-        <div className="absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-white/5" />
+      {/* Right section â€” promotional (simplified on mobile) */}
+      <div className="position-relative order-1 d-none flex-1 bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-500 lg:d-flex align-items-center justify-content-center overflow-hidden p-10">
+        <div className="position-absolute -left-20 top-20 h-64 w-64 rounded-circle bg-white/10" />
+        <div className="position-absolute -right-20 bottom-10 h-72 w-72 rounded-circle bg-white/5" />
 
-        <div className="relative max-w-lg text-white text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
+        <div className="position-relative max-w-lg text-white text-center">
+          <div className="mx-auto mb-6 d-flex h-16 w-16 align-items-center justify-content-center rounded-circle bg-white/20">
             <GraduationCap className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-[34px] font-bold tracking-tight drop-shadow-sm sm:text-[36px]">
+          <h2 className="fs-34 fw-bold tracking-tight drop-shadow-sm sm:fs-36">
             Join the Future of Student Management
           </h2>
-          <p className="mt-6 text-[18px] opacity-90 drop-shadow-sm">
+          <p className="mt-6 fs-18 opacity-90 drop-shadow-sm">
             Create an account and work with your school administrator to get set up with the appropriate access level.
           </p>
-          <div className="mt-10 grid grid-cols-3 gap-4 text-center">
+          <div className="mt-10 row col-4 gap-4 text-center">
             {[
-              { label: 'Real-time behavior tracking', icon: '✓' },
-              { label: 'Instant parent notifications', icon: '✓' },
-              { label: 'Comprehensive reports', icon: '✓' },
+              { label: 'Real-time behavior tracking', icon: 'âœ“' },
+              { label: 'Instant parent notifications', icon: 'âœ“' },
+              { label: 'Comprehensive reports', icon: 'âœ“' },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 font-bold">{item.icon}</span>
-                <span className="text-[14px] opacity-95">{item.label}</span>
+              <div key={item.label} className="d-flex align-items-center justify-content-center gap-2">
+                <span className="d-flex h-8 w-8 align-items-center justify-content-center rounded-circle bg-white/20 fw-bold">{item.icon}</span>
+                <span className="fs-14 opacity-95">{item.label}</span>
               </div>
             ))}
           </div>
@@ -232,3 +232,5 @@ export default function Signup() {
     </div>
   );
 }
+
+

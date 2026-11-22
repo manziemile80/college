@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
@@ -81,7 +81,7 @@ export function LinkStudentAccountDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md w-[calc(100%-1rem)]">
         <DialogHeader>
-          <DialogTitle>Link login account — {studentName}</DialogTitle>
+          <DialogTitle>Link login account â€” {studentName}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-2">
@@ -97,7 +97,7 @@ export function LinkStudentAccountDialog({
             <Button
               variant="outline"
               size="sm"
-              className="w-full"
+              className="w-100"
               disabled={saving}
               onClick={() => link(null)}
             >
@@ -108,11 +108,11 @@ export function LinkStudentAccountDialog({
 
           <div className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-border p-1">
             {loading ? (
-              <div className="flex justify-center py-6">
+              <div className="d-flex justify-content-center py-6">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
               </div>
             ) : filtered.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">No accounts found</p>
+              <p className="py-6 text-center fs-sm text-muted-foreground">No accounts found</p>
             ) : (
               filtered.map((c) => (
                 <button
@@ -120,16 +120,16 @@ export function LinkStudentAccountDialog({
                   type="button"
                   disabled={saving}
                   onClick={() => link(c.user_id)}
-                  className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${
+                  className={`d-flex w-100 align-items-center justify-content-between rounded-md px-3 py-2 text-start fs-sm transition-colors hover:bg-muted ${
                     c.user_id === currentUserId ? 'bg-primary/10' : ''
                   }`}
                 >
                   <span>
-                    <span className="block font-medium text-foreground">{c.full_name}</span>
-                    <span className="block text-xs text-muted-foreground">{c.email}</span>
+                    <span className="d-block fw-medium text-foreground">{c.full_name}</span>
+                    <span className="d-block text-xs text-muted-foreground">{c.email}</span>
                   </span>
                   {c.user_id === currentUserId && (
-                    <span className="text-xs font-medium text-primary">Linked</span>
+                    <span className="text-xs fw-medium text-primary">Linked</span>
                   )}
                 </button>
               ))
@@ -140,3 +140,4 @@ export function LinkStudentAccountDialog({
     </Dialog>
   );
 }
+

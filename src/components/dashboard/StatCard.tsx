@@ -1,4 +1,4 @@
-import { LucideIcon } from 'lucide-react';
+﻿import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StatCardProps {
@@ -13,41 +13,41 @@ export function StatCard({ title, value, subtitle, icon: Icon, variant = 'primar
   const variants = {
     primary: {
       icon: 'bg-emerald-600 text-white',
-      title: 'text-[13px] font-medium text-white/75',
-      value: 'text-[30px] font-bold tracking-tight text-white',
-      sub: 'text-[13px] text-white/70',
+      title: 'fs-13 fw-medium text-white/75',
+      value: 'fs-30 fw-bold tracking-tight text-white',
+      sub: 'fs-13 text-white/70',
       bg: 'bg-emerald-600',
       border: 'border-emerald-600',
     },
     secondary: {
       icon: 'bg-slate-200 text-slate-600',
-      title: 'text-[13px] font-medium text-slate-500',
-      value: 'text-[30px] font-bold tracking-tight text-slate-900',
-      sub: 'text-[13px] text-slate-500',
+      title: 'fs-13 fw-medium text-slate-500',
+      value: 'fs-30 fw-bold tracking-tight text-slate-900',
+      sub: 'fs-13 text-slate-500',
       bg: 'bg-white',
       border: 'border-slate-200',
     },
     tertiary: {
       icon: 'bg-slate-100 text-slate-500',
-      title: 'text-[13px] font-medium text-slate-500',
-      value: 'text-[30px] font-bold tracking-tight text-slate-900',
-      sub: 'text-[13px] text-slate-500',
+      title: 'fs-13 fw-medium text-slate-500',
+      value: 'fs-30 fw-bold tracking-tight text-slate-900',
+      sub: 'fs-13 text-slate-500',
       bg: 'bg-white',
       border: 'border-slate-200',
     },
     warning: {
       icon: 'bg-amber-100 text-amber-700',
-      title: 'text-[13px] font-medium text-amber-700',
-      value: 'text-[30px] font-bold tracking-tight text-amber-900',
-      sub: 'text-[13px] text-amber-700',
+      title: 'fs-13 fw-medium text-amber-700',
+      value: 'fs-30 fw-bold tracking-tight text-amber-900',
+      sub: 'fs-13 text-amber-700',
       bg: 'bg-white',
       border: 'border-slate-200',
     },
     danger: {
       icon: 'bg-red-100 text-red-700',
-      title: 'text-[13px] font-medium text-red-700',
-      value: 'text-[30px] font-bold tracking-tight text-red-900',
-      sub: 'text-[13px] text-red-700',
+      title: 'fs-13 fw-medium text-red-700',
+      value: 'fs-30 fw-bold tracking-tight text-red-900',
+      sub: 'fs-13 text-red-700',
       bg: 'bg-white',
       border: 'border-slate-200',
     },
@@ -57,7 +57,7 @@ export function StatCard({ title, value, subtitle, icon: Icon, variant = 'primar
 
   return (
     <div className={cn('stat-card', v.bg, v.border)}>
-      <div className="flex items-start justify-between">
+      <div className="d-flex align-items-start justify-content-between">
         <div className="min-w-0">
           <p className={v.title}>{title}</p>
           <p className="mt-2 stat-value">{value}</p>
@@ -70,3 +70,4 @@ export function StatCard({ title, value, subtitle, icon: Icon, variant = 'primar
     </div>
   );
 }
+

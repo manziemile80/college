@@ -1,10 +1,10 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto rounded-[14px] border border-slate-200">
-      <table ref={ref} className={cn("w-full caption-bottom text-[13px]", className)} {...props} />
+    <div className="position-relative w-100 overflow-auto rounded-[14px] border border-slate-200">
+      <table ref={ref} className={cn("w-100 caption-bottom fs-13", className)} {...props} />
     </div>
   ),
 );
@@ -26,7 +26,7 @@ TableBody.displayName = "TableBody";
 
 const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
   ({ className, ...props }, ref) => (
-    <tfoot ref={ref} className={cn("border-t bg-slate-50 font-medium [&>tr]:last:border-b-0", className)} {...props} />
+    <tfoot ref={ref} className={cn("border-t bg-slate-50 fw-medium [&>tr]:last:border-b-0", className)} {...props} />
   ),
 );
 TableFooter.displayName = "TableFooter";
@@ -47,7 +47,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
     <th
       ref={ref}
       className={cn(
-        "h-12 px-4 text-left align-middle font-semibold text-slate-500 bg-slate-50 [&:has([role=checkbox])]:pr-0",
+        "h-12 px-4 text-start align-middle fw-semibold text-slate-500 bg-slate-50 [&:has([role=checkbox])]:pr-0",
         className,
       )}
       {...props}
@@ -65,9 +65,10 @@ TableCell.displayName = "TableCell";
 
 const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTMLAttributes<HTMLTableCaptionElement>>(
   ({ className, ...props }, ref) => (
-    <caption ref={ref} className={cn("mt-4 text-[12.5px] text-muted-foreground", className)} {...props} />
+    <caption ref={ref} className={cn("mt-4 fs-12.5 text-muted-foreground", className)} {...props} />
   ),
 );
 TableCaption.displayName = "TableCaption";
 
 export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };
+

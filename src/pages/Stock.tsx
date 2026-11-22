@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
@@ -217,66 +217,66 @@ export default function Stock() {
           ) : undefined}
         />
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="row gap-3 sm:col-4">
           <Card>
             <CardContent className="p-4">
-              <p className="text-[12.5px] text-slate-500">Items tracked</p>
-              <p className="text-[30px] font-bold text-slate-900">{items.length}</p>
+              <p className="fs-12.5 text-slate-500">Items tracked</p>
+              <p className="fs-30 fw-bold text-slate-900">{items.length}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-[12.5px] text-slate-500">Low or out of stock</p>
-              <p className="text-[30px] font-bold text-red-600">{lowStock.length}</p>
+              <p className="fs-12.5 text-slate-500">Low or out of stock</p>
+              <p className="fs-30 fw-bold text-red-600">{lowStock.length}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-[12.5px] text-slate-500">Total value (RWF)</p>
-              <p className="text-[30px] font-bold text-slate-900">{totalValue.toLocaleString()}</p>
+              <p className="fs-12.5 text-slate-500">Total value (RWF)</p>
+              <p className="fs-30 fw-bold text-slate-900">{totalValue.toLocaleString()}</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <div className="position-relative max-w-md">
+          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input className="pl-9" placeholder="Search item or category" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+          <div className="d-flex justify-content-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
         ) : filtered.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center py-14 text-center">
+          <Card><CardContent className="d-flex d-flex flex-column align-items-center py-14 text-center">
             <Package className="mb-3 h-10 w-10 text-slate-400" />
-            <p className="font-medium text-slate-900">No stock items yet</p>
+            <p className="fw-medium text-slate-900">No stock items yet</p>
           </CardContent></Card>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="row gap-5 sm:col-6 xl:col-4">
             {filtered.map((item) => {
               const low = Number(item.quantity) <= Number(item.min_quantity);
               return (
-                <Card key={item.id} className="flex flex-col">
-                  <CardContent className="flex flex-1 flex-col gap-3 p-5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-emerald-50 text-emerald-600">
+                <Card key={item.id} className="d-flex d-flex flex-column">
+                  <CardContent className="d-flex flex-1 d-flex flex-column gap-3 p-5">
+                    <div className="d-flex align-items-start justify-content-between gap-2">
+                      <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
                         <Package className="h-5 w-5" />
                       </div>
                       <Badge variant={low ? 'destructive' : 'secondary'}>{item.quantity} {item.unit}</Badge>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900">{item.name}</h3>
-                      <p className="mt-1 text-[13px] text-slate-500 capitalize">{item.category}{item.location ? ` · ${item.location}` : ''}</p>
-                      <p className="mt-1 text-[12.5px] text-slate-500">
-                        Unit price: {Number(item.unit_price || 0).toLocaleString()} RWF · Total value:{' '}
-                        <span className="font-semibold text-slate-900">{(Number(item.unit_price || 0) * Number(item.quantity)).toLocaleString()} RWF</span>
+                      <h3 className="fw-semibold text-slate-900">{item.name}</h3>
+                      <p className="mt-1 fs-13 text-slate-500 capitalize">{item.category}{item.location ? ` Â· ${item.location}` : ''}</p>
+                      <p className="mt-1 fs-12.5 text-slate-500">
+                        Unit price: {Number(item.unit_price || 0).toLocaleString()} RWF Â· Total value:{' '}
+                        <span className="fw-semibold text-slate-900">{(Number(item.unit_price || 0) * Number(item.quantity)).toLocaleString()} RWF</span>
                       </p>
                       {low && (
-                        <p className="mt-1 text-[12.5px] font-medium text-red-600">
+                        <p className="mt-1 fs-12.5 fw-medium text-red-600">
                           At or below minimum level ({item.min_quantity} {item.unit})
                         </p>
                       )}
                     </div>
-                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+                    <div className="mt-auto d-flex flex-wrap align-items-center gap-2 pt-2">
                       {canManage && (
                         <>
                           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openMove(item, 'in')}>
@@ -308,7 +308,7 @@ export default function Stock() {
             <DialogHeader><DialogTitle>{editingId ? 'Edit Item' : 'New Item'}</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label>Item name</Label><Input value={form.name} maxLength={150} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="row gap-3 sm:col-6">
                 <div><Label>Category</Label>
                   <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -327,7 +327,7 @@ export default function Stock() {
                 <Label>Unit price (RWF per {form.unit || 'unit'})</Label>
                 <Input type="number" min={0} value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
                 {!editingId && items.some((i) => i.name.trim().toLowerCase() === form.name.trim().toLowerCase()) && (
-                  <p className="mt-1 text-[12.5px] text-emerald-600">This item already exists — the quantity will be added to the current total.</p>
+                  <p className="mt-1 fs-12.5 text-emerald-600">This item already exists â€” the quantity will be added to the current total.</p>
                 )}
               </div>
               <div><Label>Storage location</Label><Input value={form.location} maxLength={150} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
@@ -343,9 +343,9 @@ export default function Stock() {
         {/* Receive / issue */}
         <Dialog open={!!moveItem} onOpenChange={(o) => !o && setMoveItem(null)}>
           <DialogContent>
-            <DialogHeader><DialogTitle>{moveType === 'in' ? 'Stock in' : 'Stock out'} — {moveItem?.name}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{moveType === 'in' ? 'Stock in' : 'Stock out'} â€” {moveItem?.name}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <p className="text-[13px] text-slate-500">Currently in stock: {moveItem?.quantity} {moveItem?.unit}</p>
+              <p className="fs-13 text-slate-500">Currently in stock: {moveItem?.quantity} {moveItem?.unit}</p>
               <div><Label>Amount</Label><Input type="number" min={1} value={moveQty} onChange={(e) => setMoveQty(e.target.value)} /></div>
               <div>
                 <Label>Reason / reference</Label>
@@ -362,25 +362,25 @@ export default function Stock() {
         {/* History */}
         <Dialog open={!!historyItem} onOpenChange={(o) => !o && setHistoryItem(null)}>
           <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
-            <DialogHeader><DialogTitle>{historyItem?.name} — Movements</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{historyItem?.name} â€” Movements</DialogTitle></DialogHeader>
             {(() => {
               const rows = movements.filter((m) => m.item_id === historyItem?.id);
-              if (rows.length === 0) return <p className="text-[13px] text-slate-500">No movements recorded yet.</p>;
+              if (rows.length === 0) return <p className="fs-13 text-slate-500">No movements recorded yet.</p>;
               return (
                 <div className="space-y-2">
                   {rows.map((m) => (
-                    <div key={m.id} className="flex items-center justify-between rounded-[10px] border border-slate-200 p-3">
+                    <div key={m.id} className="d-flex align-items-center justify-content-between rounded-[10px] border border-slate-200 p-3">
                       <div>
-                        <p className="text-[14px] font-medium text-slate-900">
+                        <p className="fs-14 fw-medium text-slate-900">
                           {m.movement_type === 'in' ? 'Received' : 'Issued'} {m.quantity} {historyItem?.unit}
                         </p>
-                        <p className="text-[12.5px] text-slate-500">
+                        <p className="fs-12.5 text-slate-500">
                           {new Date(m.movement_date).toLocaleDateString()}
-                          {m.reason ? ` · ${m.reason}` : ''}
+                          {m.reason ? ` Â· ${m.reason}` : ''}
                         </p>
                       </div>
                       <Badge className={m.movement_type === 'in' ? 'bg-green-100 text-emerald-700' : 'bg-red-100 text-red-800'}>
-                        {m.movement_type === 'in' ? '+' : '−'}{m.quantity}
+                        {m.movement_type === 'in' ? '+' : 'âˆ’'}{m.quantity}
                       </Badge>
                     </div>
                   ))}
@@ -393,3 +393,5 @@ export default function Stock() {
     </DashboardLayout>
   );
 }
+
+

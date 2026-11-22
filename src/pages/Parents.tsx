@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -185,7 +185,7 @@ export default function Parents() {
                     <Label htmlFor="address">Address (Optional)</Label>
                     <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
                   </div>
-                  <div className="flex justify-end gap-3 pt-2">
+                  <div className="d-flex justify-content-end gap-3 pt-2">
                     <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
                     <Button type="submit" disabled={formLoading}>
                       {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Adding...</> : 'Add Parent'}
@@ -197,18 +197,18 @@ export default function Parents() {
           ) : undefined}
         />
 
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <div className="position-relative w-100 sm:max-w-xs">
+          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search parents..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+          <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
         ) : filteredParents.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center justify-center py-12">
+          <Card><CardContent className="d-flex d-flex flex-column align-items-center justify-content-center py-12">
             <UserCheck className="h-12 w-12 text-slate-400 mb-4" />
-            <h3 className="text-[18px] font-semibold text-slate-900">No parents found</h3>
-            <p className="text-[13px] text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Add your first parent to get started'}</p>
+            <h3 className="fs-18 fw-semibold text-slate-900">No parents found</h3>
+            <p className="fs-13 text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Add your first parent to get started'}</p>
           </CardContent></Card>
         ) : (
           <Card>
@@ -219,44 +219,44 @@ export default function Parents() {
                   <TableHead>Contact</TableHead>
                   <TableHead>Children</TableHead>
                   <TableHead>Address</TableHead>
-                  {canManage && <TableHead className="text-right">Actions</TableHead>}
+                  {canManage && <TableHead className="text-end">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredParents.map((parent) => (
                   <TableRow key={parent.id}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-[13px] font-semibold text-blue-700">
+                      <div className="d-flex align-items-center gap-3">
+                        <div className="d-flex h-9 w-9 align-items-center justify-content-center rounded-circle bg-blue-100 fs-13 fw-semibold text-blue-700">
                           {parent.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">{parent.full_name}</p>
-                          <p className="text-[12.5px] text-slate-500">{parent.children?.length || 0} student{parent.children?.length !== 1 ? 's' : ''}</p>
+                          <p className="fw-medium text-slate-900">{parent.full_name}</p>
+                          <p className="fs-12.5 text-slate-500">{parent.children?.length || 0} student{parent.children?.length !== 1 ? 's' : ''}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="space-y-1 text-[13px] text-slate-500">
-                      <span className="flex items-center gap-2"><Phone className="h-4 w-4 text-emerald-600" />{parent.phone}</span>
-                      <span className="flex items-center gap-2"><Mail className="h-4 w-4 text-emerald-600" />{parent.email}</span>
+                    <TableCell className="space-y-1 fs-13 text-slate-500">
+                      <span className="d-flex align-items-center gap-2"><Phone className="h-4 w-4 text-emerald-600" />{parent.phone}</span>
+                      <span className="d-flex align-items-center gap-2"><Mail className="h-4 w-4 text-emerald-600" />{parent.email}</span>
                     </TableCell>
                     <TableCell>
                       {parent.children && parent.children.length > 0 ? (
                         <div className="space-y-1">
                           {parent.children.map((child, idx) => (
-                            <div key={idx} className="text-[13px] text-slate-600">
+                            <div key={idx} className="fs-13 text-slate-600">
                               {child.student.first_name} {child.student.last_name}
                               {child.is_primary_contact && (
-                                <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">Primary</span>
+                                <span className="ml-2 rounded-circle bg-emerald-100 px-2 py-0.5 fs-11 fw-medium text-emerald-700">Primary</span>
                               )}
                             </div>
                           ))}
                         </div>
-                      ) : '—'}
+                      ) : 'â€”'}
                     </TableCell>
-                    <TableCell className="text-[13px] text-slate-500">{parent.address || '—'}</TableCell>
+                    <TableCell className="fs-13 text-slate-500">{parent.address || 'â€”'}</TableCell>
                     {canManage && (
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Button variant="edit" size="sm" onClick={() => handleOpenEditDialog(parent)} className="gap-1.5">
                           <Pencil className="h-4 w-4" />Edit
                         </Button>
@@ -292,7 +292,7 @@ export default function Parents() {
                 <Label htmlFor="editAddress">Address (Optional)</Label>
                 <Input id="editAddress" value={address} onChange={(e) => setAddress(e.target.value)} />
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="d-flex justify-content-end gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={formLoading}>
                   {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : 'Save Changes'}
@@ -305,3 +305,5 @@ export default function Parents() {
     </DashboardLayout>
   );
 }
+
+

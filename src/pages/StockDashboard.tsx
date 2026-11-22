@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -174,16 +174,16 @@ export default function StockDashboard() {
         />
 
         {/* Stats */}
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="row gap-3 sm:col-6 xl:col-3">
           {stats.map((s) => (
             <Card key={s.label}>
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-[10px] ${s.cls}`}>
+              <CardContent className="d-flex align-items-center gap-3 p-4">
+                <div className={`d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] ${s.cls}`}>
                   <s.icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-[12.5px] text-slate-500">{s.label}</p>
-                  <p className="text-[30px] font-bold text-slate-900">{s.value}</p>
+                  <p className="fs-12.5 text-slate-500">{s.label}</p>
+                  <p className="fs-30 fw-bold text-slate-900">{s.value}</p>
                 </div>
               </CardContent>
             </Card>
@@ -191,15 +191,15 @@ export default function StockDashboard() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+          <div className="d-flex justify-content-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
         ) : (
-          <div className="grid gap-5 lg:grid-cols-3">
+          <div className="row gap-5 lg:col-4">
             <div className="space-y-5 lg:col-span-2">
               <Card>
                 <CardContent className="p-5">
-                  <h2 className="mb-4 font-semibold text-slate-900">Inventory levels</h2>
+                  <h2 className="mb-4 fw-semibold text-slate-900">Inventory levels</h2>
                   {items.length === 0 ? (
-                    <p className="py-8 text-center text-[13px] text-slate-500">No stock items yet. Add items on the stock page first.</p>
+                    <p className="py-8 text-center fs-13 text-slate-500">No stock items yet. Add items on the stock page first.</p>
                   ) : (
                     <div className="space-y-4">
                       {items.map((it) => {
@@ -209,10 +209,10 @@ export default function StockDashboard() {
                         const low = Number(it.quantity) <= min;
                         return (
                           <div key={it.id}>
-                            <div className="mb-1 flex items-center justify-between gap-3 text-[13px]">
-                              <span className="font-medium text-slate-900">{it.name}</span>
+                            <div className="mb-1 d-flex align-items-center justify-content-between gap-3 fs-13">
+                              <span className="fw-medium text-slate-900">{it.name}</span>
                               <span className={low ? 'text-red-600' : 'text-slate-500'}>
-                                {it.quantity} {it.unit} · min {min}
+                                {it.quantity} {it.unit} Â· min {min}
                               </span>
                             </div>
                             <Progress value={pct} className={low ? '[&>div]:bg-red-600' : ''} />
@@ -226,22 +226,22 @@ export default function StockDashboard() {
 
               <Card>
                 <CardContent className="p-5">
-                  <h2 className="mb-4 font-semibold text-slate-900">Purchase orders</h2>
+                  <h2 className="mb-4 fw-semibold text-slate-900">Purchase orders</h2>
                   {orders.length === 0 ? (
-                    <p className="py-8 text-center text-[13px] text-slate-500">No purchase orders yet.</p>
+                    <p className="py-8 text-center fs-13 text-slate-500">No purchase orders yet.</p>
                   ) : (
                     <div className="space-y-3">
                       {orders.map((o) => (
-                        <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-slate-200 p-3">
+                        <div key={o.id} className="d-flex flex-wrap align-items-center justify-content-between gap-3 rounded-[10px] border border-slate-200 p-3">
                           <div className="min-w-[180px]">
-                            <p className="font-medium text-slate-900">{itemName(o.item_id)}</p>
-                            <p className="text-[12.5px] text-slate-500">
+                            <p className="fw-medium text-slate-900">{itemName(o.item_id)}</p>
+                            <p className="fs-12.5 text-slate-500">
                               {o.quantity} {itemUnit(o.item_id)}
-                              {o.supplier ? ` · ${o.supplier}` : ''}
-                              {o.expected_date ? ` · expected ${o.expected_date}` : ''}
+                              {o.supplier ? ` Â· ${o.supplier}` : ''}
+                              {o.expected_date ? ` Â· expected ${o.expected_date}` : ''}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="d-flex align-items-center gap-2">
                             <Badge className={statusStyles[o.status] || ''}>{o.status}</Badge>
                             {canManage && o.status === 'pending' && (
                               <Button size="sm" variant="outline" className="gap-1" onClick={() => updateStatus(o, 'ordered')}>
@@ -268,16 +268,16 @@ export default function StockDashboard() {
             <div className="space-y-5">
               <Card>
                 <CardContent className="p-5">
-                  <h2 className="mb-3 font-semibold text-slate-900">Reorder alerts</h2>
+                  <h2 className="mb-3 fw-semibold text-slate-900">Reorder alerts</h2>
                   {lowStock.length === 0 ? (
-                    <p className="py-6 text-center text-[13px] text-slate-500">All items are above their minimum level.</p>
+                    <p className="py-6 text-center fs-13 text-slate-500">All items are above their minimum level.</p>
                   ) : (
                     <div className="space-y-2">
                       {lowStock.map((it) => (
-                        <div key={it.id} className="flex items-center justify-between gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3">
+                        <div key={it.id} className="d-flex align-items-center justify-content-between gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3">
                           <div>
-                            <p className="text-[13.5px] font-medium text-red-700">{it.name}</p>
-                            <p className="text-[12.5px] text-red-600">
+                            <p className="fs-13.5 fw-medium text-red-700">{it.name}</p>
+                            <p className="fs-12.5 text-red-600">
                               {it.quantity} {it.unit} left (min {it.min_quantity})
                             </p>
                           </div>
@@ -306,7 +306,7 @@ export default function StockDashboard() {
               {canManage && (
                 <Card>
                   <CardContent className="space-y-3 p-5">
-                    <h2 className="font-semibold text-slate-900">New purchase order</h2>
+                    <h2 className="fw-semibold text-slate-900">New purchase order</h2>
                     <div><Label>Item</Label>
                       <Select value={form.item_id} onValueChange={(v) => setForm({ ...form, item_id: v })}>
                         <SelectTrigger><SelectValue placeholder="Select item" /></SelectTrigger>
@@ -320,7 +320,7 @@ export default function StockDashboard() {
                     <div><Label>Supplier</Label>
                       <Input value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} placeholder="e.g. Rebero Suppliers Ltd" />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="row col-6 gap-3">
                       <div><Label>Quantity</Label>
                         <Input type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
                       </div>
@@ -334,7 +334,7 @@ export default function StockDashboard() {
                     <div><Label>Notes</Label>
                       <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
                     </div>
-                    <Button className="w-full" onClick={submitOrder} disabled={saving}>
+                    <Button className="w-100" onClick={submitOrder} disabled={saving}>
                       {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Create order
                     </Button>
@@ -348,3 +348,5 @@ export default function StockDashboard() {
     </DashboardLayout>
   );
 }
+
+

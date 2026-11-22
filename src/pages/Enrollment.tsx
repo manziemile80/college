@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
@@ -231,8 +231,8 @@ export default function EnrollmentPage() {
           description="Enroll students in classes, transfer between classes, and view enrollment history."
         />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="space-y-2 sm:w-1/2">
+        <div className="d-flex d-flex flex-column gap-3 sm:d-flex flex-row sm:align-items-end">
+          <div className="space-y-2 sm:w-50">
             <Label>Class</Label>
             <Select value={classId} onValueChange={setClassId}>
               <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
@@ -243,7 +243,7 @@ export default function EnrollmentPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2 sm:w-1/4">
+          <div className="space-y-2 sm:w-25">
             <Label>Academic year</Label>
             <Input value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} />
           </div>
@@ -252,11 +252,11 @@ export default function EnrollmentPage() {
         {canManage && classId && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[18px]"><UserPlus className="h-5 w-5 text-emerald-600" /> Enroll a student</CardTitle>
+              <CardTitle className="d-flex align-items-center gap-2 fs-18"><UserPlus className="h-5 w-5 text-emerald-600" /> Enroll a student</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <div className="position-relative max-w-sm">
+                <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   className="pl-9"
                   placeholder="Search by name, student ID or registration number..."
@@ -265,14 +265,14 @@ export default function EnrollmentPage() {
                 />
               </div>
               {availableStudents.length === 0 ? (
-                <p className="text-[13px] text-slate-500">No matching students to enroll in this class for {academicYear}.</p>
+                <p className="fs-13 text-slate-500">No matching students to enroll in this class for {academicYear}.</p>
               ) : (
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="row gap-2 sm:col-6 lg:col-4">
                   {availableStudents.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between rounded-[10px] border border-slate-200 bg-white p-3">
+                    <div key={s.id} className="d-flex align-items-center justify-content-between rounded-[10px] border border-slate-200 bg-white p-3">
                       <div className="min-w-0">
-                        <p className="truncate text-[14px] font-medium text-slate-900">{s.first_name} {s.last_name}</p>
-                        <p className="text-[12.5px] text-slate-500">{s.student_id}</p>
+                        <p className="truncate fs-14 fw-medium text-slate-900">{s.first_name} {s.last_name}</p>
+                        <p className="fs-12.5 text-slate-500">{s.student_id}</p>
                       </div>
                       <Button size="sm" onClick={() => handleEnroll(s)} disabled={saving}>
                         <UserPlus className="h-4 w-4 mr-1" />Enroll
@@ -287,18 +287,18 @@ export default function EnrollmentPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-[16px]">
-              Enrollments — {classes.find((c) => c.id === classId)?.name || 'Select a class'} · {academicYear}
+            <CardTitle className="fs-16">
+              Enrollments â€” {classes.find((c) => c.id === classId)?.name || 'Select a class'} Â· {academicYear}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+              <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
             ) : enrollments.length === 0 ? (
               <div className="empty-state">
                 <CheckCircle className="h-12 w-12 text-slate-400 mb-4" />
-                <h3 className="text-[18px] font-semibold text-slate-900">No enrollments for this class and year yet.</h3>
-                <p className="text-[13px] text-slate-500">Enroll students above to get started.</p>
+                <h3 className="fs-18 fw-semibold text-slate-900">No enrollments for this class and year yet.</h3>
+                <p className="fs-13 text-slate-500">Enroll students above to get started.</p>
               </div>
             ) : (
               <Table>
@@ -307,24 +307,24 @@ export default function EnrollmentPage() {
                     <TableHead>Student</TableHead>
                     <TableHead>Student ID</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="hidden sm:table-cell">Enrolled</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="d-none sm:table-cell">Enrolled</TableHead>
+                    <TableHead className="text-end">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {enrollments.map((e) => (
                     <TableRow key={e.id}>
-                      <TableCell className="font-medium text-slate-900">
+                      <TableCell className="fw-medium text-slate-900">
                         {e.student ? `${e.student.first_name} ${e.student.last_name}` : e.student_id}
                       </TableCell>
-                      <TableCell className="text-[13px] text-slate-500">{e.student?.student_id || '—'}</TableCell>
+                      <TableCell className="fs-13 text-slate-500">{e.student?.student_id || 'â€”'}</TableCell>
                       <TableCell>{statusBadge(e.status)}</TableCell>
-                      <TableCell className="hidden text-[13px] text-slate-500 sm:table-cell">
+                      <TableCell className="d-none fs-13 text-slate-500 sm:table-cell">
                         {format(new Date(e.created_at), 'MMM d, yyyy')}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         {canManage && (
-                          <div className="flex justify-end gap-1">
+                          <div className="d-flex justify-content-end gap-1">
                             <Button size="sm" variant="ghost" onClick={() => openHistory(e)} title="Enrollment history" aria-label="Enrollment history">
                               <History className="h-4 w-4" />
                             </Button>
@@ -367,18 +367,18 @@ export default function EnrollmentPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Enrollment History</DialogTitle></DialogHeader>
           {historyLoading ? (
-            <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+            <div className="d-flex justify-content-center py-6"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
           ) : history.length === 0 ? (
-            <p className="py-6 text-center text-[13px] text-slate-500">No history recorded.</p>
+            <p className="py-6 text-center fs-13 text-slate-500">No history recorded.</p>
           ) : (
             <div className="space-y-3 py-2">
               {history.map((h) => (
-                <div key={h.id} className="flex items-start justify-between gap-3 border-b border-slate-200 pb-2 last:border-0">
+                <div key={h.id} className="d-flex align-items-start justify-content-between gap-3 border-bottom border-slate-200 pb-2 last:border-0">
                   <div>
-                    <p className="text-[14px] font-medium capitalize text-slate-900">{h.action}</p>
-                    <p className="text-[12.5px] text-slate-500">{h.details}</p>
+                    <p className="fs-14 fw-medium capitalize text-slate-900">{h.action}</p>
+                    <p className="fs-12.5 text-slate-500">{h.details}</p>
                   </div>
-                  <p className="whitespace-nowrap text-[12.5px] text-slate-500">
+                  <p className="text-nowrap fs-12.5 text-slate-500">
                     {format(new Date(h.created_at), 'MMM d, yyyy HH:mm')}
                   </p>
                 </div>
@@ -406,10 +406,10 @@ export default function EnrollmentPage() {
                 </SelectContent>
               </Select>
             </div>
-            <p className="text-[12.5px] text-slate-500">
+            <p className="fs-12.5 text-slate-500">
               The change is recorded in the enrollment history. Confirm before transferring.
             </p>
-            <div className="flex justify-end gap-3">
+            <div className="d-flex justify-content-end gap-3">
               <Button variant="outline" onClick={() => setTransferFor(null)}>Cancel</Button>
               <Button onClick={handleTransfer} disabled={saving || !transferClass}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm Transfer'}
@@ -421,3 +421,5 @@ export default function EnrollmentPage() {
     </DashboardLayout>
   );
 }
+
+

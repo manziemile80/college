@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -103,7 +103,7 @@ export default function Subjects() {
                     <Label>Description (optional)</Label>
                     <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2">
+                  <div className="d-flex justify-content-end gap-2 pt-2">
                     <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                     <Button type="submit" disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (editingId ? 'Update' : 'Create')}</Button>
                   </div>
@@ -114,15 +114,15 @@ export default function Subjects() {
         />
 
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2 text-[18px]"><BookOpen className="h-5 w-5 text-emerald-600" /> All Subjects</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="d-flex align-items-center gap-2 fs-18"><BookOpen className="h-5 w-5 text-emerald-600" /> All Subjects</CardTitle></CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+              <div className="d-flex justify-content-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
             ) : subjects.length === 0 ? (
               <div className="empty-state">
                 <BookOpen className="h-12 w-12 text-slate-400 mb-4" />
-                <h3 className="text-[18px] font-semibold text-slate-900">No subjects yet</h3>
-                <p className="text-[13px] text-slate-500">Create the first subject for your school</p>
+                <h3 className="fs-18 fw-semibold text-slate-900">No subjects yet</h3>
+                <p className="fs-13 text-slate-500">Create the first subject for your school</p>
               </div>
             ) : (
               <Table>
@@ -131,18 +131,18 @@ export default function Subjects() {
                     <TableHead>Name</TableHead>
                     <TableHead>Code</TableHead>
                     <TableHead>Description</TableHead>
-                    {canManage && <TableHead className="text-right">Actions</TableHead>}
+                    {canManage && <TableHead className="text-end">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {subjects.map((s) => (
                     <TableRow key={s.id}>
-                      <TableCell className="font-medium text-slate-900">{s.name}</TableCell>
-                      <TableCell><span className="rounded-[8px] bg-slate-100 px-2.5 py-1 text-[12.5px] font-mono text-slate-700">{s.code}</span></TableCell>
-                      <TableCell className="text-[13px] text-slate-500">{s.description || '-'}</TableCell>
+                      <TableCell className="fw-medium text-slate-900">{s.name}</TableCell>
+                      <TableCell><span className="rounded-[8px] bg-slate-100 px-2.5 py-1 fs-12.5 font-monospace text-slate-700">{s.code}</span></TableCell>
+                      <TableCell className="fs-13 text-slate-500">{s.description || '-'}</TableCell>
                       {canManage && (
                         <TableCell>
-                          <div className="flex justify-end gap-1">
+                          <div className="d-flex justify-content-end gap-1">
                             <Button variant="edit" size="icon" onClick={() => openEdit(s)} aria-label="Edit subject"><Pencil className="h-4 w-4" /></Button>
                             <Button variant="destructive" size="icon" onClick={() => handleDelete(s.id)} aria-label="Delete subject"><Trash2 className="h-4 w-4" /></Button>
                           </div>
@@ -159,3 +159,4 @@ export default function Subjects() {
     </DashboardLayout>
   );
 }
+

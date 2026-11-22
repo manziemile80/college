@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { SmsStatusBadge } from './SmsStatusBadge';
 import { Button } from '@/components/ui/button';
@@ -95,7 +95,7 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-4">
+      <div className="d-flex align-items-center justify-content-center py-4">
         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       </div>
     );
@@ -103,7 +103,7 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
 
   if (notifications.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground py-2">
+      <p className="fs-sm text-muted-foreground py-2">
         No SMS notifications sent yet
       </p>
     );
@@ -114,12 +114,12 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
       {notifications.map((notification) => (
         <div
           key={notification.id}
-          className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3"
+          className="d-flex align-items-center justify-content-between rounded-lg border border-border bg-muted/30 p-3"
         >
-        <div className="flex-1 space-y-1">
-            <div className="flex items-center gap-2">
+        <div className="d-flex-1 space-y-1">
+            <div className="d-flex align-items-center gap-2">
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium text-sm">
+              <span className="fw-medium fs-sm">
                 {notification.parent?.full_name || 'Unknown Parent'}
               </span>
             </div>
@@ -137,7 +137,7 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="d-flex align-items-center gap-2">
             {notification.status === 'failed' && (
               <Button
                 variant="ghost"
@@ -161,3 +161,4 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
     </div>
   );
 }
+

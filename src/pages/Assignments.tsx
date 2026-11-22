@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
@@ -203,10 +203,10 @@ export default function Assignments() {
 
         {role === 'student' && !studentId && (
           <Card className="border-dashed border-2 border-slate-300 bg-slate-50">
-            <CardContent className="flex items-center justify-between gap-4 p-4 sm:flex-row">
+            <CardContent className="d-flex align-items-center justify-content-between gap-4 p-4 sm:d-flex flex-row">
               <div>
-                <p className="text-[14px] font-medium text-slate-900">Connect your student profile</p>
-                <p className="text-[13px] text-slate-500">Pick your name once so your work is saved.</p>
+                <p className="fs-14 fw-medium text-slate-900">Connect your student profile</p>
+                <p className="fs-13 text-slate-500">Pick your name once so your work is saved.</p>
               </div>
               <Button size="sm" className="gap-1.5" onClick={() => setClaimOpen(true)}><UserCheck className="h-4 w-4" />Find my profile</Button>
             </CardContent>
@@ -220,23 +220,23 @@ export default function Assignments() {
         />
 
         {loading ? (
-          <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+          <div className="d-flex justify-content-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
         ) : assignments.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center py-14 text-center">
+          <Card><CardContent className="d-flex d-flex flex-column align-items-center py-14 text-center">
             <ClipboardList className="mb-3 h-10 w-10 text-slate-400" />
-            <p className="font-medium text-slate-900">No assignments yet</p>
-            {isStaff && <p className="mt-1 text-[13px] text-slate-500">Post the first assignment for your class.</p>}
+            <p className="fw-medium text-slate-900">No assignments yet</p>
+            {isStaff && <p className="mt-1 fs-13 text-slate-500">Post the first assignment for your class.</p>}
           </CardContent></Card>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="row gap-5 sm:col-6 xl:col-4">
             {assignments.map((a) => {
               const mine = mySubmissions.find((s) => s.assignment_id === a.id);
               const overdue = a.due_date && new Date(a.due_date) < new Date() && !mine;
               return (
-                <Card key={a.id} className="flex flex-col">
-                  <CardContent className="flex flex-1 flex-col gap-3 p-5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-emerald-50 text-emerald-600">
+                <Card key={a.id} className="d-flex d-flex flex-column">
+                  <CardContent className="d-flex flex-1 d-flex flex-column gap-3 p-5">
+                    <div className="d-flex align-items-start justify-content-between gap-2">
+                      <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
                         <ClipboardList className="h-5 w-5" />
                       </div>
                       {mine ? (
@@ -250,30 +250,30 @@ export default function Assignments() {
                       )}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900">{a.title}</h3>
-                      <p className="mt-1 line-clamp-2 text-[13px] text-slate-500">
+                      <h3 className="fw-semibold text-slate-900">{a.title}</h3>
+                      <p className="mt-1 line-clamp-2 fs-13 text-slate-500">
                         {a.instructions || 'No instructions provided.'}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+                    <div className="d-flex flex-wrap gap-x-3 gap-y-1.5">
                       {a.due_date && (
-                        <span className="inline-flex items-center gap-1 text-[11.5px] text-slate-500">
+                        <span className="d-inline-flex align-items-center gap-1 fs-11.5 text-slate-500">
                           <CalendarDays className="h-3.5 w-3.5 text-emerald-600" /> Due {new Date(a.due_date).toLocaleDateString()}
                         </span>
                       )}
                       {label(subjects, a.subject_id) && (
-                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11.5px] text-slate-600">{label(subjects, a.subject_id)}</span>
+                        <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{label(subjects, a.subject_id)}</span>
                       )}
                       {label(classes, a.class_id) && (
-                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11.5px] text-slate-600">{label(classes, a.class_id)}</span>
+                        <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{label(classes, a.class_id)}</span>
                       )}
                     </div>
                     {mine?.feedback && (
-                      <div className="rounded-[10px] bg-slate-50 p-2.5 text-[12.5px] text-slate-500">
+                      <div className="rounded-[10px] bg-slate-50 p-2.5 fs-12.5 text-slate-500">
                         Feedback: {mine.feedback}
                       </div>
                     )}
-                    <div className="mt-auto flex items-center gap-2 pt-2">
+                    <div className="mt-auto d-flex align-items-center gap-2 pt-2">
                       {isStaff ? (
                         <>
                           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openGrading(a)}><GraduationCap className="h-4 w-4" />Submissions</Button>
@@ -308,7 +308,7 @@ export default function Assignments() {
                 <Label>Instructions</Label>
                 <Textarea value={form.instructions} maxLength={3000} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="row gap-3 sm:col-6">
                 <div>
                   <Label>Due date</Label>
                   <Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
@@ -351,7 +351,7 @@ export default function Assignments() {
               </div>
               <div>
                 <Label>File link (optional)</Label>
-                <div className="flex gap-2">
+                <div className="d-flex gap-2">
                   <Input value={answer.file_url} maxLength={500} placeholder="https://..." onChange={(e) => setAnswer({ ...answer, file_url: e.target.value })} />
                   <Button type="button" variant="outline" size="icon" className="shrink-0"><Paperclip className="h-4 w-4" /></Button>
                 </div>
@@ -367,9 +367,9 @@ export default function Assignments() {
         {/* Grading */}
         <Dialog open={!!gradeFor} onOpenChange={(o) => !o && setGradeFor(null)}>
           <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-            <DialogHeader><DialogTitle>{gradeFor?.title} — Submissions</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{gradeFor?.title} â€” Submissions</DialogTitle></DialogHeader>
             {submissions.length === 0 ? (
-              <p className="text-[13px] text-slate-500">No submissions yet.</p>
+              <p className="fs-13 text-slate-500">No submissions yet.</p>
             ) : (
               <div className="space-y-3">
                 {submissions.map((s) => (
@@ -405,23 +405,23 @@ function GradeRow({
 
   return (
     <div className="space-y-2 rounded-[10px] border border-slate-200 p-3">
-      <p className="text-[14px] font-semibold text-slate-900">
+      <p className="fs-14 fw-semibold text-slate-900">
         {submission.student ? `${submission.student.first_name} ${submission.student.last_name}` : 'Student'}
-        <span className="ml-2 text-[12.5px] font-normal text-slate-500">
-          {submission.student?.student_id} · {new Date(submission.submitted_at).toLocaleString()}
+        <span className="ml-2 fs-12.5 fw-normal text-slate-500">
+          {submission.student?.student_id} Â· {new Date(submission.submitted_at).toLocaleString()}
         </span>
       </p>
       {submission.answer_text && (
-        <p className="whitespace-pre-wrap rounded-[8px] bg-slate-50 p-2.5 text-[13px] text-slate-600">
+        <p className="text-wrap rounded-[8px] bg-slate-50 p-2.5 fs-13 text-slate-600">
           {submission.answer_text}
         </p>
       )}
       {submission.file_url && (
-        <a href={submission.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[13px] text-emerald-600 underline">
+        <a href={submission.file_url} target="_blank" rel="noreferrer" className="d-inline-flex align-items-center gap-1.5 fs-13 text-emerald-600 underline">
           <Paperclip className="h-3.5 w-3.5" />Open submitted file
         </a>
       )}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="d-flex d-flex flex-column gap-2 sm:d-flex flex-row sm:align-items-center">
         <Input
           type="number"
           min={0}
@@ -443,4 +443,6 @@ function GradeRow({
     </div>
   );
 }
+
+
 

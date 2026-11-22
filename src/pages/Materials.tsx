@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
@@ -113,39 +113,39 @@ export default function Materials() {
           ) : undefined}
         />
 
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <div className="position-relative max-w-md">
+          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input className="pl-9" placeholder="Search materials..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+          <div className="d-flex justify-content-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
         ) : filtered.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center py-14 text-center">
+          <Card><CardContent className="d-flex d-flex flex-column align-items-center py-14 text-center">
             <FolderOpen className="mb-3 h-10 w-10 text-slate-400" />
-            <p className="font-medium text-slate-900">No materials found</p>
+            <p className="fw-medium text-slate-900">No materials found</p>
           </CardContent></Card>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="row gap-5 sm:col-6 xl:col-4">
             {filtered.map((m) => (
-              <Card key={m.id} className="flex flex-col">
+              <Card key={m.id} className="d-flex d-flex flex-column">
                 <CardContent className="space-y-3 p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-emerald-50 text-emerald-600">
+                  <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
                     <FolderOpen className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900">{m.title}</h3>
-                    <p className="mt-1 line-clamp-2 text-[13px] text-slate-500">{m.description || 'No description'}</p>
+                    <h3 className="fw-semibold text-slate-900">{m.title}</h3>
+                    <p className="mt-1 line-clamp-2 fs-13 text-slate-500">{m.description || 'No description'}</p>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="d-flex flex-wrap gap-1.5">
                     {label(subjects, m.subject_id) && (
-                      <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11.5px] text-slate-600">{label(subjects, m.subject_id)}</span>
+                      <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{label(subjects, m.subject_id)}</span>
                     )}
                     {label(classes, m.class_id) && (
-                      <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11.5px] text-slate-600">{label(classes, m.class_id)}</span>
+                      <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{label(classes, m.class_id)}</span>
                     )}
                   </div>
-                  <div className="mt-auto flex items-center gap-2">
+                  <div className="mt-auto d-flex align-items-center gap-2">
                     {m.file_url && (
                       <a href={m.file_url} target="_blank" rel="noreferrer">
                         <Button variant="outline" size="sm" className="gap-1.5"><Download className="h-4 w-4" />Open</Button>
@@ -190,7 +190,7 @@ export default function Materials() {
                 <Label>File / resource link</Label>
                 <Input value={form.file_url} maxLength={500} placeholder="https://..." onChange={(e) => setForm({ ...form, file_url: e.target.value })} />
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="row gap-3 sm:col-6">
                 <div>
                   <Label>Subject</Label>
                   <Select value={form.subject_id} onValueChange={(v) => setForm({ ...form, subject_id: v })}>
@@ -221,3 +221,5 @@ export default function Materials() {
     </DashboardLayout>
   );
 }
+
+

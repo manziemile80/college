@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Menu,
@@ -53,17 +53,17 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
   const visible = navItems.filter((item) => role && item.roles.includes(role));
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
-      <div className="flex h-16 items-center gap-2 px-3 sm:px-6">
+    <header className="position-sticky top-0 z-30 border-bottom border-slate-200 bg-white">
+      <div className="d-flex h-16 align-items-center gap-2 px-3 sm:px-6">
         {/* Mobile menu */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">
+            <Button variant="ghost" size="icon" className="lg:d-none" aria-label="Open menu">
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[264px] border-slate-300 bg-sidebar p-0">
-            <div className="flex h-full flex-col" onClick={() => setMobileOpen(false)}>
+            <div className="d-flex h-100 d-flex flex-column" onClick={() => setMobileOpen(false)}>
               <SidebarNav />
             </div>
           </SheetContent>
@@ -73,7 +73,7 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="hidden lg:inline-flex rounded-md"
+          className="d-none lg:d-inline-flex rounded-md"
           onClick={onToggleCollapsed}
           aria-label="Collapse sidebar"
           aria-expanded={!collapsed}
@@ -85,25 +85,25 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          className="group flex h-11 flex-1 min-w-40 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-left shadow-sm transition-colors hover:border-emerald-300 hover:shadow-md"
+          className="group d-flex h-11 flex-1 min-w-40 align-items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-start shadow-sm transition-colors hover:border-emerald-300 hover:shadow-md"
         >
           <Search className="h-4 w-4 text-slate-400 group-hover:text-emerald-600" />
-          <span className="flex-1 truncate text-[14.5px] text-slate-500">Search anything</span>
-          <span className="hidden rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] sm:inline">⌘K</span>
+          <span className="flex-1 truncate fs-14.5 text-slate-500">Search anything</span>
+          <span className="d-none rounded-md border border-slate-200 px-1.5 py-0.5 fs-10 sm:d-inline">âŒ˜K</span>
         </button>
 
         {/* Notifications */}
-        <div className="flex items-center gap-1">
+        <div className="d-flex align-items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
-            className="relative rounded-full"
+            className="position-relative rounded-circle"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5 text-slate-600" />
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-emerald-600" />
+            <span className="position-absolute right-1 top-1 h-2 w-2 rounded-circle bg-emerald-600" />
           </Button>
-          <Button variant="ghost" size="icon" className="rounded-full" aria-label="Notification center">
+          <Button variant="ghost" size="icon" className="rounded-circle" aria-label="Notification center">
             <Mail className="h-5 w-5 text-slate-600" />
           </Button>
         </div>
@@ -113,36 +113,36 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-left hover:bg-slate-50"
+              className="d-flex h-10 align-items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-start hover:bg-slate-50"
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[13px] font-semibold text-white">
+              <span className="d-flex h-7 w-7 shrink-0 align-items-center justify-content-center rounded-circle bg-emerald-600 fs-13 fw-semibold text-white">
                 {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
               </span>
-              <span className="hidden text-[14.5px] font-medium text-slate-900 md:block">
+              <span className="d-none fs-14.5 fw-medium text-slate-900 md:d-block">
                 {profile?.full_name || 'User'}
               </span>
               <ChevronDown className="h-4 w-4 text-slate-400" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 rounded-xl border-slate-200">
-            <DropdownMenuLabel className="text-[14px] font-semibold">
+            <DropdownMenuLabel className="fs-14 fw-semibold">
               {profile?.full_name || 'User'}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="rounded-lg text-[14px]">
+            <DropdownMenuItem asChild className="rounded-lg fs-14">
               <Link to="/settings">
                 <UserCircle className="mr-2 h-4.5 w-4.5" />
                 Profile &amp; account
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="rounded-lg text-[14px]">
+            <DropdownMenuItem asChild className="rounded-lg fs-14">
               <Link to="/settings">
                 <Settings className="mr-2 h-4.5 w-4.5" />
                 Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={signOut} className="rounded-lg text-[14px]">
+            <DropdownMenuItem onClick={signOut} className="rounded-lg fs-14">
               <LogOut className="mr-2 h-4.5 w-4.5" />
               Sign out
             </DropdownMenuItem>
@@ -178,3 +178,5 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
     </header>
   );
 }
+
+

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -132,7 +132,7 @@ export default function Reports() {
           description="Analyze behavior trends, category averages and the score distribution over time."
           actions={
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-full sm:w-44"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-100 sm:w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="week">Last 7 days</SelectItem>
                 <SelectItem value="month">Last 30 days</SelectItem>
@@ -143,16 +143,16 @@ export default function Reports() {
         />
 
         {loading ? (
-          <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+          <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
         ) : (
           <>
             {/* Stats cards */}
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="row gap-5 sm:col-6 lg:col-3">
               <Card>
                 <CardContent className="stat-card p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="d-flex align-items-center justify-content-between">
                     <div>
-                      <p className="text-[13px] text-slate-500">Total Scores</p>
+                      <p className="fs-13 text-slate-500">Total Scores</p>
                       <p className="stat-value">{stats.totalScores}</p>
                     </div>
                     <BarChart3 className="h-8 w-8 text-slate-400" />
@@ -161,10 +161,10 @@ export default function Reports() {
               </Card>
               <Card>
                 <CardContent className="stat-card p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="d-flex align-items-center justify-content-between">
                     <div>
-                      <p className="text-[13px] text-slate-500">Average Score</p>
-                      <p className={`text-[32px] font-bold tracking-tight ${stats.avgScore >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{stats.avgScore}</p>
+                      <p className="fs-13 text-slate-500">Average Score</p>
+                      <p className={`fs-32 fw-bold tracking-tight ${stats.avgScore >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{stats.avgScore}</p>
                     </div>
                     {stats.avgScore >= 0 ? <TrendingUp className="h-8 w-8 text-emerald-600" /> : <TrendingDown className="h-8 w-8 text-red-600" />}
                   </div>
@@ -173,24 +173,24 @@ export default function Reports() {
               <Card>
                 <CardContent className="stat-card p-6">
                   <div>
-                    <p className="text-[13px] text-slate-500">Best Category</p>
-                    <p className="text-[30px] font-bold text-emerald-600">{stats.highestCategory}</p>
+                    <p className="fs-13 text-slate-500">Best Category</p>
+                    <p className="fs-30 fw-bold text-emerald-600">{stats.highestCategory}</p>
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="stat-card p-6">
                   <div>
-                    <p className="text-[13px] text-slate-500">Needs Attention</p>
-                    <p className="text-[30px] font-bold text-amber-600">{stats.lowestCategory}</p>
-                    <p className="mt-1 text-[12.5px] text-slate-500">Active days: {stats.daysWithActivity}</p>
+                    <p className="fs-13 text-slate-500">Needs Attention</p>
+                    <p className="fs-30 fw-bold text-amber-600">{stats.lowestCategory}</p>
+                    <p className="mt-1 fs-12.5 text-slate-500">Active days: {stats.daysWithActivity}</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Charts */}
-            <div className="grid gap-5 lg:grid-cols-2">
+            <div className="row gap-5 lg:col-6">
               <Card>
                 <CardHeader><CardTitle>Average Scores by Category</CardTitle></CardHeader>
                 <CardContent>
@@ -205,7 +205,7 @@ export default function Reports() {
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-[300px] text-[13px] text-slate-500">No data available</div>
+                    <div className="d-flex align-items-center justify-content-center h-[300px] fs-13 text-slate-500">No data available</div>
                   )}
                 </CardContent>
               </Card>
@@ -237,7 +237,7 @@ export default function Reports() {
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-[300px] text-[13px] text-slate-500">No data available</div>
+                    <div className="d-flex align-items-center justify-content-center h-[300px] fs-13 text-slate-500">No data available</div>
                   )}
                 </CardContent>
               </Card>
@@ -246,7 +246,7 @@ export default function Reports() {
             {/* Trend chart */}
             <Card>
               <CardHeader>
-                <div className="flex items-center gap-2">
+                <div className="d-flex align-items-center gap-2">
                   <Calendar className="h-5 w-5 text-emerald-600" />
                   <CardTitle>Score Trend Over Time</CardTitle>
                 </div>
@@ -267,7 +267,7 @@ export default function Reports() {
                     </ComposedChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-[320px] text-[13px] text-slate-500">
+                  <div className="d-flex align-items-center justify-content-center h-[320px] fs-13 text-slate-500">
                     No data available for this time range
                   </div>
                 )}
@@ -279,3 +279,4 @@ export default function Reports() {
     </DashboardLayout>
   );
 }
+

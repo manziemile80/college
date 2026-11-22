@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -42,8 +42,8 @@ export default function Settings() {
         {/* Notifications */}
         <Card>
           <CardHeader>
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-emerald-50">
+            <div className="d-flex align-items-start gap-3">
+              <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50">
                 <Bell className="h-5 w-5 text-emerald-600" />
               </div>
               <div>
@@ -53,17 +53,17 @@ export default function Settings() {
             </div>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="flex items-center justify-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+            <div className="d-flex align-items-center justify-content-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
               <div className="min-w-0">
-                <Label htmlFor="sms-notifications" className="text-[14px] font-semibold">SMS Notifications</Label>
-                <p className="mt-0.5 text-[13px] text-slate-500">Send SMS to parents when scores are updated</p>
+                <Label htmlFor="sms-notifications" className="fs-14 fw-semibold">SMS Notifications</Label>
+                <p className="mt-0.5 fs-13 text-slate-500">Send SMS to parents when scores are updated</p>
               </div>
               <Switch id="sms-notifications" checked={smsEnabled} onCheckedChange={setSmsEnabled} />
             </div>
-            <div className="flex items-center justify-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+            <div className="d-flex align-items-center justify-content-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
               <div className="min-w-0">
-                <Label htmlFor="email-notifications" className="text-[14px] font-semibold">Email Notifications</Label>
-                <p className="mt-0.5 text-[13px] text-slate-500">Send email summaries to parents weekly</p>
+                <Label htmlFor="email-notifications" className="fs-14 fw-semibold">Email Notifications</Label>
+                <p className="mt-0.5 fs-13 text-slate-500">Send email summaries to parents weekly</p>
               </div>
               <Switch id="email-notifications" checked={emailEnabled} onCheckedChange={setEmailEnabled} />
             </div>
@@ -73,8 +73,8 @@ export default function Settings() {
         {/* SMS Gateway */}
         <Card>
           <CardHeader>
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-blue-50">
+            <div className="d-flex align-items-start gap-3">
+              <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-blue-50">
                 <MessageSquare className="h-5 w-5 text-blue-600" />
               </div>
               <div>
@@ -84,9 +84,9 @@ export default function Settings() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-4 text-[13px] text-slate-500 space-y-2">
+            <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-4 fs-13 text-slate-500 space-y-2">
               <p>SMS gateway integration requires API keys. Please configure your SMS provider credentials to enable parent notifications.</p>
-              <p className="font-medium text-slate-600">Supported providers: <span className="font-normal">Twilio</span>, <span className="font-normal">Africa's Talking</span></p>
+              <p className="fw-medium text-slate-600">Supported providers: <span className="fw-normal">Twilio</span>, <span className="fw-normal">Africa's Talking</span></p>
             </div>
           </CardContent>
         </Card>
@@ -94,8 +94,8 @@ export default function Settings() {
         {/* Security */}
         <Card>
           <CardHeader>
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-red-50">
+            <div className="d-flex align-items-start gap-3">
+              <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-red-50">
                 <Shield className="h-5 w-5 text-red-600" />
               </div>
               <div>
@@ -105,17 +105,17 @@ export default function Settings() {
             </div>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="flex items-center justify-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+            <div className="d-flex align-items-center justify-content-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
               <div className="min-w-0">
-                <Label htmlFor="two-factor" className="text-[14px] font-semibold">Two-Factor Authentication</Label>
-                <p className="mt-0.5 text-[13px] text-slate-500">Require 2FA for admin accounts</p>
+                <Label htmlFor="two-factor" className="fs-14 fw-semibold">Two-Factor Authentication</Label>
+                <p className="mt-0.5 fs-13 text-slate-500">Require 2FA for admin accounts</p>
               </div>
               <Switch id="two-factor" checked={twoFactor} onCheckedChange={setTwoFactor} />
             </div>
-            <div className="flex items-center justify-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+            <div className="d-flex align-items-center justify-content-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
               <div className="min-w-0">
-                <Label htmlFor="session-timeout" className="text-[14px] font-semibold">Session Timeout</Label>
-                <p className="mt-0.5 text-[13px] text-slate-500">Auto-logout after 30 minutes of inactivity</p>
+                <Label htmlFor="session-timeout" className="fs-14 fw-semibold">Session Timeout</Label>
+                <p className="mt-0.5 fs-13 text-slate-500">Auto-logout after 30 minutes of inactivity</p>
               </div>
               <Switch id="session-timeout" checked={sessionTimeout} onCheckedChange={setSessionTimeout} />
             </div>
@@ -125,8 +125,8 @@ export default function Settings() {
         {/* Database */}
         <Card>
           <CardHeader>
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-cyan-50">
+            <div className="d-flex align-items-start gap-3">
+              <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-cyan-50">
                 <Database className="h-5 w-5 text-cyan-600" />
               </div>
               <div>
@@ -136,14 +136,14 @@ export default function Settings() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-3">
-              <span className="text-[13px] text-slate-500">Database Name</span>
-              <span className="text-[13px] font-medium text-slate-900">conduct</span>
+            <div className="d-flex justify-content-between rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-3">
+              <span className="fs-13 text-slate-500">Database Name</span>
+              <span className="fs-13 fw-medium text-slate-900">conduct</span>
             </div>
-            <div className="flex justify-between rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-3">
-              <span className="text-[13px] text-slate-500">Status</span>
-              <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-emerald-600">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />Connected
+            <div className="d-flex justify-content-between rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-3">
+              <span className="fs-13 text-slate-500">Status</span>
+              <span className="d-inline-flex align-items-center gap-1.5 fs-13 fw-medium text-emerald-600">
+                <span className="h-2.5 w-2.5 rounded-circle bg-emerald-600" />Connected
               </span>
             </div>
           </CardContent>
@@ -152,23 +152,23 @@ export default function Settings() {
         {/* Audit logs */}
         <Card>
           <CardHeader>
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-amber-50">
+            <div className="d-flex align-items-start gap-3">
+              <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-amber-50">
                 <ScrollText className="h-5 w-5 text-amber-600" />
               </div>
               <div>
                 <CardTitle>System Activity Logs</CardTitle>
-                <CardDescription>Recent sensitive actions — role changes, enrollment changes and discipline reviews</CardDescription>
+                <CardDescription>Recent sensitive actions â€” role changes, enrollment changes and discipline reviews</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             {logsLoading ? (
-              <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+              <div className="d-flex align-items-center justify-content-center py-10"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
             ) : logs.length === 0 ? (
               <div className="empty-state">
                 <ScrollText className="h-10 w-10 text-slate-400 mb-3" />
-                <p className="text-[14px] text-slate-500">No activity recorded yet.</p>
+                <p className="fs-14 text-slate-500">No activity recorded yet.</p>
               </div>
             ) : (
               <Table>
@@ -182,13 +182,13 @@ export default function Settings() {
                 <TableBody>
                   {logs.map((log) => (
                     <TableRow key={log.id}>
-                      <TableCell className="whitespace-nowrap text-[13px] text-slate-500">
+                      <TableCell className="text-nowrap fs-13 text-slate-500">
                         {format(new Date(log.created_at), 'MMM d, yyyy HH:mm')}
                       </TableCell>
-                      <TableCell className="text-[13px] font-medium text-slate-900 capitalize">
+                      <TableCell className="fs-13 fw-medium text-slate-900 capitalize">
                         {log.action.replace(/_/g, ' ')}
                       </TableCell>
-                      <TableCell className="text-[13px] text-slate-500">{log.entity}</TableCell>
+                      <TableCell className="fs-13 text-slate-500">{log.entity}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -200,3 +200,5 @@ export default function Settings() {
     </DashboardLayout>
   );
 }
+
+

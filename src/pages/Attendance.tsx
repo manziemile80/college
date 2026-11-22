@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -107,7 +107,7 @@ export default function Attendance() {
         />
 
         {/* Filters */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="row gap-4 sm:col-6 lg:col-3">
           <div className="space-y-2">
             <Label>Class</Label>
             <Select value={classId} onValueChange={setClassId}>
@@ -124,23 +124,23 @@ export default function Attendance() {
         {classId && (
           <Card>
             <CardHeader>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="d-flex d-flex flex-column gap-3 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
                 <div>
-                  <CardTitle className="text-[16px]">Roll Call</CardTitle>
-                  <p className="mt-1 text-[13px] text-slate-500">
-                    Attendance taken on <span className="font-semibold text-slate-900">{format(new Date(date), 'EEEE, MMMM d, yyyy')}</span>
+                  <CardTitle className="fs-16">Roll Call</CardTitle>
+                  <p className="mt-1 fs-13 text-slate-500">
+                    Attendance taken on <span className="fw-semibold text-slate-900">{format(new Date(date), 'EEEE, MMMM d, yyyy')}</span>
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex gap-3 rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-slate-600">
+                <div className="d-flex flex-wrap align-items-center gap-3">
+                  <div className="d-flex gap-3 rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-2 fs-13 text-slate-600">
                     <span>Present: {summary.present}</span>
                     <span>Absent: {summary.absent}</span>
                     <span>Late: {summary.late}</span>
                     <span>Excused: {summary.excused}</span>
                     <span>Total: {total}</span>
                   </div>
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
+                  <div className="position-relative">
+                    <Search className="position-absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
                     <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student..." className="w-48 pl-8" />
                   </div>
                   {canEdit && (
@@ -153,24 +153,24 @@ export default function Attendance() {
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
-                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+                <div className="d-flex justify-content-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
               ) : filtered.length === 0 ? (
-                <div className="empty-state"><CalendarCheck className="h-10 w-10 text-slate-400 mb-3" /><p className="text-[14px] text-slate-500">No students in this class</p></div>
+                <div className="empty-state"><CalendarCheck className="h-10 w-10 text-slate-400 mb-3" /><p className="fs-14 text-slate-500">No students in this class</p></div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Student</TableHead>
                       <TableHead>ID</TableHead>
-                      <TableHead className="text-right">Status</TableHead>
+                      <TableHead className="text-end">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filtered.map((s) => (
                       <TableRow key={s.id}>
-                        <TableCell className="font-medium text-slate-900">{s.first_name} {s.last_name}</TableCell>
-                        <TableCell className="text-[13px] text-slate-500">{s.student_id}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="fw-medium text-slate-900">{s.first_name} {s.last_name}</TableCell>
+                        <TableCell className="fs-13 text-slate-500">{s.student_id}</TableCell>
+                        <TableCell className="text-end">
                           {canEdit ? (
                             <Select value={statuses[s.id] || 'present'} onValueChange={(v) => setStatus(s.id, v as Status)}>
                               <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
@@ -195,10 +195,10 @@ export default function Attendance() {
         )}
 
         {/* Status legend */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="d-flex flex-wrap align-items-center gap-3">
           {(['present', 'absent', 'late', 'excused'] as const).map((s) => (
-            <span key={s} className="inline-flex items-center gap-1.5 text-[13px] text-slate-600">
-              <span className="h-2.5 w-2.5 rounded-full bg-slate-100" />{statusLabel(s)}
+            <span key={s} className="d-inline-flex align-items-center gap-1.5 fs-13 text-slate-600">
+              <span className="h-2.5 w-2.5 rounded-circle bg-slate-100" />{statusLabel(s)}
             </span>
           ))}
         </div>
@@ -206,3 +206,5 @@ export default function Attendance() {
     </DashboardLayout>
   );
 }
+
+

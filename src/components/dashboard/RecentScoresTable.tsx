@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+﻿import { format } from 'date-fns';
 import { ScoreBadge } from './ScoreBadge';
 import { BehaviorScoreWithDetails, BehaviorCategory } from '@/types/database';
 import { useEffect, useState } from 'react';
@@ -44,39 +44,39 @@ export function RecentScoresTable({ scores, loading }: RecentScoresTableProps) {
 
   if (scores.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="text-[14px] text-slate-500">No behavior scores recorded yet.</p>
+      <div className="d-flex d-flex flex-column align-items-center justify-content-center py-12 text-center">
+        <p className="fs-14 text-slate-500">No behavior scores recorded yet.</p>
       </div>
     );
   }
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-slate-200">
-      <table className="w-full">
+      <table className="w-100">
         <thead>
-          <tr className="border-b border-slate-200 bg-slate-50">
-            <th className="px-4 py-3 text-left text-[13px] font-semibold text-slate-500">Student</th>
-            <th className="px-4 py-3 text-left text-[13px] font-semibold text-slate-500">Category</th>
-            <th className="px-4 py-3 text-left text-[13px] font-semibold text-slate-500">Score</th>
-            <th className="px-4 py-3 text-left text-[13px] font-semibold text-slate-500">Remaining</th>
-            <th className="px-4 py-3 text-left text-[13px] font-semibold text-slate-500">Date</th>
+          <tr className="border-bottom border-slate-200 bg-slate-50">
+            <th className="px-4 py-3 text-start fs-13 fw-semibold text-slate-500">Student</th>
+            <th className="px-4 py-3 text-start fs-13 fw-semibold text-slate-500">Category</th>
+            <th className="px-4 py-3 text-start fs-13 fw-semibold text-slate-500">Score</th>
+            <th className="px-4 py-3 text-start fs-13 fw-semibold text-slate-500">Remaining</th>
+            <th className="px-4 py-3 text-start fs-13 fw-semibold text-slate-500">Date</th>
           </tr>
         </thead>
         <tbody>
           {scores.map((score) => (
-            <tr key={score.id} className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50">
+            <tr key={score.id} className="border-bottom border-slate-200 last:border-0 hover:bg-slate-50/50">
               <td className="px-4 py-4">
                 <div>
-                  <p className="text-[14px] font-medium text-slate-900">
+                  <p className="fs-14 fw-medium text-slate-900">
                     {score.student?.first_name} {score.student?.last_name}
                   </p>
-                  <p className="text-[13px] text-slate-500">
+                  <p className="fs-13 text-slate-500">
                     {score.student?.class?.name || 'No class'}
                   </p>
                 </div>
               </td>
               <td className="px-4 py-4">
-                <span className="rounded-[8px] bg-slate-100 px-2.5 py-1 text-[13px] font-medium text-slate-700">
+                <span className="rounded-[8px] bg-slate-100 px-2.5 py-1 fs-13 fw-medium text-slate-700">
                   {categoryLabels[score.category]}
                 </span>
               </td>
@@ -88,10 +88,10 @@ export function RecentScoresTable({ scores, loading }: RecentScoresTableProps) {
                   const raw = remainingMap[score.student_id] ?? 100;
                   const r = Math.max(0, Math.min(100, raw));
                   const cls = r >= 50 ? 'text-emerald-700' : r >= 25 ? 'text-amber-700' : 'text-red-700';
-                  return <span className={`text-[13px] font-semibold ${cls}`}>{r}/100</span>;
+                  return <span className={`fs-13 fw-semibold ${cls}`}>{r}/100</span>;
                 })()}
               </td>
-              <td className="px-4 py-4 text-[13px] text-slate-500">
+              <td className="px-4 py-4 fs-13 text-slate-500">
                 {format(new Date(score.score_date), 'MMM d, yyyy')}
               </td>
             </tr>
@@ -101,3 +101,5 @@ export function RecentScoresTable({ scores, loading }: RecentScoresTableProps) {
     </div>
   );
 }
+
+

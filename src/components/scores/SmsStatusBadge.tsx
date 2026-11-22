@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+﻿import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SmsStatusBadgeProps {
@@ -36,7 +36,7 @@ export function SmsStatusBadge({ status, className }: SmsStatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+        'd-inline-d-flex align-items-center gap-1 rounded-circle px-2 py-0.5 text-xs fw-medium',
         config.className,
         className
       )}
@@ -46,3 +46,4 @@ export function SmsStatusBadge({ status, className }: SmsStatusBadgeProps) {
     </span>
   );
 }
+

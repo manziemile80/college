@@ -1,11 +1,11 @@
-import { cn } from '@/lib/utils';
+﻿import { cn } from '@/lib/utils';
 import { SidebarNav } from './SidebarNav';
 
 export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-40 flex flex-col bg-sidebar',
+        'position-fixed inset-y-0 left-0 z-40 d-flex d-flex flex-column bg-sidebar',
         collapsed ? 'w-14' : 'w-[260px]',
       )}
     >
@@ -13,3 +13,5 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
     </aside>
   );
 }
+
+
