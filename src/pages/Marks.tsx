@@ -131,9 +131,9 @@ export default function Marks() {
 
         {/* Filters */}
         <Card>
-          <CardHeader><CardTitle className="d-flex align-items-center gap-2 fs-16"><ClipboardList className="h-5 w-5 text-emerald-600" /> Filters</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="d-flex align-items-center g-2 fs-16"><ClipboardList className="h-5 w-5 text-emerald-600" /> Filters</CardTitle></CardHeader>
           <CardContent>
-            <div className="row gap-4 sm:col-6 lg:col-3">
+            <div className="row g-3 col-md-6 col-xl-3">
               <div className="space-y-2">
                 <Label>Class</Label>
                 <Select value={classId} onValueChange={setClassId}>
@@ -170,9 +170,9 @@ export default function Marks() {
         {classId && subjectId && (
           <Card>
             <CardHeader>
-              <div className="d-flex d-flex flex-column gap-3 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
+              <div className="d-flex d-flex flex-column g-3 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
                 <CardTitle className="fs-16">Students â€” {TERM_LABELS[term]} {year}</CardTitle>
-                <div className="d-flex gap-2">
+                <div className="d-flex g-2">
                   <div className="position-relative">
                     <Search className="position-absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
                     <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student..." className="w-44 pl-8" />
@@ -187,7 +187,7 @@ export default function Marks() {
               ) : filteredStudents.length === 0 ? (
                 <div className="empty-state"><Loader2 className="h-10 w-10 text-slate-400" /><p className="fs-14 text-slate-500">No students in this class</p></div>
               ) : (
-                <Table>
+                <div class="table-responsive"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Student</TableHead>
@@ -230,7 +230,7 @@ export default function Marks() {
                       );
                     })}
                   </TableBody>
-                </Table>
+                </Table></div>
               )}
             </CardContent>
           </Card>
@@ -239,6 +239,9 @@ export default function Marks() {
     </DashboardLayout>
   );
 }
+
+
+
 
 
 

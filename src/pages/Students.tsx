@@ -231,12 +231,12 @@ export default function Students() {
           actions={canManage ? (
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" className="gap-2"><Plus className="h-4 w-4" />Add Student</Button>
+                <Button size="sm" className="g-2"><Plus className="h-4 w-4" />Add Student</Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-1rem)]">
                 <DialogHeader><DialogTitle className="fs-20 fw-semibold">Add New Student</DialogTitle></DialogHeader>
                 <form onSubmit={handleAddStudent} className="mt-4 space-y-4">
-                  <div className="row col-12 sm:col-6 gap-4">
+                  <div className="row col-12 col-md-6 g-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First Name</Label>
                       <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
@@ -265,7 +265,7 @@ export default function Students() {
                     <Label htmlFor="dateOfBirth">Date of Birth</Label>
                     <Input id="dateOfBirth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
                   </div>
-                  <div className="d-flex justify-content-end gap-3 pt-2">
+                  <div className="d-flex justify-content-end g-3 pt-2">
                     <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
                     <Button type="submit" disabled={formLoading}>
                       {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Adding...</> : 'Add Student'}
@@ -278,12 +278,12 @@ export default function Students() {
         />
 
         {/* Search + filters */}
-        <div className="d-flex d-flex flex-column gap-3 sm:d-flex flex-row sm:align-items-center">
+        <div className="d-flex d-flex flex-column g-3 sm:d-flex flex-row sm:align-items-center">
           <div className="position-relative w-100 sm:max-w-xs">
             <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input placeholder="Search students..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
           </div>
-          <div className="d-flex flex-wrap align-items-center gap-2">
+          <div className="d-flex flex-wrap align-items-center g-2">
             <button
               type="button"
               onClick={() => setClassFilter('__all__')}
@@ -322,7 +322,7 @@ export default function Students() {
           </CardContent></Card>
         ) : (
           <Card>
-            <Table>
+            <div class="table-responsive"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Student</TableHead>
@@ -338,7 +338,7 @@ export default function Students() {
                 {filteredStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell>
-                      <div className="d-flex align-items-center gap-3">
+                      <div className="d-flex align-items-center g-3">
                         <div className="d-flex h-9 w-9 align-items-center justify-content-center rounded-circle bg-emerald-600 fs-sm fw-semibold text-white">
                           {student.first_name.charAt(0)}{student.last_name.charAt(0)}
                         </div>
@@ -362,20 +362,20 @@ export default function Students() {
                     </TableCell>
                     {canManage && (
                       <TableCell className="text-end">
-                        <div className="d-flex justify-content-end gap-1.5">
-                          <Button variant="outline" size="sm" onClick={() => handleOpenLinkDialog(student)} className="gap-1.5">
+                        <div className="d-flex justify-content-end g-1.5">
+                          <Button variant="outline" size="sm" onClick={() => handleOpenLinkDialog(student)} className="g-1.5">
                             <Users className="h-4 w-4" />Link
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleOpenEditDialog(student)} className="gap-1.5">
+                          <Button variant="outline" size="sm" onClick={() => handleOpenEditDialog(student)} className="g-1.5">
                             <Pencil className="h-4 w-4" />Edit
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => {
                             setAccountStudent(student);
                             setAccountDialogOpen(true);
-                          }} className="gap-1.5">
+                          }} className="g-1.5">
                             <Eye className="h-4 w-4" />Account
                           </Button>
-                          <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(student)} className="gap-1.5">
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(student)} className="g-1.5">
                             <Trash2 className="h-4 w-4" />Delete
                           </Button>
                         </div>
@@ -384,20 +384,20 @@ export default function Students() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </Card>
         )}
 
         {/* Status badges preview row */}
         {students.length > 0 && (
-          <div className="d-flex flex-wrap gap-2">
+          <div className="d-flex flex-wrap g-2">
             <span className="rounded-circle bg-slate-100 px-3 py-1 fs-12.5 text-slate-600">
               Total: {students.length} students
             </span>
             <span className={cn('rounded-circle px-3 py-1 fs-12.5 fw-medium', badgeForStatus('active'))}>Active</span>
             <span className={cn('rounded-circle px-3 py-1 fs-12.5 fw-medium', badgeForStatus('inactive'))}>Inactive</span>
             {isAdmin && <span className={cn('rounded-circle px-3 py-1 fs-12.5 fw-medium', badgeForStatus('graduated'))}>Graduated</span>}
-            <span className="d-inline-flex align-items-center gap-1 rounded-circle bg-slate-100 px-3 py-1 fs-12.5 text-slate-600">
+            <span className="d-inline-flex align-items-center g-1 rounded-circle bg-slate-100 px-3 py-1 fs-12.5 text-slate-600">
               <ArrowUp className="h-3 w-3 text-emerald-600" /> In conduct review
             </span>
           </div>
@@ -411,7 +411,7 @@ export default function Students() {
           <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-1rem)]">
             <DialogHeader><DialogTitle>Edit Student</DialogTitle></DialogHeader>
             <form onSubmit={handleEditStudent} className="mt-4 space-y-4">
-              <div className="row col-12 sm:col-6 gap-4">
+              <div className="row col-12 col-md-6 g-4">
                 <div className="space-y-2">
                   <Label htmlFor="editFirstName">First Name</Label>
                   <Input id="editFirstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
@@ -451,7 +451,7 @@ export default function Students() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="d-flex justify-content-end gap-3 pt-2">
+              <div className="d-flex justify-content-end g-3 pt-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={formLoading}>{formLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Changes'}</Button>
               </div>
@@ -483,6 +483,9 @@ export default function Students() {
     </DashboardLayout>
   );
 }
+
+
+
 
 
 

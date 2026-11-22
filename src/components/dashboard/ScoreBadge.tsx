@@ -27,7 +27,7 @@ export function ScoreBadge({ score, size = 'md' }: ScoreBadgeProps) {
   return (
     <span
       className={cn(
-        'd-inline-flex align-items-center gap-1.5 rounded-circle border fw-medium',
+        'd-inline-flex align-items-center g-1.5 rounded-circle border fw-medium',
         getScoreClass(score),
         sizeClasses[size],
       )}
@@ -37,5 +37,6 @@ export function ScoreBadge({ score, size = 'md' }: ScoreBadgeProps) {
     </span>
   );
 }
+
 
 

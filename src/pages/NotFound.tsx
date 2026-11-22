@@ -21,9 +21,9 @@ const NotFound = () => {
         <p className="mb-8 max-w-md fs-14 text-slate-500">
           The page you are looking for doesn't exist or has been moved. Let's get you back on track.
         </p>
-        <div className="d-flex d-flex flex-column gap-2 sm:d-flex flex-row sm:justify-content-center">
+        <div className="d-flex d-flex flex-column g-2 sm:d-flex flex-row sm:justify-content-center">
           <Link to="/dashboard">
-            <Button className="gap-2"><ArrowLeft className="h-4 w-4" />Back to Dashboard</Button>
+            <Button className="g-2"><ArrowLeft className="h-4 w-4" />Back to Dashboard</Button>
           </Link>
         </div>
       </div>
@@ -32,6 +32,7 @@ const NotFound = () => {
 };
 
 export default NotFound;
+
 
 
 

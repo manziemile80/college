@@ -67,7 +67,7 @@ export default function Signup() {
       {/* Left section â€” form (form first on mobile) */}
       <div className="order-2 d-flex flex-1 d-flex flex-column justify-content-center px-6 py-12 sm:px-10 lg:order-1 lg:px-16">
         <div className="mx-auto w-100 max-w-md">
-          <div className="mb-8 d-flex align-items-center gap-3">
+          <div className="mb-8 d-flex align-items-center g-3">
             <img src={schoolLogo} alt="College De Rebero" className="h-14 w-14 object-contain" />
             <div>
               <h1 className="fs-32 fw-bold text-slate-900">College De Rebero</h1>
@@ -164,7 +164,7 @@ export default function Signup() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="h-12 w-100 gap-2 bg-gradient-to-br from-emerald-600 to-green-600 text-white shadow-md hover:from-emerald-700 hover:to-green-500"
+                className="h-12 w-100 g-2 bg-gradient-to-br from-emerald-600 to-green-600 text-white shadow-md hover:from-emerald-700 hover:to-green-500"
               >
                 {loading ? (
                   <>
@@ -208,13 +208,13 @@ export default function Signup() {
           <p className="mt-6 fs-18 opacity-90 drop-shadow-sm">
             Create an account and work with your school administrator to get set up with the appropriate access level.
           </p>
-          <div className="mt-10 row col-4 gap-4 text-center">
+          <div className="mt-10 row col-4 g-4 text-center">
             {[
               { label: 'Real-time behavior tracking', icon: 'âœ“' },
               { label: 'Instant parent notifications', icon: 'âœ“' },
               { label: 'Comprehensive reports', icon: 'âœ“' },
             ].map((item) => (
-              <div key={item.label} className="d-flex align-items-center justify-content-center gap-2">
+              <div key={item.label} className="d-flex align-items-center justify-content-center g-2">
                 <span className="d-flex h-8 w-8 align-items-center justify-content-center rounded-circle bg-white/20 fw-bold">{item.icon}</span>
                 <span className="fs-14 opacity-95">{item.label}</span>
               </div>
@@ -222,7 +222,7 @@ export default function Signup() {
           </div>
           <div className="mt-8 text-center">
             <Link to="/login">
-              <Button className="h-11 gap-2 bg-white text-emerald-700 hover:bg-emerald-50">
+              <Button className="h-11 g-2 bg-white text-emerald-700 hover:bg-emerald-50">
                 Sign in instead
               </Button>
             </Link>
@@ -232,6 +232,7 @@ export default function Signup() {
     </div>
   );
 }
+
 
 
 

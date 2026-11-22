@@ -149,7 +149,7 @@ export default function UsersPage() {
   const getRoleBadge = (role?: AppRole | null) => {
     if (!role) return <Badge variant="secondary">No role</Badge>;
     return (
-      <Badge variant="secondary" className="d-flex align-items-center gap-1.5">
+      <Badge variant="secondary" className="d-flex align-items-center g-1.5">
         <span className="fs-13 fw-semibold text-slate-700 text-uppercase">{role}</span>
       </Badge>
     );
@@ -197,7 +197,7 @@ export default function UsersPage() {
           </CardContent></Card>
         ) : (
           <Card>
-            <Table>
+            <div class="table-responsive"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
@@ -214,7 +214,7 @@ export default function UsersPage() {
                   return (
                     <TableRow key={user.id}>
                       <TableCell>
-                        <div className="d-flex align-items-center gap-3">
+                        <div className="d-flex align-items-center g-3">
                           <div className="d-flex h-9 w-9 align-items-center justify-content-center rounded-circle bg-emerald-100 text-emerald-700 fw-medium">
                             {user.full_name?.charAt(0)}
                           </div>
@@ -240,7 +240,7 @@ export default function UsersPage() {
                       </TableCell>
                       <TableCell className="text-end">
                         {isAdmin ? (
-                          <div className="d-flex justify-content-end gap-1.5">
+                          <div className="d-flex justify-content-end g-1.5">
                             <Dialog
                               open={isAssignDialogOpen && selectedUser?.id === user.id}
                               onOpenChange={(open) => {
@@ -280,7 +280,7 @@ export default function UsersPage() {
                                       </SelectContent>
                                     </Select>
                                   </div>
-                                  <div className="d-flex justify-content-end gap-3">
+                                  <div className="d-flex justify-content-end g-3">
                                     <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
                                     <Button onClick={handleAssignRole} disabled={formLoading}>
                                       {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : 'Save'}
@@ -299,13 +299,15 @@ export default function UsersPage() {
                   );
                 })}
               </TableBody>
-            </Table>
+            </Table></div>
           </Card>
         )}
       </div>
     </DashboardLayout>
   );
 }
+
+
 
 
 

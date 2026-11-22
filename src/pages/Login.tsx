@@ -80,7 +80,7 @@ export default function Login() {
       <div className="d-flex flex-1 align-items-center justify-content-center px-4 py-10 sm:px-6 lg:px-10">
         <div className="w-100 max-w-lg">
           {/* Institution header */}
-          <div className="mb-7 d-flex align-items-center gap-3">
+          <div className="mb-7 d-flex align-items-center g-3">
             <img src={schoolLogo} alt="College De Rebero" className="h-16 w-16 object-contain" />
             <div>
               <h1 className="fs-32 fw-bold text-slate-900">College De Rebero</h1>
@@ -91,7 +91,7 @@ export default function Login() {
           {/* Large white rounded login container */}
           <div className="rounded-[22px] border border-slate-200 bg-white px-6 py-8 shadow-lg sm:px-8">
             <div>
-              <h2 className="fs-34 fw-bold text-slate-900">Welcome back</h2>
+              <h2 className="fs-30 md:fs-34 fw-bold text-slate-900">Welcome back</h2>
               <p className="mt-2 fs-14 text-slate-500">
                 Sign in to your account to continue.
               </p>
@@ -144,7 +144,7 @@ export default function Login() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="h-12 w-100 gap-2 bg-gradient-to-br from-emerald-600 to-green-600 text-white shadow-md hover:from-emerald-700 hover:to-green-500"
+                className="h-12 w-100 g-2 bg-gradient-to-br from-emerald-600 to-green-600 text-white shadow-md hover:from-emerald-700 hover:to-green-500"
               >
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -156,20 +156,20 @@ export default function Login() {
             </form>
 
             <div className="mt-6 text-center">
-              <Link to="/signup" className="d-inline-flex align-items-center gap-2 fs-14 fw-medium text-emerald-700 hover:underline">
+              <Link to="/signup" className="d-inline-flex align-items-center g-2 fs-14 fw-medium text-emerald-700 hover:underline">
                 Sign Up
               </Link>
             </div>
 
             {/* Student marks checking information panel */}
-            <div className="mt-5 d-flex gap-3 rounded-[14px] border border-slate-200 bg-emerald-50 p-4">
+            <div className="mt-5 d-flex g-3 rounded-[14px] border border-slate-200 bg-emerald-50 p-4">
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
               <div className="min-w-0">
                 <p className="fs-14 fw-semibold text-slate-900">Student Marks Checking</p>
                 <p className="mt-1 fs-13 leading-relaxed text-slate-500">
                   View your behavior records, attendance and academic progress from anywhere.
                 </p>
-                <Link to="/check-marks" className="mt-2 d-inline-flex align-items-center gap-1 fs-13 fw-medium text-emerald-600 hover:underline">
+                <Link to="/check-marks" className="mt-2 d-inline-flex align-items-center g-1 fs-13 fw-medium text-emerald-600 hover:underline">
                   Check your marks
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
@@ -180,6 +180,17 @@ export default function Login() {
           <p className="mt-6 text-center fs-12.5 text-slate-400">
             College De Rebero Â· Excellence Â· Discipline Â· Integrity
           </p>
+
+          {/* Mobile/tablet promo — simplified, no unverified statistics */}
+          <div className="mt-6 d-block d-md-none p-4 rounded-[16px] border border-emerald-200 bg-emerald-50 text-center">
+            <div className="d-flex justify-content-center">
+              <span className="rounded-circle d-inline-flex h-9 w-9 align-items-center justify-content-center bg-emerald-600">
+                <GraduationCap className="h-5 w-5 text-white" />
+              </span>
+            </div>
+            <p className="mt-2 fw-semibold fs-14 text-emerald-700">Track behavior • Attendance • Reports</p>
+            <p className="mt-1 fs-13 text-emerald-600">Better Learning. Brighter Future.</p>
+          </div>
         </div>
       </div>
 
@@ -212,22 +223,22 @@ export default function Login() {
           </p>
 
           {promoStats && (
-            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-3">
-              <div className="d-flex flex-column gap-2 rounded-[16px] border border-white/20 bg-white/10 px-4 py-5">
+            <div className="mt-10 grid grid-cols-3 g-3 sm:g-4 lg:grid-cols-3">
+              <div className="d-flex flex-column g-2 rounded-[16px] border border-white/20 bg-white/10 px-4 py-5">
                 <div className="rounded-circle d-inline-flex h-10 w-10 align-items-center justify-content-center bg-white/20">
                   <GraduationCap className="h-5 w-5 text-golden" />
                 </div>
                 <p className="mt-2 fs-28 fw-bold text-white">{promoStats.students}</p>
                 <p className="fs-13 fw-medium text-white/80">Students</p>
               </div>
-              <div className="d-flex flex-column gap-2 rounded-[16px] border border-white/20 bg-white/10 px-4 py-5">
+              <div className="d-flex flex-column g-2 rounded-[16px] border border-white/20 bg-white/10 px-4 py-5">
                 <div className="rounded-circle d-inline-flex h-10 w-10 align-items-center justify-content-center bg-white/20">
                   <BookOpen className="h-5 w-5 text-golden" />
                 </div>
                 <p className="mt-2 fs-28 fw-bold text-white">{promoStats.classes}</p>
                 <p className="fs-13 fw-medium text-white/80">Classes</p>
               </div>
-              <div className="d-flex flex-column gap-2 rounded-[16px] border border-white/20 bg-white/10 px-4 py-5">
+              <div className="d-flex flex-column g-2 rounded-[16px] border border-white/20 bg-white/10 px-4 py-5">
                 <div className="rounded-circle d-inline-flex h-10 w-10 align-items-center justify-content-center bg-white/20">
                   <CalendarCheck className="h-5 w-5 text-golden" />
                 </div>
@@ -240,7 +251,7 @@ export default function Login() {
             Better Learning. Brighter Future.
           </p>
           <Link to="/signup">
-            <Button className="h-11 gap-2 bg-white text-emerald-700 hover:bg-slate-50">
+            <Button className="h-11 g-2 bg-white text-emerald-700 hover:bg-slate-50">
               <GraduationCap className="h-5 w-5" /> Create Account
             </Button>
           </Link>
@@ -249,6 +260,7 @@ export default function Login() {
     </div>
   );
 }
+
 
 
 

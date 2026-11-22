@@ -86,7 +86,7 @@ export default function Subjects() {
           actions={canManage ? (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" />Add Subject</Button>
+                <Button onClick={openCreate} className="g-2"><Plus className="h-4 w-4" />Add Subject</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>{editingId ? 'Edit Subject' : 'New Subject'}</DialogTitle></DialogHeader>
@@ -103,7 +103,7 @@ export default function Subjects() {
                     <Label>Description (optional)</Label>
                     <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                   </div>
-                  <div className="d-flex justify-content-end gap-2 pt-2">
+                  <div className="d-flex justify-content-end g-2 pt-2">
                     <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                     <Button type="submit" disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (editingId ? 'Update' : 'Create')}</Button>
                   </div>
@@ -114,7 +114,7 @@ export default function Subjects() {
         />
 
         <Card>
-          <CardHeader><CardTitle className="d-flex align-items-center gap-2 fs-18"><BookOpen className="h-5 w-5 text-emerald-600" /> All Subjects</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="d-flex align-items-center g-2 fs-18"><BookOpen className="h-5 w-5 text-emerald-600" /> All Subjects</CardTitle></CardHeader>
           <CardContent>
             {loading ? (
               <div className="d-flex justify-content-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
@@ -125,7 +125,7 @@ export default function Subjects() {
                 <p className="fs-13 text-slate-500">Create the first subject for your school</p>
               </div>
             ) : (
-              <Table>
+              <div class="table-responsive"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
@@ -142,7 +142,7 @@ export default function Subjects() {
                       <TableCell className="fs-13 text-slate-500">{s.description || '-'}</TableCell>
                       {canManage && (
                         <TableCell>
-                          <div className="d-flex justify-content-end gap-1">
+                          <div className="d-flex justify-content-end g-1">
                             <Button variant="edit" size="icon" onClick={() => openEdit(s)} aria-label="Edit subject"><Pencil className="h-4 w-4" /></Button>
                             <Button variant="destructive" size="icon" onClick={() => handleDelete(s.id)} aria-label="Delete subject"><Trash2 className="h-4 w-4" /></Button>
                           </div>
@@ -151,7 +151,7 @@ export default function Subjects() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             )}
           </CardContent>
         </Card>
@@ -159,5 +159,7 @@ export default function Subjects() {
     </DashboardLayout>
   );
 }
+
+
 
 

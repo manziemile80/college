@@ -107,7 +107,7 @@ export default function Materials() {
           title="Learning Materials"
           description="Notes, PDFs and resources shared with students for each subject and class."
           actions={isStaff ? (
-            <Button className="gap-2" onClick={() => { setEditingId(null); setForm(emptyForm); setOpen(true); }}>
+            <Button className="g-2" onClick={() => { setEditingId(null); setForm(emptyForm); setOpen(true); }}>
               <Plus className="h-4 w-4" /> Add Material
             </Button>
           ) : undefined}
@@ -126,7 +126,7 @@ export default function Materials() {
             <p className="fw-medium text-slate-900">No materials found</p>
           </CardContent></Card>
         ) : (
-          <div className="row gap-5 sm:col-6 xl:col-4">
+          <div className="row g-4 col-md-6 col-xl-3">
             {filtered.map((m) => (
               <Card key={m.id} className="d-flex d-flex flex-column">
                 <CardContent className="space-y-3 p-5">
@@ -137,7 +137,7 @@ export default function Materials() {
                     <h3 className="fw-semibold text-slate-900">{m.title}</h3>
                     <p className="mt-1 line-clamp-2 fs-13 text-slate-500">{m.description || 'No description'}</p>
                   </div>
-                  <div className="d-flex flex-wrap gap-1.5">
+                  <div className="d-flex flex-wrap g-1.5">
                     {label(subjects, m.subject_id) && (
                       <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{label(subjects, m.subject_id)}</span>
                     )}
@@ -145,10 +145,10 @@ export default function Materials() {
                       <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{label(classes, m.class_id)}</span>
                     )}
                   </div>
-                  <div className="mt-auto d-flex align-items-center gap-2">
+                  <div className="mt-auto d-flex align-items-center g-2">
                     {m.file_url && (
                       <a href={m.file_url} target="_blank" rel="noreferrer">
-                        <Button variant="outline" size="sm" className="gap-1.5"><Download className="h-4 w-4" />Open</Button>
+                        <Button variant="outline" size="sm" className="g-1.5"><Download className="h-4 w-4" />Open</Button>
                       </a>
                     )}
                     {isStaff && (
@@ -190,7 +190,7 @@ export default function Materials() {
                 <Label>File / resource link</Label>
                 <Input value={form.file_url} maxLength={500} placeholder="https://..." onChange={(e) => setForm({ ...form, file_url: e.target.value })} />
               </div>
-              <div className="row gap-3 sm:col-6">
+              <div className="row g-2 col-md-6">
                 <div>
                   <Label>Subject</Label>
                   <Select value={form.subject_id} onValueChange={(v) => setForm({ ...form, subject_id: v })}>
@@ -221,6 +221,8 @@ export default function Materials() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

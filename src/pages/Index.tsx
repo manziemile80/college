@@ -98,19 +98,19 @@ export default function Index() {
     <div className="min-h-screen bg-background d-flex d-flex flex-column">
       {/* Top bar */}
       <header className="position-sticky top-0 z-30 border-bottom border-slate-200 bg-white">
-        <div className="d-flex h-16 align-items-center justify-content-between gap-3 px-3 sm:px-6">
-          <div className="d-flex align-items-center gap-2.5 min-w-0">
+        <div className="d-flex h-16 align-items-center justify-content-between g-3 px-3 sm:px-6">
+          <div className="d-flex align-items-center g-2.5 min-w-0">
             <img src={schoolLogo} alt="College De Rebero" width={32} height={32} className="h-8 w-8 object-contain" />
             <div className="min-w-0">
               <p className="truncate fs-15 fw-semibold text-slate-900">College De Rebero</p>
               <p className="truncate fs-11 text-slate-500">Behavior Management System</p>
             </div>
           </div>
-          <div className="d-flex align-items-center gap-2">
-            <span className="d-none align-items-center gap-1.5 rounded-circle border border-slate-200 bg-slate-50 px-2.5 py-1 fs-11 text-slate-600 sm:d-inline-flex">
+          <div className="d-flex align-items-center g-2">
+            <span className="d-none align-items-center g-1.5 rounded-circle border border-slate-200 bg-slate-50 px-2.5 py-1 fs-11 text-slate-600 sm:d-inline-flex">
               System online
             </span>
-            <Link to="/login"><Button variant="outline" size="sm" className="gap-1.5"><LogIn className="h-4 w-4" />Sign In</Button></Link>
+            <Link to="/login"><Button variant="outline" size="sm" className="g-1.5"><LogIn className="h-4 w-4" />Sign In</Button></Link>
             <Link to="/signup"><Button size="sm">Create Account</Button></Link>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default function Index() {
               { label: 'Reports', icon: BarChart3 },
               { label: 'Users', icon: Users },
             ].map((item) => (
-              <div key={item.label} className="d-flex align-items-center gap-2.5 rounded-lg px-3 py-2 fs-14 text-slate-600">
+              <div key={item.label} className="d-flex align-items-center g-2.5 rounded-lg px-3 py-2 fs-14 text-slate-600">
                 <item.icon className="h-4 w-4" />
                 {item.label}
               </div>
@@ -151,8 +151,8 @@ export default function Index() {
               className="position-absolute inset-0 h-100 w-100 object-cover"
             />
             <div className="position-absolute inset-0 bg-gradient-to-r from-emerald-900/85 via-emerald-800/70 to-emerald-700/40" />
-            <div className="position-relative z-10 d-flex d-flex flex-column justify-content-center gap-3 p-6 sm:p-10">
-              <p className="d-inline-flex align-items-center gap-2 rounded-circle border border-white/20 bg-white/10 px-3 py-1 fs-12 fw-medium text-white">
+            <div className="position-relative z-10 d-flex d-flex flex-column justify-content-center g-3 p-6 sm:p-10">
+              <p className="d-inline-flex align-items-center g-2 rounded-circle border border-white/20 bg-white/10 px-3 py-1 fs-12 fw-medium text-white">
                 <Building2 className="h-3.5 w-3.5" /> College De Rebero Â· Kigali, Rwanda
               </p>
               <h1 className="fs-32 fw-bold tracking-tight text-white sm:fs-40">
@@ -162,15 +162,15 @@ export default function Index() {
                 Record conduct deductions, take attendance, enter subject marks and generate ranked
                 report cards â€” all in one internal system.
               </p>
-              <div className="d-flex flex-wrap gap-2 pt-2">
-                <Link to="/login"><Button size="sm" className="gap-2 bg-white text-emerald-800 hover:bg-emerald-50">Open the system <ArrowRight className="h-4 w-4" /></Button></Link>
+              <div className="d-flex flex-wrap g-2 pt-2">
+                <Link to="/login"><Button size="sm" className="g-2 bg-white text-emerald-800 hover:bg-emerald-50">Open the system <ArrowRight className="h-4 w-4" /></Button></Link>
                 <Link to="/signup"><Button size="sm" variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white/15">Request access</Button></Link>
               </div>
             </div>
           </section>
 
           {/* Verified stats */}
-          <section className="row col-6 gap-3 lg:col-3">
+          <section className="row col-6 g-3 lg:col-3">
             {statsLoading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="rounded-[12px] border border-slate-200 bg-white p-3.5">
@@ -188,7 +188,7 @@ export default function Index() {
                 </div>
               ))
             ) : (
-              <div className="col-span-2 fs-sm text-slate-500 lg:col-span-4">
+              <div className="col-6 fs-sm text-slate-500 col-lg-3">
                 Institution statistics are available once verified data is loaded.
               </div>
             )}
@@ -200,9 +200,9 @@ export default function Index() {
               <h2 className="fs-18 fw-semibold text-slate-900">Available modules</h2>
               <span className="fs-12.5 text-slate-500">Access depends on your role</span>
             </div>
-            <div className="row gap-3 p-4 sm:col-6">
+            <div className="row g-2 p-4 col-md-6">
               {modules.map((m) => (
-                <div key={m.title} className="d-flex gap-3 rounded-[10px] border border-slate-200 bg-slate-50 p-3.5">
+                <div key={m.title} className="d-flex g-3 rounded-[10px] border border-slate-200 bg-slate-50 p-3.5">
                   <div className={`d-flex h-9 w-9 shrink-0 align-items-center justify-content-center rounded-lg ${m.tone}`}>
                     <m.icon className="h-4.5 w-4.5" />
                   </div>
@@ -216,8 +216,8 @@ export default function Index() {
           </section>
 
           {/* Access row */}
-          <section className="d-flex d-flex flex-column align-items-start justify-content-between gap-3 rounded-[14px] border border-slate-200 bg-slate-50 p-4 sm:d-flex flex-row sm:align-items-center">
-            <div className="d-flex align-items-start gap-2.5">
+          <section className="d-flex d-flex flex-column align-items-start justify-content-between g-3 rounded-[14px] border border-slate-200 bg-slate-50 p-4 sm:d-flex flex-row sm:align-items-center">
+            <div className="d-flex align-items-start g-2.5">
               <CheckCircle className="mt-0.5 h-5 w-5 text-emerald-600" />
               <div>
                 <p className="fs-14 fw-medium text-slate-900">Already registered?</p>
@@ -233,7 +233,7 @@ export default function Index() {
 
       {/* Footer */}
       <footer className="border-top border-slate-200 bg-white px-4 py-4 text-center fs-12 text-slate-500 sm:text-start">
-        <div className="d-flex d-flex flex-column gap-1 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
+        <div className="d-flex d-flex flex-column g-1 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
           <span>Gicumbi, Ruvune, Rebero Â· +250 788 000 000 Â· info@collegederebero.rw</span>
           <span>Â© {new Date().getFullYear()} College De Rebero â€” Excellence Â· Discipline Â· Integrity</span>
         </div>
@@ -241,6 +241,8 @@ export default function Index() {
     </div>
   );
 }
+
+
 
 
 

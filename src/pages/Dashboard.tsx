@@ -165,7 +165,7 @@ export default function Dashboard() {
       case 'teacher':
       case 'viewer':
         return (
-          <div className="row gap-5 sm:col-6 lg:col-3">
+          <div className="row g-4 col-md-6 col-xl-3">
             <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="secondary" />
             <StatCard title="Total Classes" value={stats.totalClasses || 0} icon={Users} variant="tertiary" />
             {role !== 'viewer' && (
@@ -184,7 +184,7 @@ export default function Dashboard() {
         );
       case 'dos':
         return (
-          <div className="row gap-5 sm:col-6 lg:col-3">
+          <div className="row g-4 col-md-6 col-xl-3">
             <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="secondary" />
             <StatCard title="Classes" value={stats.totalClasses || 0} icon={Users} variant="tertiary" />
             <StatCard title="Subjects" value={stats.totalSubjects || 0} icon={BookOpen} variant="secondary" />
@@ -193,7 +193,7 @@ export default function Dashboard() {
         );
       case 'dod':
         return (
-          <div className="row gap-5 sm:col-6 lg:col-3">
+          <div className="row g-4 col-md-6 col-xl-3">
             <StatCard title="Pending Reviews" value={stats.pendingIncidents || 0} icon={AlertTriangle} variant="warning" />
             <StatCard title="Reviewed Incidents" value={stats.reviewedIncidents || 0} icon={CheckCircle} variant="secondary" />
             <StatCard title="Total Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} variant="tertiary" />
@@ -202,19 +202,19 @@ export default function Dashboard() {
         );
       case 'stock_manager':
         return (
-          <div className="row gap-5 sm:col-6 lg:col-3">
+          <div className="row g-4 col-md-6 col-xl-3">
             <StatCard title="Stock Items" value={stats.stockItems || 0} icon={Boxes} />
           </div>
         );
       case 'parent':
         return (
-          <div className="row gap-5 sm:col-6 lg:col-3">
+          <div className="row g-4 col-md-6 col-xl-3">
             <StatCard title="Linked Child" value={stats.myChildren || 0} icon={GraduationCap} />
           </div>
         );
       case 'student':
         return (
-          <div className="row gap-5 sm:col-6 lg:col-3">
+          <div className="row g-4 col-md-6 col-xl-3">
             <StatCard title="Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} />
           </div>
         );
@@ -255,7 +255,7 @@ export default function Dashboard() {
     }
     if (actions.length === 0) return null;
     return (
-      <div className="row gap-5 md:col-6 lg:col-4">
+      <div className="row g-4 md:col-6 col-lg-3">
         {actions.map((a) => (
           <Link key={a.to} to={a.to}>
             <Card className="h-100 cursor-pointer transition-colors hover:border-emerald-300">
@@ -294,7 +294,7 @@ export default function Dashboard() {
             <CardTitle>Attendance Statistics {totalAttendance > 0 ? `Â· ${totalAttendance} days this year` : ''}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="row gap-4 sm:col-6 lg:col-3">
+            <div className="row g-3 col-md-6 col-xl-3">
               {[
                 { label: 'Present', value: attendanceStats.present, cls: 'text-emerald-600' },
                 { label: 'Absent', value: attendanceStats.absent, cls: 'text-red-600' },
@@ -328,7 +328,7 @@ export default function Dashboard() {
               <CardTitle>Discipline Statistics</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="row gap-4 sm:col-6 lg:col-3">
+              <div className="row g-3 col-md-6 col-xl-3">
                 <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
                   <p className="fs-13 fw-medium text-slate-500">Pending reviews</p>
                   <p className="stat-value text-amber-600">{stats.pendingIncidents || 0}</p>
@@ -341,7 +341,7 @@ export default function Dashboard() {
               {recentIncidents.length > 0 && (
                 <div className="space-y-2">
                   {recentIncidents.map((i) => (
-                    <div key={i.id} className="d-flex align-items-center justify-content-between gap-3 rounded-[10px] border border-slate-200 p-3">
+                    <div key={i.id} className="d-flex align-items-center justify-content-between g-3 rounded-[10px] border border-slate-200 p-3">
                       <p className="truncate fs-13 fw-medium text-slate-900">
                         {i.student ? `${i.student.first_name} ${i.student.last_name}` : 'Student'}
                         {i.rule?.title ? ` Â· ${i.rule.title}` : ''}
@@ -363,7 +363,7 @@ export default function Dashboard() {
             <CardTitle>Academic Performance â€” {new Date().getFullYear()}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="row gap-5 sm:col-6">
+            <div className="row g-4 col-md-6">
               <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
                 <p className="fs-13 fw-medium text-slate-500">Average Marks (/100)</p>
                 <p className="stat-value text-emerald-600">{stats.avgMarks ?? 0}</p>
@@ -425,6 +425,8 @@ export default function Dashboard() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

@@ -42,7 +42,7 @@ export default function Settings() {
         {/* Notifications */}
         <Card>
           <CardHeader>
-            <div className="d-flex align-items-start gap-3">
+            <div className="d-flex align-items-start g-3">
               <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50">
                 <Bell className="h-5 w-5 text-emerald-600" />
               </div>
@@ -53,14 +53,14 @@ export default function Settings() {
             </div>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="d-flex align-items-center justify-content-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+            <div className="d-flex align-items-center justify-content-between g-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
               <div className="min-w-0">
                 <Label htmlFor="sms-notifications" className="fs-14 fw-semibold">SMS Notifications</Label>
                 <p className="mt-0.5 fs-13 text-slate-500">Send SMS to parents when scores are updated</p>
               </div>
               <Switch id="sms-notifications" checked={smsEnabled} onCheckedChange={setSmsEnabled} />
             </div>
-            <div className="d-flex align-items-center justify-content-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+            <div className="d-flex align-items-center justify-content-between g-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
               <div className="min-w-0">
                 <Label htmlFor="email-notifications" className="fs-14 fw-semibold">Email Notifications</Label>
                 <p className="mt-0.5 fs-13 text-slate-500">Send email summaries to parents weekly</p>
@@ -73,7 +73,7 @@ export default function Settings() {
         {/* SMS Gateway */}
         <Card>
           <CardHeader>
-            <div className="d-flex align-items-start gap-3">
+            <div className="d-flex align-items-start g-3">
               <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-blue-50">
                 <MessageSquare className="h-5 w-5 text-blue-600" />
               </div>
@@ -94,7 +94,7 @@ export default function Settings() {
         {/* Security */}
         <Card>
           <CardHeader>
-            <div className="d-flex align-items-start gap-3">
+            <div className="d-flex align-items-start g-3">
               <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-red-50">
                 <Shield className="h-5 w-5 text-red-600" />
               </div>
@@ -105,14 +105,14 @@ export default function Settings() {
             </div>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="d-flex align-items-center justify-content-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+            <div className="d-flex align-items-center justify-content-between g-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
               <div className="min-w-0">
                 <Label htmlFor="two-factor" className="fs-14 fw-semibold">Two-Factor Authentication</Label>
                 <p className="mt-0.5 fs-13 text-slate-500">Require 2FA for admin accounts</p>
               </div>
               <Switch id="two-factor" checked={twoFactor} onCheckedChange={setTwoFactor} />
             </div>
-            <div className="d-flex align-items-center justify-content-between gap-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+            <div className="d-flex align-items-center justify-content-between g-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
               <div className="min-w-0">
                 <Label htmlFor="session-timeout" className="fs-14 fw-semibold">Session Timeout</Label>
                 <p className="mt-0.5 fs-13 text-slate-500">Auto-logout after 30 minutes of inactivity</p>
@@ -125,7 +125,7 @@ export default function Settings() {
         {/* Database */}
         <Card>
           <CardHeader>
-            <div className="d-flex align-items-start gap-3">
+            <div className="d-flex align-items-start g-3">
               <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-cyan-50">
                 <Database className="h-5 w-5 text-cyan-600" />
               </div>
@@ -142,7 +142,7 @@ export default function Settings() {
             </div>
             <div className="d-flex justify-content-between rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-3">
               <span className="fs-13 text-slate-500">Status</span>
-              <span className="d-inline-flex align-items-center gap-1.5 fs-13 fw-medium text-emerald-600">
+              <span className="d-inline-flex align-items-center g-1.5 fs-13 fw-medium text-emerald-600">
                 <span className="h-2.5 w-2.5 rounded-circle bg-emerald-600" />Connected
               </span>
             </div>
@@ -152,7 +152,7 @@ export default function Settings() {
         {/* Audit logs */}
         <Card>
           <CardHeader>
-            <div className="d-flex align-items-start gap-3">
+            <div className="d-flex align-items-start g-3">
               <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-amber-50">
                 <ScrollText className="h-5 w-5 text-amber-600" />
               </div>
@@ -171,7 +171,7 @@ export default function Settings() {
                 <p className="fs-14 text-slate-500">No activity recorded yet.</p>
               </div>
             ) : (
-              <Table>
+              <div class="table-responsive"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>When</TableHead>
@@ -192,7 +192,7 @@ export default function Settings() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             )}
           </CardContent>
         </Card>
@@ -200,6 +200,8 @@ export default function Settings() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

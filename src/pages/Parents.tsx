@@ -164,7 +164,7 @@ export default function Parents() {
           actions={canManage ? (
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" className="gap-2"><Plus className="h-4 w-4" />Add Parent</Button>
+                <Button size="sm" className="g-2"><Plus className="h-4 w-4" />Add Parent</Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-1rem)]">
                 <DialogHeader><DialogTitle>Add New Parent</DialogTitle></DialogHeader>
@@ -185,7 +185,7 @@ export default function Parents() {
                     <Label htmlFor="address">Address (Optional)</Label>
                     <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
                   </div>
-                  <div className="d-flex justify-content-end gap-3 pt-2">
+                  <div className="d-flex justify-content-end g-3 pt-2">
                     <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
                     <Button type="submit" disabled={formLoading}>
                       {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Adding...</> : 'Add Parent'}
@@ -212,7 +212,7 @@ export default function Parents() {
           </CardContent></Card>
         ) : (
           <Card>
-            <Table>
+            <div class="table-responsive"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Parent</TableHead>
@@ -226,7 +226,7 @@ export default function Parents() {
                 {filteredParents.map((parent) => (
                   <TableRow key={parent.id}>
                     <TableCell>
-                      <div className="d-flex align-items-center gap-3">
+                      <div className="d-flex align-items-center g-3">
                         <div className="d-flex h-9 w-9 align-items-center justify-content-center rounded-circle bg-blue-100 fs-13 fw-semibold text-blue-700">
                           {parent.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                         </div>
@@ -237,8 +237,8 @@ export default function Parents() {
                       </div>
                     </TableCell>
                     <TableCell className="space-y-1 fs-13 text-slate-500">
-                      <span className="d-flex align-items-center gap-2"><Phone className="h-4 w-4 text-emerald-600" />{parent.phone}</span>
-                      <span className="d-flex align-items-center gap-2"><Mail className="h-4 w-4 text-emerald-600" />{parent.email}</span>
+                      <span className="d-flex align-items-center g-2"><Phone className="h-4 w-4 text-emerald-600" />{parent.phone}</span>
+                      <span className="d-flex align-items-center g-2"><Mail className="h-4 w-4 text-emerald-600" />{parent.email}</span>
                     </TableCell>
                     <TableCell>
                       {parent.children && parent.children.length > 0 ? (
@@ -257,7 +257,7 @@ export default function Parents() {
                     <TableCell className="fs-13 text-slate-500">{parent.address || 'â€”'}</TableCell>
                     {canManage && (
                       <TableCell className="text-end">
-                        <Button variant="edit" size="sm" onClick={() => handleOpenEditDialog(parent)} className="gap-1.5">
+                        <Button variant="edit" size="sm" onClick={() => handleOpenEditDialog(parent)} className="g-1.5">
                           <Pencil className="h-4 w-4" />Edit
                         </Button>
                       </TableCell>
@@ -265,7 +265,7 @@ export default function Parents() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </Card>
         )}
 
@@ -292,7 +292,7 @@ export default function Parents() {
                 <Label htmlFor="editAddress">Address (Optional)</Label>
                 <Input id="editAddress" value={address} onChange={(e) => setAddress(e.target.value)} />
               </div>
-              <div className="d-flex justify-content-end gap-3 pt-2">
+              <div className="d-flex justify-content-end g-3 pt-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={formLoading}>
                   {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : 'Save Changes'}
@@ -305,6 +305,8 @@ export default function Parents() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

@@ -38,7 +38,7 @@ export function ScoreDetailsDialog({
         </DialogHeader>
         <div className="space-y-4">
           {/* Student Info */}
-          <div className="d-flex align-items-center gap-3">
+          <div className="d-flex align-items-center g-3">
             <div className="d-flex h-12 w-12 align-items-center justify-content-center rounded-circle bg-primary text-primary-foreground fw-medium">
               {score.student?.first_name?.charAt(0)}
               {score.student?.last_name?.charAt(0)}
@@ -54,7 +54,7 @@ export function ScoreDetailsDialog({
           </div>
 
           {/* Score Info */}
-          <div className="row col-6 gap-4 rounded-lg bg-muted/50 p-4">
+          <div className="row col-6 g-4 rounded-lg bg-muted/50 p-4">
             <div>
               <p className="text-xs text-muted-foreground">Category</p>
               <p className="fw-medium">{categoryLabels[score.category]}</p>
@@ -95,4 +95,5 @@ export function ScoreDetailsDialog({
     </Dialog>
   );
 }
+
 

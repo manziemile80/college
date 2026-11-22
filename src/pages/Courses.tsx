@@ -189,7 +189,7 @@ export default function Courses() {
           title="Courses"
           description="Online courses with lessons, videos and reading content for each subject and class."
           actions={isStaff ? (
-            <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" />New Course</Button>
+            <Button onClick={openNew} className="g-2"><Plus className="h-4 w-4" />New Course</Button>
           ) : undefined}
         />
 
@@ -207,11 +207,11 @@ export default function Courses() {
             <p className="mt-1 fs-13 text-slate-500">{isStaff ? 'Create your first course to start publishing lessons.' : 'Courses will appear here once published.'}</p>
           </CardContent></Card>
         ) : (
-          <div className="row gap-5 sm:col-6 xl:col-4">
+          <div className="row g-4 col-md-6 col-xl-3">
             {filtered.map((course) => (
               <Card key={course.id} className="d-flex d-flex flex-column">
-                <CardContent className="d-flex flex-1 d-flex flex-column gap-3 p-5">
-                  <div className="d-flex align-items-start justify-content-between gap-2">
+                <CardContent className="d-flex flex-1 d-flex flex-column g-3 p-5">
+                  <div className="d-flex align-items-start justify-content-between g-2">
                     <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
                       <BookOpen className="h-5 w-5" />
                     </div>
@@ -225,7 +225,7 @@ export default function Courses() {
                       {course.description || 'No description provided.'}
                     </p>
                   </div>
-                  <div className="d-flex flex-wrap gap-1.5">
+                  <div className="d-flex flex-wrap g-1.5">
                     {subjectName(course.subject_id) && (
                       <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{subjectName(course.subject_id)}</span>
                     )}
@@ -236,8 +236,8 @@ export default function Courses() {
                       {course.term?.replace('term', 'Term ') || 'â€”'} Â· {course.academic_year}
                     </span>
                   </div>
-                  <div className="mt-auto d-flex align-items-center gap-2 pt-2">
-                    <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openLessons(course)}>
+                  <div className="mt-auto d-flex align-items-center g-2 pt-2">
+                    <Button variant="outline" size="sm" className="g-1.5" onClick={() => openLessons(course)}>
                       <PlayCircle className="h-4 w-4" /> Lessons
                     </Button>
                     {isStaff && (
@@ -266,7 +266,7 @@ export default function Courses() {
                 <Label>Description</Label>
                 <Textarea value={form.description} maxLength={2000} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What learners will cover in this course" />
               </div>
-              <div className="row gap-3 sm:col-6">
+              <div className="row g-2 col-md-6">
                 <div>
                   <Label>Subject</Label>
                   <Select value={form.subject_id} onValueChange={(v) => setForm({ ...form, subject_id: v })}>
@@ -326,12 +326,12 @@ export default function Courses() {
               )}
               {lessons.map((lesson, i) => (
                 <div key={lesson.id} className="rounded-[10px] border border-slate-200 p-3">
-                  <div className="d-flex align-items-start justify-content-between gap-2">
+                  <div className="d-flex align-items-start justify-content-between g-2">
                     <div className="min-w-0">
                       <p className="fs-14 fw-semibold text-slate-900">{i + 1}. {lesson.title}</p>
                       {lesson.content && <p className="mt-1 text-wrap fs-13 text-slate-500">{lesson.content}</p>}
                       {lesson.video_url && (
-                        <a href={lesson.video_url} target="_blank" rel="noreferrer" className="mt-2 d-inline-flex align-items-center gap-1.5 fs-13 text-emerald-600 underline">
+                        <a href={lesson.video_url} target="_blank" rel="noreferrer" className="mt-2 d-inline-flex align-items-center g-1.5 fs-13 text-emerald-600 underline">
                           <PlayCircle className="h-4 w-4" />Watch lesson video
                         </a>
                       )}
@@ -346,11 +346,11 @@ export default function Courses() {
 
             {isStaff && (
               <div className="space-y-3 rounded-[10px] border border-dashed border-slate-300 bg-slate-50 p-3">
-                <p className="d-flex align-items-center gap-2 fs-14 fw-medium text-slate-900"><FileText className="h-4 w-4 text-emerald-600" /> Add a lesson</p>
+                <p className="d-flex align-items-center g-2 fs-14 fw-medium text-slate-900"><FileText className="h-4 w-4 text-emerald-600" /> Add a lesson</p>
                 <Input placeholder="Lesson title" maxLength={150} value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} />
                 <Textarea placeholder="Lesson content / notes" maxLength={5000} value={lessonForm.content} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} />
                 <Input placeholder="Video link (optional)" maxLength={500} value={lessonForm.video_url} onChange={(e) => setLessonForm({ ...lessonForm, video_url: e.target.value })} />
-                <Button onClick={addLesson} className="gap-2"><Plus className="h-4 w-4" /> Add Lesson</Button>
+                <Button onClick={addLesson} className="g-2"><Plus className="h-4 w-4" /> Add Lesson</Button>
               </div>
             )}
           </DialogContent>
@@ -359,6 +359,8 @@ export default function Courses() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

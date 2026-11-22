@@ -107,7 +107,7 @@ export default function Attendance() {
         />
 
         {/* Filters */}
-        <div className="row gap-4 sm:col-6 lg:col-3">
+        <div className="row g-3 col-md-6 col-xl-3">
           <div className="space-y-2">
             <Label>Class</Label>
             <Select value={classId} onValueChange={setClassId}>
@@ -124,15 +124,15 @@ export default function Attendance() {
         {classId && (
           <Card>
             <CardHeader>
-              <div className="d-flex d-flex flex-column gap-3 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
+              <div className="d-flex d-flex flex-column g-3 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
                 <div>
                   <CardTitle className="fs-16">Roll Call</CardTitle>
                   <p className="mt-1 fs-13 text-slate-500">
                     Attendance taken on <span className="fw-semibold text-slate-900">{format(new Date(date), 'EEEE, MMMM d, yyyy')}</span>
                   </p>
                 </div>
-                <div className="d-flex flex-wrap align-items-center gap-3">
-                  <div className="d-flex gap-3 rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-2 fs-13 text-slate-600">
+                <div className="d-flex flex-wrap align-items-center g-3">
+                  <div className="d-flex g-3 rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-2 fs-13 text-slate-600">
                     <span>Present: {summary.present}</span>
                     <span>Absent: {summary.absent}</span>
                     <span>Late: {summary.late}</span>
@@ -157,7 +157,7 @@ export default function Attendance() {
               ) : filtered.length === 0 ? (
                 <div className="empty-state"><CalendarCheck className="h-10 w-10 text-slate-400 mb-3" /><p className="fs-14 text-slate-500">No students in this class</p></div>
               ) : (
-                <Table>
+                <div class="table-responsive"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Student</TableHead>
@@ -188,16 +188,16 @@ export default function Attendance() {
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
+                </Table></div>
               )}
             </CardContent>
           </Card>
         )}
 
         {/* Status legend */}
-        <div className="d-flex flex-wrap align-items-center gap-3">
+        <div className="d-flex flex-wrap align-items-center g-3">
           {(['present', 'absent', 'late', 'excused'] as const).map((s) => (
-            <span key={s} className="d-inline-flex align-items-center gap-1.5 fs-13 text-slate-600">
+            <span key={s} className="d-inline-flex align-items-center g-1.5 fs-13 text-slate-600">
               <span className="h-2.5 w-2.5 rounded-circle bg-slate-100" />{statusLabel(s)}
             </span>
           ))}
@@ -206,6 +206,9 @@ export default function Attendance() {
     </DashboardLayout>
   );
 }
+
+
+
 
 
 

@@ -213,11 +213,11 @@ export default function Stock() {
           title="Stock Management"
           description={canManage ? 'Track school supplies, record what comes in and what is issued out.' : 'View the school stock list and current quantities.'}
           actions={canManage ? (
-            <Button className="gap-2" onClick={openNew}><Plus className="h-4 w-4" />New Item</Button>
+            <Button className="g-2" onClick={openNew}><Plus className="h-4 w-4" />New Item</Button>
           ) : undefined}
         />
 
-        <div className="row gap-3 sm:col-4">
+        <div className="row g-2 col-md-6 col-lg-3">
           <Card>
             <CardContent className="p-4">
               <p className="fs-12.5 text-slate-500">Items tracked</p>
@@ -251,13 +251,13 @@ export default function Stock() {
             <p className="fw-medium text-slate-900">No stock items yet</p>
           </CardContent></Card>
         ) : (
-          <div className="row gap-5 sm:col-6 xl:col-4">
+          <div className="row g-4 col-md-6 col-xl-3">
             {filtered.map((item) => {
               const low = Number(item.quantity) <= Number(item.min_quantity);
               return (
                 <Card key={item.id} className="d-flex d-flex flex-column">
-                  <CardContent className="d-flex flex-1 d-flex flex-column gap-3 p-5">
-                    <div className="d-flex align-items-start justify-content-between gap-2">
+                  <CardContent className="d-flex flex-1 d-flex flex-column g-3 p-5">
+                    <div className="d-flex align-items-start justify-content-between g-2">
                       <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
                         <Package className="h-5 w-5" />
                       </div>
@@ -276,18 +276,18 @@ export default function Stock() {
                         </p>
                       )}
                     </div>
-                    <div className="mt-auto d-flex flex-wrap align-items-center gap-2 pt-2">
+                    <div className="mt-auto d-flex flex-wrap align-items-center g-2 pt-2">
                       {canManage && (
                         <>
-                          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openMove(item, 'in')}>
+                          <Button variant="outline" size="sm" className="g-1.5" onClick={() => openMove(item, 'in')}>
                             <ArrowDownCircle className="h-4 w-4" />Stock In
                           </Button>
-                          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openMove(item, 'out')}>
+                          <Button variant="outline" size="sm" className="g-1.5" onClick={() => openMove(item, 'out')}>
                             <ArrowUpCircle className="h-4 w-4" />Stock Out
                           </Button>
                         </>
                       )}
-                      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setHistoryItem(item)}><History className="h-4 w-4" />History</Button>
+                      <Button variant="outline" size="sm" className="g-1.5" onClick={() => setHistoryItem(item)}><History className="h-4 w-4" />History</Button>
                       {canManage && (
                         <>
                           <Button variant="edit" size="icon" aria-label="Edit item" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>
@@ -308,7 +308,7 @@ export default function Stock() {
             <DialogHeader><DialogTitle>{editingId ? 'Edit Item' : 'New Item'}</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label>Item name</Label><Input value={form.name} maxLength={150} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="row gap-3 sm:col-6">
+              <div className="row g-2 col-md-6">
                 <div><Label>Category</Label>
                   <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -393,6 +393,8 @@ export default function Stock() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

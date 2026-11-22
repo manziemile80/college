@@ -165,10 +165,10 @@ export default function Classes() {
           title="Classes"
           description="Manage class sections, grades, student counts and year assignments."
           actions={canManage ? (
-            <div className="d-flex flex-wrap gap-2">
+            <div className="d-flex flex-wrap g-2">
               <Dialog open={promoteOpen} onOpenChange={setPromoteOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="secondary" className="gap-2"><ArrowUpRight className="h-4 w-4" />Promote Students</Button>
+                  <Button size="sm" variant="secondary" className="g-2"><ArrowUpRight className="h-4 w-4" />Promote Students</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md w-[calc(100%-1rem)]">
                   <DialogHeader><DialogTitle>Promote Students to Next Class</DialogTitle></DialogHeader>
@@ -198,7 +198,7 @@ export default function Classes() {
                     <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-3 fs-13 text-slate-600">
                       <strong>{eligibleCount}</strong> eligible student(s) will be moved.
                     </div>
-                    <div className="d-flex justify-content-end gap-2">
+                    <div className="d-flex justify-content-end g-2">
                       <Button variant="outline" onClick={() => setPromoteOpen(false)}>Cancel</Button>
                       <Button onClick={handlePromote} disabled={promoting || !fromClass || !toClass}>
                         {promoting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpRight className="h-4 w-4" />}Promote
@@ -209,7 +209,7 @@ export default function Classes() {
               </Dialog>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="gap-2"><Plus className="h-4 w-4" />Add Class</Button>
+                  <Button className="g-2"><Plus className="h-4 w-4" />Add Class</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-1rem)]">
                   <DialogHeader><DialogTitle>Create New Class</DialogTitle></DialogHeader>
@@ -226,7 +226,7 @@ export default function Classes() {
                       <Label htmlFor="academicYear">Academic Year</Label>
                       <Input id="academicYear" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} placeholder="e.g., 2024-2025" required />
                     </div>
-                    <div className="d-flex justify-content-end gap-3 pt-2">
+                    <div className="d-flex justify-content-end g-3 pt-2">
                       <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
                       <Button type="submit" disabled={formLoading}>
                         {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Creating...</> : 'Create Class'}
@@ -254,7 +254,7 @@ export default function Classes() {
           </CardContent></Card>
         ) : (
           <Card>
-            <Table>
+            <div class="table-responsive"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Class</TableHead>
@@ -268,7 +268,7 @@ export default function Classes() {
                 {filteredClasses.map((cls) => (
                   <TableRow key={cls.id}>
                     <TableCell>
-                      <div className="d-flex align-items-center gap-3">
+                      <div className="d-flex align-items-center g-3">
                         <div className="d-flex h-9 w-9 align-items-center justify-content-center rounded-lg bg-emerald-50 text-emerald-600">
                           <BookOpen className="h-5 w-5" />
                         </div>
@@ -281,17 +281,17 @@ export default function Classes() {
                     <TableCell className="text-slate-600">{cls.grade_level}</TableCell>
                     <TableCell className="text-slate-600">{cls.academic_year}</TableCell>
                     <TableCell className="text-end">
-                      <span className="d-inline-flex align-items-center gap-1.5 fs-13 text-slate-600">
+                      <span className="d-inline-flex align-items-center g-1.5 fs-13 text-slate-600">
                         <Users className="h-4 w-4 text-emerald-600" />{studentCounts[cls.id] || 0} students
                       </span>
                     </TableCell>
                     {canManage && (
                       <TableCell className="text-end">
-                        <div className="d-flex justify-content-end gap-1.5">
-                          <Button variant="edit" size="sm" onClick={() => openEdit(cls)} className="gap-1.5">
+                        <div className="d-flex justify-content-end g-1.5">
+                          <Button variant="edit" size="sm" onClick={() => openEdit(cls)} className="g-1.5">
                             <Pencil className="h-4 w-4" />Edit
                           </Button>
-                          <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(cls)} className="gap-1.5">
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(cls)} className="g-1.5">
                             <Trash2 className="h-4 w-4" />Delete
                           </Button>
                         </div>
@@ -300,7 +300,7 @@ export default function Classes() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </Card>
         )}
 
@@ -320,7 +320,7 @@ export default function Classes() {
                 <Label>Academic Year</Label>
                 <Input value={editYear} onChange={(e) => setEditYear(e.target.value)} />
               </div>
-              <div className="d-flex justify-content-end gap-2">
+              <div className="d-flex justify-content-end g-2">
                 <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
                 <Button onClick={handleEditSave}>Save</Button>
               </div>
@@ -331,6 +331,8 @@ export default function Classes() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

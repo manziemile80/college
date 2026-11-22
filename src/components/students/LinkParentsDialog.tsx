@@ -181,7 +181,7 @@ export function LinkParentsDialog({
                     >
                       <div className="space-y-1">
                         <p className="fw-medium">{link.parent?.full_name}</p>
-                        <div className="d-flex align-items-center gap-2 fs-sm text-muted-foreground">
+                        <div className="d-flex align-items-center g-2 fs-sm text-muted-foreground">
                           <span className="capitalize">{link.relationship}</span>
                           {link.is_primary_contact && (
                             <span className="rounded-circle bg-primary/10 px-2 py-0.5 text-xs fw-medium text-primary">
@@ -193,7 +193,7 @@ export function LinkParentsDialog({
                           {link.parent?.phone}
                         </p>
                       </div>
-                      <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center g-2">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -224,7 +224,7 @@ export function LinkParentsDialog({
             {availableParents.length > 0 && (
               <div className="space-y-4 border-t pt-4">
                 <Label className="fs-sm fw-medium">Link New Parent</Label>
-                <div className="row gap-4">
+                <div className="row g-3">
                   <div className="space-y-2">
                     <Label htmlFor="parent">Parent</Label>
                     <Select
@@ -259,7 +259,7 @@ export function LinkParentsDialog({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="d-flex align-items-center gap-2">
+                  <div className="d-flex align-items-center g-2">
                     <Checkbox
                       id="primary"
                       checked={isPrimaryContact}
@@ -309,5 +309,7 @@ export function LinkParentsDialog({
     </Dialog>
   );
 }
+
+
 
 

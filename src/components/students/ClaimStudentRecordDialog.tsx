@@ -98,14 +98,14 @@ export function ClaimStudentRecordDialog({ open, onOpenChange, onLinked }: Props
         ) : (
           <div className="space-y-2">
             {filtered.map((r) => (
-              <div key={r.id} className="d-flex align-items-center justify-content-between gap-2 rounded-xl border border-border p-3">
+              <div key={r.id} className="d-flex align-items-center justify-content-between g-2 rounded-xl border border-border p-3">
                 <div>
                   <p className="fs-sm fw-medium text-foreground">
                     {r.first_name} {r.last_name}
                   </p>
                   <p className="text-xs text-muted-foreground">{r.student_id}</p>
                 </div>
-                <Button size="sm" className="gap-1.5" disabled={saving === r.id} onClick={() => claim(r)}>
+                <Button size="sm" className="g-1.5" disabled={saving === r.id} onClick={() => claim(r)}>
                   {saving === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
                   This is me
                 </Button>
@@ -122,5 +122,6 @@ export function ClaimStudentRecordDialog({ open, onOpenChange, onLinked }: Props
     </Dialog>
   );
 }
+
 
 

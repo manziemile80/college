@@ -231,7 +231,7 @@ export default function EnrollmentPage() {
           description="Enroll students in classes, transfer between classes, and view enrollment history."
         />
 
-        <div className="d-flex d-flex flex-column gap-3 sm:d-flex flex-row sm:align-items-end">
+        <div className="d-flex d-flex flex-column g-3 sm:d-flex flex-row sm:align-items-end">
           <div className="space-y-2 sm:w-50">
             <Label>Class</Label>
             <Select value={classId} onValueChange={setClassId}>
@@ -252,7 +252,7 @@ export default function EnrollmentPage() {
         {canManage && classId && (
           <Card>
             <CardHeader>
-              <CardTitle className="d-flex align-items-center gap-2 fs-18"><UserPlus className="h-5 w-5 text-emerald-600" /> Enroll a student</CardTitle>
+              <CardTitle className="d-flex align-items-center g-2 fs-18"><UserPlus className="h-5 w-5 text-emerald-600" /> Enroll a student</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="position-relative max-w-sm">
@@ -267,7 +267,7 @@ export default function EnrollmentPage() {
               {availableStudents.length === 0 ? (
                 <p className="fs-13 text-slate-500">No matching students to enroll in this class for {academicYear}.</p>
               ) : (
-                <div className="row gap-2 sm:col-6 lg:col-4">
+                <div className="row g-2 col-md-6 col-xl-3">
                   {availableStudents.map((s) => (
                     <div key={s.id} className="d-flex align-items-center justify-content-between rounded-[10px] border border-slate-200 bg-white p-3">
                       <div className="min-w-0">
@@ -301,7 +301,7 @@ export default function EnrollmentPage() {
                 <p className="fs-13 text-slate-500">Enroll students above to get started.</p>
               </div>
             ) : (
-              <Table>
+              <div class="table-responsive"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Student</TableHead>
@@ -324,7 +324,7 @@ export default function EnrollmentPage() {
                       </TableCell>
                       <TableCell className="text-end">
                         {canManage && (
-                          <div className="d-flex justify-content-end gap-1">
+                          <div className="d-flex justify-content-end g-1">
                             <Button size="sm" variant="ghost" onClick={() => openHistory(e)} title="Enrollment history" aria-label="Enrollment history">
                               <History className="h-4 w-4" />
                             </Button>
@@ -356,7 +356,7 @@ export default function EnrollmentPage() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             )}
           </CardContent>
         </Card>
@@ -373,7 +373,7 @@ export default function EnrollmentPage() {
           ) : (
             <div className="space-y-3 py-2">
               {history.map((h) => (
-                <div key={h.id} className="d-flex align-items-start justify-content-between gap-3 border-bottom border-slate-200 pb-2 last:border-0">
+                <div key={h.id} className="d-flex align-items-start justify-content-between g-3 border-bottom border-slate-200 pb-2 last:border-0">
                   <div>
                     <p className="fs-14 fw-medium capitalize text-slate-900">{h.action}</p>
                     <p className="fs-12.5 text-slate-500">{h.details}</p>
@@ -409,7 +409,7 @@ export default function EnrollmentPage() {
             <p className="fs-12.5 text-slate-500">
               The change is recorded in the enrollment history. Confirm before transferring.
             </p>
-            <div className="d-flex justify-content-end gap-3">
+            <div className="d-flex justify-content-end g-3">
               <Button variant="outline" onClick={() => setTransferFor(null)}>Cancel</Button>
               <Button onClick={handleTransfer} disabled={saving || !transferClass}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm Transfer'}
@@ -421,6 +421,9 @@ export default function EnrollmentPage() {
     </DashboardLayout>
   );
 }
+
+
+
 
 
 

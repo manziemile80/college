@@ -20,9 +20,10 @@ export function PageHeader({ eyebrow, title, description, actions }: PageHeaderP
       {description && (
         <p className="max-w-2xl fs-12.5 leading-relaxed text-muted-foreground">{description}</p>
       )}
-      {actions && <div className={cn('d-flex flex-wrap align-items-center gap-3 pt-1')}>{actions}</div>}
+      {actions && <div className={cn('d-flex flex-wrap align-items-center g-3 pt-1')}>{actions}</div>}
     </div>
   );
 }
+
 
 

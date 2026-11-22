@@ -54,7 +54,7 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
 
   return (
     <header className="position-sticky top-0 z-30 border-bottom border-slate-200 bg-white">
-      <div className="d-flex h-16 align-items-center gap-2 px-3 sm:px-6">
+      <div className="d-flex h-16 align-items-center g-2 px-3 sm:px-6">
         {/* Mobile menu */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
@@ -63,8 +63,8 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[264px] border-slate-300 bg-sidebar p-0">
-            <div className="d-flex h-100 d-flex flex-column" onClick={() => setMobileOpen(false)}>
-              <SidebarNav />
+            <div className="d-flex h-100 d-flex flex-column">
+              <SidebarNav onLinkSelect={() => setMobileOpen(false)} />
             </div>
           </SheetContent>
         </Sheet>
@@ -73,7 +73,7 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="d-none lg:d-inline-flex rounded-md"
+          className="d-none md:d-inline-flex rounded-md"
           onClick={onToggleCollapsed}
           aria-label="Collapse sidebar"
           aria-expanded={!collapsed}
@@ -85,7 +85,7 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          className="group d-flex h-11 flex-1 min-w-40 align-items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-start shadow-sm transition-colors hover:border-emerald-300 hover:shadow-md"
+          className="group d-flex h-11 flex-1 min-w-40 align-items-center g-3 rounded-xl border border-slate-200 bg-white px-4 text-start shadow-sm transition-colors hover:border-emerald-300 hover:shadow-md"
         >
           <Search className="h-4 w-4 text-slate-400 group-hover:text-emerald-600" />
           <span className="flex-1 truncate fs-14.5 text-slate-500">Search anything</span>
@@ -93,7 +93,7 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
         </button>
 
         {/* Notifications */}
-        <div className="d-flex align-items-center gap-1">
+        <div className="d-flex align-items-center g-1">
           <Button
             variant="ghost"
             size="icon"
@@ -113,7 +113,7 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="d-flex h-10 align-items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-start hover:bg-slate-50"
+              className="d-flex h-10 align-items-center g-2 rounded-xl border border-slate-200 bg-white px-3 text-start hover:bg-slate-50"
             >
               <span className="d-flex h-7 w-7 shrink-0 align-items-center justify-content-center rounded-circle bg-emerald-600 fs-13 fw-semibold text-white">
                 {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
@@ -178,6 +178,7 @@ export function AppTopBar({ collapsed, onToggleCollapsed }: AppTopBarProps) {
     </header>
   );
 }
+
 
 
 

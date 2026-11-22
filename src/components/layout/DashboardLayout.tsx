@@ -19,7 +19,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   if (loading) {
     return (
       <div className="d-flex min-h-screen align-items-center justify-content-center bg-background">
-        <div className="d-flex d-flex flex-column align-items-center gap-4">
+        <div className="d-flex d-flex flex-column align-items-center g-4">
           <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
           <p className="fs-sm text-muted-foreground">Loading...</p>
         </div>
@@ -46,8 +46,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar collapsed={sidebarCollapsed} />
-      <div className={cn('transition-all duration-300 ease-in-out', sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[272px]')}>
+      <Sidebar collapsed={sidebarCollapsed} onCollapseToggle={toggleCollapsed} />
+      <div className={cn('transition-all duration-300 ease-in-out', sidebarCollapsed ? 'md:pl-16' : 'md:pl-[272px]')}>
         <AppTopBar collapsed={sidebarCollapsed} onToggleCollapsed={toggleCollapsed} />
         <main className="d-flex min-h-[calc(100vh-4rem)] d-flex flex-column">
           <div className="page-space flex-1 space-y-6">{children}</div>
@@ -57,6 +57,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     </div>
   );
 }
+
 
 
 

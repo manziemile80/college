@@ -429,11 +429,11 @@ export default function Quizzes() {
           title="Quizzes"
           description={isStaff ? 'Build multiple-choice quizzes and review auto-scored student results.' : 'Take published quizzes and see your score instantly.'}
           actions={isStaff ? (
-            <div className="d-flex flex-wrap gap-2">
-              <Button variant="outline" className="gap-2" onClick={() => { setAiDraft(null); setAiOpen(true); }}>
+            <div className="d-flex flex-wrap g-2">
+              <Button variant="outline" className="g-2" onClick={() => { setAiDraft(null); setAiOpen(true); }}>
                 <Sparkles className="h-4 w-4" /> Generate with AI
               </Button>
-              <Button className="gap-2" onClick={openNewQuiz}>
+              <Button className="g-2" onClick={openNewQuiz}>
                 <Plus className="h-4 w-4" /> New Quiz
               </Button>
             </div>
@@ -442,12 +442,12 @@ export default function Quizzes() {
 
         {role === 'student' && !studentId && (
           <Card className="border-dashed border-2 border-slate-300 bg-slate-50">
-            <CardContent className="d-flex align-items-center justify-content-between gap-4 p-4 sm:d-flex flex-row">
+            <CardContent className="d-flex align-items-center justify-content-between g-4 p-4 sm:d-flex flex-row">
               <div>
                 <p className="fs-14 fw-medium text-slate-900">Connect your student profile</p>
                 <p className="fs-13 text-slate-500">Pick your name once so your quiz answers are saved.</p>
               </div>
-              <Button size="sm" className="gap-1.5" onClick={() => setClaimOpen(true)}><UserCheck className="h-4 w-4" />Find my profile</Button>
+              <Button size="sm" className="g-1.5" onClick={() => setClaimOpen(true)}><UserCheck className="h-4 w-4" />Find my profile</Button>
             </CardContent>
           </Card>
         )}
@@ -467,13 +467,13 @@ export default function Quizzes() {
             {isStaff && <p className="mt-1 fs-13 text-slate-500">Create your first quiz to get started.</p>}
           </CardContent></Card>
         ) : (
-          <div className="row gap-5 sm:col-6 xl:col-4">
+          <div className="row g-4 col-md-6 col-xl-3">
             {quizzes.map((quiz) => {
               const attempt = myAttempts.find((a) => a.quiz_id === quiz.id);
               return (
                 <Card key={quiz.id} className="d-flex d-flex flex-column">
-                  <CardContent className="d-flex flex-1 d-flex flex-column gap-3 p-5">
-                    <div className="d-flex align-items-start justify-content-between gap-2">
+                  <CardContent className="d-flex flex-1 d-flex flex-column g-3 p-5">
+                    <div className="d-flex align-items-start justify-content-between g-2">
                       <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
                         <ListChecks className="h-5 w-5" />
                       </div>
@@ -500,11 +500,11 @@ export default function Quizzes() {
                         <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{quiz.time_limit_minutes} min</span>
                       )}
                     </div>
-                    <div className="mt-auto d-flex flex-wrap align-items-center gap-2 pt-2">
+                    <div className="mt-auto d-flex flex-wrap align-items-center g-2 pt-2">
                       {isStaff ? (
                         <>
-                          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openManage(quiz)}><PenLine className="h-4 w-4" />Questions</Button>
-                          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openResults(quiz)}><BarChart3 className="h-4 w-4" />Results</Button>
+                          <Button variant="outline" size="sm" className="g-1.5" onClick={() => openManage(quiz)}><PenLine className="h-4 w-4" />Questions</Button>
+                          <Button variant="outline" size="sm" className="g-1.5" onClick={() => openResults(quiz)}><BarChart3 className="h-4 w-4" />Results</Button>
                           <Button variant="destructive" size="icon" aria-label="Delete quiz" onClick={() => removeQuiz(quiz.id)}><Trash2 className="h-4 w-4" /></Button>
                         </>
                       ) : role === 'student' && !attempt ? (
@@ -527,7 +527,7 @@ export default function Quizzes() {
             <div className="space-y-3">
               <div><Label>Title</Label><Input value={quizForm.title} maxLength={150} onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })} /></div>
               <div><Label>Description</Label><Textarea value={quizForm.description} maxLength={1000} onChange={(e) => setQuizForm({ ...quizForm, description: e.target.value })} /></div>
-              <div className="row gap-3 sm:col-6">
+              <div className="row g-2 col-md-6">
                 <div><Label>Subject</Label>
                   <Select value={quizForm.subject_id} onValueChange={(v) => setQuizForm({ ...quizForm, subject_id: v })}>
                     <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
@@ -546,7 +546,7 @@ export default function Quizzes() {
               </div>
 
               <div className="space-y-3 rounded-[10px] border border-slate-200 bg-slate-50 p-3">
-                <div className="d-flex align-items-center justify-content-between gap-3">
+                <div className="d-flex align-items-center justify-content-between g-3">
                   <div>
                     <p className="fs-14 fw-medium text-slate-900">Questions and answer key</p>
                     <p className="fs-12.5 text-slate-500">Add every question before publishing the quiz.</p>
@@ -554,7 +554,7 @@ export default function Quizzes() {
                   <Badge variant="secondary">{newQuizQuestions.length}</Badge>
                 </div>
                 {newQuizQuestions.map((question, index) => (
-                  <div key={`${question.sort_order}-${question.question_text}`} className="d-flex align-items-start justify-content-between gap-2 rounded-[8px] bg-slate-100 p-3">
+                  <div key={`${question.sort_order}-${question.question_text}`} className="d-flex align-items-start justify-content-between g-2 rounded-[8px] bg-slate-100 p-3">
                     <div>
                       <p className="fs-13.5 fw-medium text-slate-900">{index + 1}. {question.question_text}</p>
                       <p className="mt-1 fs-11.5 text-slate-500">Correct: {question.correct_option.toUpperCase()} Â· {question.points} pt(s)</p>
@@ -574,13 +574,13 @@ export default function Quizzes() {
 
                 <div className="space-y-2 rounded-[8px] border border-dashed border-slate-300 bg-white p-3">
                   <Textarea placeholder="Question" maxLength={1000} value={questionForm.question_text} onChange={(e) => setQuestionForm({ ...questionForm, question_text: e.target.value })} />
-                  <div className="row gap-2 sm:col-6">
+                  <div className="row g-2 col-md-6">
                     <Input placeholder="Option A" maxLength={300} value={questionForm.option_a} onChange={(e) => setQuestionForm({ ...questionForm, option_a: e.target.value })} />
                     <Input placeholder="Option B" maxLength={300} value={questionForm.option_b} onChange={(e) => setQuestionForm({ ...questionForm, option_b: e.target.value })} />
                     <Input placeholder="Option C (optional)" maxLength={300} value={questionForm.option_c} onChange={(e) => setQuestionForm({ ...questionForm, option_c: e.target.value })} />
                     <Input placeholder="Option D (optional)" maxLength={300} value={questionForm.option_d} onChange={(e) => setQuestionForm({ ...questionForm, option_d: e.target.value })} />
                   </div>
-                  <div className="row gap-2 sm:col-6">
+                  <div className="row g-2 col-md-6">
                     <div>
                       <Label className="fs-13">Correct option</Label>
                       <Select value={questionForm.correct_option} onValueChange={(v) => setQuestionForm({ ...questionForm, correct_option: v })}>
@@ -598,7 +598,7 @@ export default function Quizzes() {
                       <Input type="number" min={1} max={20} value={questionForm.points} onChange={(e) => setQuestionForm({ ...questionForm, points: e.target.value })} />
                     </div>
                   </div>
-                  <Button variant="outline" className="gap-2" onClick={addNewQuizQuestion}><Plus className="h-4 w-4" />Add Question</Button>
+                  <Button variant="outline" className="g-2" onClick={addNewQuizQuestion}><Plus className="h-4 w-4" />Add Question</Button>
                 </div>
               </div>
 
@@ -612,7 +612,7 @@ export default function Quizzes() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setQuizOpen(false)} disabled={savingQuiz}>Cancel</Button>
-              <Button onClick={saveQuiz} disabled={savingQuiz} className="gap-2">
+              <Button onClick={saveQuiz} disabled={savingQuiz} className="g-2">
                 {savingQuiz && <Loader2 className="h-4 w-4 animate-spin" />}
                 {quizForm.is_published ? 'Publish quiz' : 'Create draft'}
               </Button>
@@ -623,7 +623,7 @@ export default function Quizzes() {
         {/* AI quiz generator */}
         <Dialog open={aiOpen} onOpenChange={(o) => { if (!aiBusy) setAiOpen(o); }}>
           <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-            <DialogHeader><DialogTitle className="d-flex align-items-center gap-2"><Sparkles className="h-5 w-5 text-emerald-600" />Generate quiz with AI</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="d-flex align-items-center g-2"><Sparkles className="h-5 w-5 text-emerald-600" />Generate quiz with AI</DialogTitle></DialogHeader>
             {!aiDraft ? (
               <div className="space-y-3">
                 <div>
@@ -631,13 +631,13 @@ export default function Quizzes() {
                   <Textarea rows={8} maxLength={20000} placeholder="e.g. Photosynthesis â€” or paste your lesson notes here" value={aiMaterial} onChange={(e) => setAiMaterial(e.target.value)} />
                   <p className="mt-1 fs-12.5 text-slate-500">{aiMaterial.length}/20000</p>
                 </div>
-                <div className="row gap-3 sm:col-6">
+                <div className="row g-2 col-md-6">
                   <div><Label>Number of questions</Label><Input type="number" min={1} max={20} value={aiCount} onChange={(e) => setAiCount(e.target.value)} /></div>
                   <div><Label className="fs-13">Class level (optional)</Label><Input placeholder="e.g. Senior 2" maxLength={100} value={aiLevel} onChange={(e) => setAiLevel(e.target.value)} /></div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setAiOpen(false)} disabled={aiBusy}>Cancel</Button>
-                  <Button className="gap-2" onClick={generateWithAI} disabled={aiBusy}>
+                  <Button className="g-2" onClick={generateWithAI} disabled={aiBusy}>
                     {aiBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                     {aiBusy ? 'Generatingâ€¦' : 'Generate'}
                   </Button>
@@ -645,9 +645,9 @@ export default function Quizzes() {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="row gap-3 sm:col-6">
-                  <div className="sm:col-span-2"><Label>Title</Label><Input value={aiDraft.title} maxLength={150} onChange={(e) => setAiDraft({ ...aiDraft, title: e.target.value })} /></div>
-                  <div className="sm:col-span-2"><Label>Description</Label><Textarea value={aiDraft.description} maxLength={1000} onChange={(e) => setAiDraft({ ...aiDraft, description: e.target.value })} /></div>
+                <div className="row g-2 col-md-6">
+                  <div className="col-sm-6"><Label>Title</Label><Input value={aiDraft.title} maxLength={150} onChange={(e) => setAiDraft({ ...aiDraft, title: e.target.value })} /></div>
+                  <div className="col-sm-6"><Label>Description</Label><Textarea value={aiDraft.description} maxLength={1000} onChange={(e) => setAiDraft({ ...aiDraft, description: e.target.value })} /></div>
                   <div><Label>Subject</Label>
                     <Select value={aiSubject} onValueChange={setAiSubject}>
                       <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
@@ -664,22 +664,22 @@ export default function Quizzes() {
                 <p className="fs-14 fw-semibold text-slate-900">Questions & answer key â€” edit anything before saving</p>
                 {aiDraft.questions.map((q, i) => (
                   <div key={i} className="space-y-2 rounded-[10px] border border-slate-200 p-3">
-                    <div className="d-flex align-items-start gap-2">
+                    <div className="d-flex align-items-start g-2">
                       <span className="pt-2 fs-14 fw-semibold text-slate-900">{i + 1}.</span>
                       <Textarea rows={2} value={q.question_text} onChange={(e) => updateDraftQ(i, { question_text: e.target.value })} />
                       <Button variant="destructive" size="icon" aria-label="Remove question" onClick={() => setAiDraft({ ...aiDraft, questions: aiDraft.questions.filter((_, j) => j !== i) })}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="row gap-2 sm:col-6">
+                    <div className="row g-2 col-md-6">
                       {(['a', 'b', 'c', 'd'] as const).map((k) => (
-                        <div key={k} className="d-flex align-items-center gap-2">
+                        <div key={k} className="d-flex align-items-center g-2">
                           <span className={`w-5 fs-12 fw-bold ${q.correct_option === k ? 'text-emerald-600' : 'text-slate-400'}`}>{k.toUpperCase()}</span>
                           <Input value={q[`option_${k}`]} maxLength={300} onChange={(e) => updateDraftQ(i, { [`option_${k}`]: e.target.value } as Partial<DraftQuestion>)} />
                         </div>
                       ))}
                     </div>
-                    <div className="d-flex flex-wrap align-items-center gap-3">
+                    <div className="d-flex flex-wrap align-items-center g-3">
                       <Label className="fs-12.5">Correct answer</Label>
                       <Select value={q.correct_option} onValueChange={(v) => updateDraftQ(i, { correct_option: v })}>
                         <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
@@ -689,9 +689,9 @@ export default function Quizzes() {
                     </div>
                   </div>
                 ))}
-                <DialogFooter className="gap-2">
+                <DialogFooter className="g-2">
                   <Button variant="outline" onClick={() => setAiDraft(null)} disabled={aiBusy}>Back</Button>
-                  <Button onClick={saveAiQuiz} disabled={aiBusy || aiDraft.questions.length === 0} className="gap-2">
+                  <Button onClick={saveAiQuiz} disabled={aiBusy || aiDraft.questions.length === 0} className="g-2">
                     {aiBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Publish quiz
                   </Button>
                 </DialogFooter>
@@ -707,7 +707,7 @@ export default function Quizzes() {
             <div className="space-y-2">
               {questions.length === 0 && <p className="fs-13 text-slate-500">No questions yet.</p>}
               {questions.map((q, i) => (
-                <div key={q.id} className="d-flex align-items-start justify-content-between gap-2 rounded-[8px] border border-slate-200 p-3">
+                <div key={q.id} className="d-flex align-items-start justify-content-between g-2 rounded-[8px] border border-slate-200 p-3">
                   <div>
                     <p className="fs-13.5 fw-medium text-slate-900">{i + 1}. {q.question_text}</p>
                     <p className="mt-1 fs-11.5 text-slate-500">
@@ -725,13 +725,13 @@ export default function Quizzes() {
             <div className="space-y-2 rounded-[8px] border border-dashed border-slate-300 bg-slate-50 p-3">
               <p className="fs-14 fw-medium text-slate-900">Add a question</p>
               <Textarea placeholder="Question" maxLength={1000} value={questionForm.question_text} onChange={(e) => setQuestionForm({ ...questionForm, question_text: e.target.value })} />
-              <div className="row gap-2 sm:col-6">
+              <div className="row g-2 col-md-6">
                 <Input placeholder="Option A" maxLength={300} value={questionForm.option_a} onChange={(e) => setQuestionForm({ ...questionForm, option_a: e.target.value })} />
                 <Input placeholder="Option B" maxLength={300} value={questionForm.option_b} onChange={(e) => setQuestionForm({ ...questionForm, option_b: e.target.value })} />
                 <Input placeholder="Option C (optional)" maxLength={300} value={questionForm.option_c} onChange={(e) => setQuestionForm({ ...questionForm, option_c: e.target.value })} />
                 <Input placeholder="Option D (optional)" maxLength={300} value={questionForm.option_d} onChange={(e) => setQuestionForm({ ...questionForm, option_d: e.target.value })} />
               </div>
-              <div className="row gap-2 sm:col-6">
+              <div className="row g-2 col-md-6">
                 <div>
                   <Label>Correct option</Label>
                   <Select value={questionForm.correct_option} onValueChange={(v) => setQuestionForm({ ...questionForm, correct_option: v })}>
@@ -746,10 +746,10 @@ export default function Quizzes() {
                   <Input type="number" min={1} max={20} value={questionForm.points} onChange={(e) => setQuestionForm({ ...questionForm, points: e.target.value })} />
                 </div>
               </div>
-              <Button className="gap-2" onClick={addQuestion}><Plus className="h-4 w-4" />Add Question</Button>
+              <Button className="g-2" onClick={addQuestion}><Plus className="h-4 w-4" />Add Question</Button>
             </div>
             {!manageQuiz?.is_published && (
-              <DialogFooter className="gap-2 sm:justify-content-between">
+              <DialogFooter className="g-2 sm:justify-content-between">
                 <p className="fs-12.5 text-slate-500">This is a draft. Students cannot see it yet.</p>
                 <Button onClick={publishQuiz} disabled={savingQuiz}>
                   {savingQuiz && <Loader2 className="h-4 w-4 animate-spin" />}Publish quiz
@@ -775,7 +775,7 @@ export default function Quizzes() {
                         const text = q[`option_${key}` as 'option_a'];
                         if (!text) return null;
                         return (
-                          <div key={key} className="d-flex align-items-center gap-2">
+                          <div key={key} className="d-flex align-items-center g-2">
                             <RadioGroupItem value={key} id={`${q.id}-${key}`} />
                             <Label htmlFor={`${q.id}-${key}`} className="fw-normal">{key.toUpperCase()}) {text}</Label>
                           </div>
@@ -788,7 +788,7 @@ export default function Quizzes() {
             )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setTakeQuiz(null)}>Cancel</Button>
-              <Button onClick={submitQuiz} disabled={takeQuestions.length === 0} className="gap-2"><CheckCircle2 className="h-4 w-4" />Submit Answers</Button>
+              <Button onClick={submitQuiz} disabled={takeQuestions.length === 0} className="g-2"><CheckCircle2 className="h-4 w-4" />Submit Answers</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -820,6 +820,8 @@ export default function Quizzes() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

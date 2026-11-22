@@ -117,7 +117,7 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
           className="d-flex align-items-center justify-content-between rounded-lg border border-border bg-muted/30 p-3"
         >
         <div className="d-flex-1 space-y-1">
-            <div className="d-flex align-items-center gap-2">
+            <div className="d-flex align-items-center g-2">
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
               <span className="fw-medium fs-sm">
                 {notification.parent?.full_name || 'Unknown Parent'}
@@ -137,7 +137,7 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
               </p>
             )}
           </div>
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center g-2">
             {notification.status === 'failed' && (
               <Button
                 variant="ghost"
@@ -161,5 +161,6 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
     </div>
   );
 }
+
 
 

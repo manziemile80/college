@@ -273,7 +273,7 @@ export default function Scores() {
           title="Behavior Scores"
           description="Record and manage student behavior assessments."
           actions={canManage ? (
-            <div className="d-flex flex-wrap gap-2">
+            <div className="d-flex flex-wrap g-2">
               <Button variant="outline" size="sm" onClick={handleResetAllScores} disabled={resetLoading}>
                 {resetLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                 Reset Marks (New Term)
@@ -289,7 +289,7 @@ export default function Scores() {
                 <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[calc(100%-1rem)]">
                   <DialogHeader><DialogTitle>Record Behavior Score</DialogTitle></DialogHeader>
                   <form onSubmit={handleAddScore} className="space-y-3 mt-2">
-                    <div className="row col-12 sm:col-6 gap-3">
+                    <div className="row col-12 col-md-6 g-3">
                       <div className="space-y-1.5">
                         <Label htmlFor="student" className="fs-14">Student</Label>
                         <Popover open={studentPickerOpen} onOpenChange={setStudentPickerOpen}>
@@ -331,7 +331,7 @@ export default function Scores() {
                                             selectedStudent === student.id ? 'opacity-100' : 'opacity-0'
                                           )}
                                         />
-                                        <div className="d-flex flex-1 align-items-center justify-content-between gap-2">
+                                        <div className="d-flex flex-1 align-items-center justify-content-between g-2">
                                           <span>
                                             {student.first_name} {student.last_name}
                                             <span className="ml-1 fs-12.5 text-slate-500">
@@ -374,7 +374,7 @@ export default function Scores() {
                         <Label className="fs-14">Points to deduct</Label>
                         <span className="fs-30 fw-bold text-red-600">-{Math.abs(score[0])}</span>
                       </div>
-                      <div className="d-flex align-items-center gap-3">
+                      <div className="d-flex align-items-center g-3">
                         <Slider value={score} onValueChange={setScore} min={1} max={MAX_SCORE} step={1} className="flex-1" />
                         <Input
                           type="number"
@@ -402,7 +402,7 @@ export default function Scores() {
                       )}
                     </div>
 
-                    <div className="row col-12 sm:col-6 gap-3">
+                    <div className="row col-12 col-md-6 g-3">
                       <div className="space-y-1.5">
                         <Label htmlFor="date" className="fs-14">Date</Label>
                         <Input id="date" type="date" value={scoreDate} onChange={(e) => setScoreDate(e.target.value)} required />
@@ -413,12 +413,12 @@ export default function Scores() {
                       </div>
                     </div>
 
-                    <div className="d-flex align-items-center gap-2 rounded-[10px] bg-blue-50 p-2 fs-12.5 text-blue-700">
+                    <div className="d-flex align-items-center g-2 rounded-[10px] bg-blue-50 p-2 fs-12.5 text-blue-700">
                       <Bell className="h-3.5 w-3.5" />
                       <span>Parents will be notified via SMS</span>
                     </div>
 
-                    <div className="d-flex d-flex flex-column-reverse sm:d-flex flex-row sm:justify-content-end gap-2 pt-1">
+                    <div className="d-flex d-flex flex-column-reverse sm:d-flex flex-row sm:justify-content-end g-2 pt-1">
                       <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} className="w-100 sm:w-auto">Cancel</Button>
                       <Button type="submit" disabled={formLoading || !selectedStudent} className="w-100 sm:w-auto">
                         {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Recording...</> : 'Record Score'}
@@ -453,7 +453,7 @@ export default function Scores() {
           </CardContent></Card>
         ) : (
           <Card>
-            <Table>
+            <div class="table-responsive"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Student</TableHead>
@@ -485,7 +485,7 @@ export default function Scores() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="gap-1 text-slate-500 hover:text-slate-900"
+                        className="g-1 text-slate-500 hover:text-slate-900"
                         onClick={() => {
                           setSelectedScore(score);
                           setDetailsDialogOpen(true);
@@ -497,7 +497,7 @@ export default function Scores() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </Card>
         )}
 
@@ -511,6 +511,9 @@ export default function Scores() {
     </DashboardLayout>
   );
 }
+
+
+
 
 
 

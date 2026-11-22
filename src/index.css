@@ -459,6 +459,48 @@ body {
 .empty-state { display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .toaster, .toast { display: flex; align-items: center; }
 
+/* ── Responsive design system (A/B/E/G/I/J) ── */
+
+/* Responsive images (I) */
+img { max-width: 100%; height: auto; display: block; }
+.object-cover { object-fit: cover; }
+
+/* Modal: fit small screens, allow vertical scroll (G) */
+.modal-dialog .modal-content { max-height: 85vh; overflow-y: auto; }
+
+/* Touch targets: comfortable hit areas, 44px minimum (J) */
+@media (max-width: 767.98px) {
+  .btn { min-height: 44px; padding-top: 0.75rem; padding-bottom: 0.75rem; }
+  .btn-sm { min-height: 36px; }
+  .nav-item-link, .nav-item-link > a { min-height: 44px; padding: 0.75rem 1rem; }
+  .table-responsive { -webkit-overflow-scrolling: touch; }
+  .min-h-screen { min-height: 100dvh; }
+}
+@media (pointer: coarse) {
+  .btn, .nav-item-link { -webkit-overflow-scrolling: touch; }
+}
+
+/* Charts: stack on mobile, auto-height on narrow screens (D) */
+@media (max-width: 767.98px) {
+  .chart-h, .h-\[220px\] { height: auto; max-height: 260px; }
+}
+.h-\[220px\] { height: 220px; }
+
+/* Two-column forms stack on mobile (F); ensure no overflow */
+.form-group { margin-bottom: 0; }
+input.form-control, select.form-select, textarea.form-control { width: 100%; }
+
+/* Respect mobile keyword space (avoids half-open keyboard eating buttons, G/J) */
+@media (max-width: 767.98px) {
+  .form-label { font-size: 0.875rem; }
+  .form-control, .form-select, .form-select { font-size: 0.9375rem; }
+}
+
+/* Footer: fine on mobile; add spacing */
+@media (max-width: 575.98px) {
+  .row { gap: 1rem; }
+}
+
 /* ── App badge classes (College De Rebero spec palette) ── */
 .badge-active { background-color: #DCFCE7; color: #047857; }
 .badge-pending { background-color: #FEF3C7; color: #D97706; }

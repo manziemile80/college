@@ -36,7 +36,7 @@ export function SmsStatusBadge({ status, className }: SmsStatusBadgeProps) {
   return (
     <span
       className={cn(
-        'd-inline-d-flex align-items-center gap-1 rounded-circle px-2 py-0.5 text-xs fw-medium',
+        'd-inline-d-flex align-items-center g-1 rounded-circle px-2 py-0.5 text-xs fw-medium',
         config.className,
         className
       )}
@@ -46,5 +46,6 @@ export function SmsStatusBadge({ status, className }: SmsStatusBadgeProps) {
     </span>
   );
 }
+
 
 

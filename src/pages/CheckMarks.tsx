@@ -38,8 +38,8 @@ export default function CheckMarks() {
     <div className="min-h-screen bg-background p-3 sm:p-5">
       <div className="mx-auto max-w-3xl space-y-5">
         {/* Header */}
-        <div className="d-flex d-flex flex-column gap-1 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
-          <div className="d-flex align-items-center gap-3">
+        <div className="d-flex d-flex flex-column g-1 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
+          <div className="d-flex align-items-center g-3">
             <div className="d-flex h-11 w-11 align-items-center justify-content-center rounded-circle bg-emerald-100">
               <img src={logo} alt="College De Rebero" className="h-7 w-7 object-contain" />
             </div>
@@ -54,17 +54,17 @@ export default function CheckMarks() {
         {/* Search form */}
         <Card>
           <CardContent className="space-y-4 py-5">
-            <div className="d-flex d-flex flex-column sm:d-flex flex-row gap-2">
-              <form onSubmit={search} className="d-flex w-100 max-w-xl gap-2">
+            <div className="d-flex d-flex flex-column sm:d-flex flex-row g-2">
+              <form onSubmit={search} className="d-flex w-100 max-w-xl g-2">
                 <Input placeholder="Enter your registration number" value={reg} onChange={(e) => setReg(e.target.value)} className="h-11" />
-                <Button type="submit" className="gap-2" disabled={loading}>
+                <Button type="submit" className="g-2" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                   Search
                 </Button>
               </form>
             </div>
             {error && (
-              <div className="d-flex align-items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3">
+              <div className="d-flex align-items-start g-2 rounded-[10px] border border-red-200 bg-red-50 p-3">
                 <p className="fs-13 text-red-600">{error}</p>
               </div>
             )}
@@ -89,14 +89,14 @@ export default function CheckMarks() {
               return (
                 <Card key={k}>
                   <CardContent className="space-y-3 py-5">
-                    <div className="d-flex align-items-center gap-2">
+                    <div className="d-flex align-items-center g-2">
                       <FileText className="h-5 w-5 text-emerald-600" />
                       <h3 className="fw-semibold fs-15 text-slate-900">{k}</h3>
                       <Badge className={passCount === list.length ? 'bg-green-100 text-emerald-700' : passCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}>
                         {passCount}/{list.length} passed
                       </Badge>
                     </div>
-                    <Table>
+                    <div class="table-responsive"><Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Subject</TableHead>
@@ -115,7 +115,7 @@ export default function CheckMarks() {
                           </TableRow>
                         ))}
                       </TableBody>
-                    </Table>
+                    </Table></div>
                     <p className="text-end fs-14 fw-semibold text-emerald-600">
                       Average: {avg.toFixed(1)}%
                     </p>
@@ -131,6 +131,8 @@ export default function CheckMarks() {
 }
 
 import { Badge } from '@/components/ui/badge';
+
+
 
 
 

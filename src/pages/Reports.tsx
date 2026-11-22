@@ -147,7 +147,7 @@ export default function Reports() {
         ) : (
           <>
             {/* Stats cards */}
-            <div className="row gap-5 sm:col-6 lg:col-3">
+            <div className="row g-4 col-md-6 col-xl-3">
               <Card>
                 <CardContent className="stat-card p-6">
                   <div className="d-flex align-items-center justify-content-between">
@@ -190,7 +190,7 @@ export default function Reports() {
             </div>
 
             {/* Charts */}
-            <div className="row gap-5 lg:col-6">
+            <div className="row g-4 col-lg-6 col-xl-3">
               <Card>
                 <CardHeader><CardTitle>Average Scores by Category</CardTitle></CardHeader>
                 <CardContent>
@@ -246,7 +246,7 @@ export default function Reports() {
             {/* Trend chart */}
             <Card>
               <CardHeader>
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex align-items-center g-2">
                   <Calendar className="h-5 w-5 text-emerald-600" />
                   <CardTitle>Score Trend Over Time</CardTitle>
                 </div>
@@ -279,5 +279,7 @@ export default function Reports() {
     </DashboardLayout>
   );
 }
+
+
 
 

@@ -52,7 +52,7 @@ export function RecentScoresTable({ scores, loading }: RecentScoresTableProps) {
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-slate-200">
-      <table className="w-100">
+      <div class="table-responsive"><table className="w-100">
         <thead>
           <tr className="border-bottom border-slate-200 bg-slate-50">
             <th className="px-4 py-3 text-start fs-13 fw-semibold text-slate-500">Student</th>
@@ -97,9 +97,10 @@ export function RecentScoresTable({ scores, loading }: RecentScoresTableProps) {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }
+
 
 

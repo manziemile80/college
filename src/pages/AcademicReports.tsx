@@ -306,7 +306,7 @@ export default function AcademicReports() {
 
         <Card>
           <CardContent className="space-y-4">
-            <div className="row gap-4 sm:col-6 lg:col-3">
+            <div className="row g-3 col-md-6 col-xl-3">
               <div className="space-y-2">
                 <Label>Class</Label>
                 <Select value={classId} onValueChange={setClassId}>
@@ -330,7 +330,7 @@ export default function AcademicReports() {
                 </div>
               </div>
               <div className="d-flex align-items-end">
-                <Button onClick={generateClassBatch} disabled={aggregates.length === 0} className="gap-2 w-100 sm:w-auto">
+                <Button onClick={generateClassBatch} disabled={aggregates.length === 0} className="g-2 w-100 sm:w-auto">
                   <Download className="h-4 w-4" /> Download All Reports
                 </Button>
               </div>
@@ -340,7 +340,7 @@ export default function AcademicReports() {
 
         {/* Class ranking summary */}
         {classId && (
-          <div className="row gap-4 sm:col-6 lg:col-4">
+          <div className="row g-3 col-md-6 col-xl-3">
             <Card>
               <CardContent className="p-5">
                 <div className="d-flex align-items-center justify-content-between">
@@ -382,7 +382,7 @@ export default function AcademicReports() {
         {classId && (
           <Card>
             <CardContent className="p-0 overflow-x-auto">
-              <Table>
+              <div class="table-responsive"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">Pos</TableHead>
@@ -408,14 +408,14 @@ export default function AcademicReports() {
                         {a.annualPct.toFixed(2)}%
                       </TableCell>
                       <TableCell className="text-end">
-                        <Button size="sm" variant="outline" onClick={() => generateOne(a)} disabled={generating === a.student.id} className="gap-2">
+                        <Button size="sm" variant="outline" onClick={() => generateOne(a)} disabled={generating === a.student.id} className="g-2">
                           {generating === a.student.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} PDF
                         </Button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             </CardContent>
           </Card>
         )}
@@ -423,5 +423,8 @@ export default function AcademicReports() {
     </DashboardLayout>
   );
 }
+
+
+
 
 

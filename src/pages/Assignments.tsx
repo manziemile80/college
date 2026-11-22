@@ -197,18 +197,18 @@ export default function Assignments() {
           title="Assignments"
           description={isStaff ? 'Post assignments with due dates, then review and grade student submissions.' : 'View assignments, submit your work and see your marks and feedback.'}
           actions={isStaff ? (
-            <Button className="gap-2" onClick={() => setOpen(true)}><Plus className="h-4 w-4" />New Assignment</Button>
+            <Button className="g-2" onClick={() => setOpen(true)}><Plus className="h-4 w-4" />New Assignment</Button>
           ) : undefined}
         />
 
         {role === 'student' && !studentId && (
           <Card className="border-dashed border-2 border-slate-300 bg-slate-50">
-            <CardContent className="d-flex align-items-center justify-content-between gap-4 p-4 sm:d-flex flex-row">
+            <CardContent className="d-flex align-items-center justify-content-between g-4 p-4 sm:d-flex flex-row">
               <div>
                 <p className="fs-14 fw-medium text-slate-900">Connect your student profile</p>
                 <p className="fs-13 text-slate-500">Pick your name once so your work is saved.</p>
               </div>
-              <Button size="sm" className="gap-1.5" onClick={() => setClaimOpen(true)}><UserCheck className="h-4 w-4" />Find my profile</Button>
+              <Button size="sm" className="g-1.5" onClick={() => setClaimOpen(true)}><UserCheck className="h-4 w-4" />Find my profile</Button>
             </CardContent>
           </Card>
         )}
@@ -228,14 +228,14 @@ export default function Assignments() {
             {isStaff && <p className="mt-1 fs-13 text-slate-500">Post the first assignment for your class.</p>}
           </CardContent></Card>
         ) : (
-          <div className="row gap-5 sm:col-6 xl:col-4">
+          <div className="row g-4 col-md-6 col-xl-3">
             {assignments.map((a) => {
               const mine = mySubmissions.find((s) => s.assignment_id === a.id);
               const overdue = a.due_date && new Date(a.due_date) < new Date() && !mine;
               return (
                 <Card key={a.id} className="d-flex d-flex flex-column">
-                  <CardContent className="d-flex flex-1 d-flex flex-column gap-3 p-5">
-                    <div className="d-flex align-items-start justify-content-between gap-2">
+                  <CardContent className="d-flex flex-1 d-flex flex-column g-3 p-5">
+                    <div className="d-flex align-items-start justify-content-between g-2">
                       <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
                         <ClipboardList className="h-5 w-5" />
                       </div>
@@ -257,7 +257,7 @@ export default function Assignments() {
                     </div>
                     <div className="d-flex flex-wrap gap-x-3 gap-y-1.5">
                       {a.due_date && (
-                        <span className="d-inline-flex align-items-center gap-1 fs-11.5 text-slate-500">
+                        <span className="d-inline-flex align-items-center g-1 fs-11.5 text-slate-500">
                           <CalendarDays className="h-3.5 w-3.5 text-emerald-600" /> Due {new Date(a.due_date).toLocaleDateString()}
                         </span>
                       )}
@@ -273,14 +273,14 @@ export default function Assignments() {
                         Feedback: {mine.feedback}
                       </div>
                     )}
-                    <div className="mt-auto d-flex align-items-center gap-2 pt-2">
+                    <div className="mt-auto d-flex align-items-center g-2 pt-2">
                       {isStaff ? (
                         <>
-                          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openGrading(a)}><GraduationCap className="h-4 w-4" />Submissions</Button>
+                          <Button variant="outline" size="sm" className="g-1.5" onClick={() => openGrading(a)}><GraduationCap className="h-4 w-4" />Submissions</Button>
                           <Button variant="destructive" size="icon" aria-label="Delete assignment" onClick={() => remove(a.id)}><Trash2 className="h-4 w-4" /></Button>
                         </>
                       ) : role === 'student' ? (
-                        <Button size="sm" className="gap-1.5" onClick={() => {
+                        <Button size="sm" className="g-1.5" onClick={() => {
                           setSubmitFor(a);
                           setAnswer({ answer_text: mine?.answer_text || '', file_url: mine?.file_url || '' });
                         }}>
@@ -308,7 +308,7 @@ export default function Assignments() {
                 <Label>Instructions</Label>
                 <Textarea value={form.instructions} maxLength={3000} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
               </div>
-              <div className="row gap-3 sm:col-6">
+              <div className="row g-2 col-md-6">
                 <div>
                   <Label>Due date</Label>
                   <Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
@@ -351,7 +351,7 @@ export default function Assignments() {
               </div>
               <div>
                 <Label>File link (optional)</Label>
-                <div className="d-flex gap-2">
+                <div className="d-flex g-2">
                   <Input value={answer.file_url} maxLength={500} placeholder="https://..." onChange={(e) => setAnswer({ ...answer, file_url: e.target.value })} />
                   <Button type="button" variant="outline" size="icon" className="shrink-0"><Paperclip className="h-4 w-4" /></Button>
                 </div>
@@ -417,11 +417,11 @@ function GradeRow({
         </p>
       )}
       {submission.file_url && (
-        <a href={submission.file_url} target="_blank" rel="noreferrer" className="d-inline-flex align-items-center gap-1.5 fs-13 text-emerald-600 underline">
+        <a href={submission.file_url} target="_blank" rel="noreferrer" className="d-inline-flex align-items-center g-1.5 fs-13 text-emerald-600 underline">
           <Paperclip className="h-3.5 w-3.5" />Open submitted file
         </a>
       )}
-      <div className="d-flex d-flex flex-column gap-2 sm:d-flex flex-row sm:align-items-center">
+      <div className="d-flex d-flex flex-column g-2 sm:d-flex flex-row sm:align-items-center">
         <Input
           type="number"
           min={0}
@@ -443,6 +443,8 @@ function GradeRow({
     </div>
   );
 }
+
+
 
 
 

@@ -2,16 +2,20 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
-import { LogOut, Sun, Moon, UserCog } from '@/lib/icons';
+import { ChevronLeft, ChevronRight, LogOut, Sun, Moon, UserCog } from '@/lib/icons';
 import { Button } from '@/components/ui/button';
 import schoolLogo from '@/assets/college-rebero-logo.png';
 import { navItems, roleBadges, NavItem } from './navItems';
 
 interface SidebarNavProps {
   collapsed?: boolean;
+  /** Called when a navigation link is selected (closes the mobile Sheet). */
+  onLinkSelect?: () => void;
+  /** Called by the expand/collapse button (provided at tablet width). */
+  onCollapseToggle?: () => void;
 }
 
-export function SidebarNav({ collapsed = false }: SidebarNavProps) {
+export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }: SidebarNavProps) {
   const { role, profile, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
@@ -26,7 +30,7 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
         <div className="d-flex h-16 align-items-center justify-content-center border-bottom border-sidebar-border">
           <img src={schoolLogo} alt="College De Rebero" width={32} height={32} className="h-8 w-8 object-contain" />
         </div>
-        <nav className="d-flex flex-1 d-flex flex-column align-items-center gap-1.5 overflow-y-auto px-2 py-4">
+        <nav className="d-flex flex-1 d-flex flex-column align-items-center g-1.5 overflow-y-auto px-2 py-4">
           {visible.map((item) => {
             const isActive = location.pathname === item.href;
             return (
@@ -37,7 +41,7 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
                 asChild
                 className="position-relative h-11 w-11 rounded-3xl p-0 text-white hover:bg-white/10"
               >
-                <Link to={item.href} aria-label={item.label} title={item.label}>
+                <Link to={item.href} aria-label={item.label} title={item.label} onClick={() => onLinkSelect?.()}>
                   <item.icon className="h-5 w-5" />
                   {isActive && <span className="position-absolute -top-1.5 left-1/2 h-1 w-6 -translate-x-1/2 rounded-circle bg-emerald-600" />}
                 </Link>
@@ -45,14 +49,17 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
             );
           })}
         </nav>
-        <div className="d-flex d-flex flex-column gap-2 border-top border-sidebar-border px-2 py-3">
-          <Button variant="ghost" asChild className="h-10 w-100 justify-content-center rounded-3xl text-white hover:bg-white/10">
+        <div className="d-flex d-flex flex-column g-2 border-top border-sidebar-border px-2 py-3">
+          <Button variant="ghost" asChild className="h-10 w-100 justify-content-center rounded-3xl text-white hover:bg-white/10" onClick={() => onLinkSelect?.()}>
             <Link to="/settings">
               <UserCog className="h-5 w-5" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" onClick={signOut} className="h-10 w-10 self-center rounded-3xl text-white hover:bg-white/10" aria-label="Sign out">
+          <Button variant="ghost" size="icon" onClick={() => { signOut(); onLinkSelect?.(); }} className="h-10 w-10 self-center rounded-3xl text-white hover:bg-white/10" aria-label="Sign out">
             <LogOut className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => onCollapseToggle?.()} className="mx-auto h-10 w-10 rounded-3xl text-white hover:bg-white/10" aria-label="Expand sidebar">
+            <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
       </>
@@ -62,7 +69,7 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
   return (
     <>
       {/* Institution header */}
-      <div className="d-flex h-16 align-items-center gap-3 border-bottom border-sidebar-border px-6">
+      <div className="d-flex h-16 align-items-center g-3 border-bottom border-sidebar-border px-6">
         <img src={schoolLogo} alt="College De Rebero" width={32} height={32} className="h-8 w-8 object-contain" />
         <div className="min-w-0">
           <p className="truncate fs-15 fw-bold leading-tight text-white">College De Rebero</p>
@@ -71,8 +78,8 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
       </div>
 
       {/* User profile section */}
-      <div className="border-bottom border-sidebar-border px-5 py-5">
-        <div className="d-flex align-items-center gap-3">
+      <div className="border-bottom border-sidebar-border px-5 py-5" onClick={() => onLinkSelect?.()}>
+        <div className="d-flex align-items-center g-3">
           <div className="d-flex h-10 w-10 shrink-0 align-items-center justify-content-center rounded-circle bg-emerald-600 fs-sm fw-semibold text-white">
             {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
           </div>
@@ -113,8 +120,9 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
                 <Link
                   key={item.href}
                   to={item.href}
+                  onClick={() => onLinkSelect?.()}
                   className={cn(
-                    'group d-flex align-items-center gap-3 rounded-[12px] px-3 py-2.5 fs-14.5 fw-medium transition-all duration-200',
+                    'nav-item-link group d-flex align-items-center g-3 rounded-[12px] px-3 py-3 fs-14.5 fw-medium transition-all duration-200',
                     isActive
                       ? 'bg-emerald-600 text-white shadow-sm'
                       : 'text-slate-300 hover:bg-white/10 hover:text-white',
@@ -130,20 +138,22 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
         ))}
       </nav>
 
-      {/* Logout action */}
-      <div className="border-top border-sidebar-border px-4 py-4">
+      {/* Collapse button (tablet) */}
+      <div className="border-top border-sidebar-border px-4 py-3 d-flex justify-content-center">
         <Button
           variant="ghost"
-          onClick={signOut}
-          className="w-100 justify-content-start gap-3 rounded-[12px] text-slate-300 hover:bg-white/10 hover:text-white"
+          size="icon"
+          onClick={() => onCollapseToggle?.()}
+          className="h-10 w-10 rounded-3xl text-slate-300 hover:bg-white/10"
+          aria-label="Collapse sidebar"
         >
-          <LogOut className="h-5 w-5" />
-          Sign Out
+          <ChevronLeft className="h-5 w-5" />
         </Button>
       </div>
     </>
   );
 }
+
 
 
 

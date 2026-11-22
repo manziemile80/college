@@ -5,7 +5,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
   return (
     <aside
       className={cn(
-        'position-fixed inset-y-0 left-0 z-40 d-flex d-flex flex-column bg-sidebar',
+        'position-fixed inset-y-0 left-0 z-40 d-none d-md-block flex-column bg-sidebar',
         collapsed ? 'w-14' : 'w-[260px]',
       )}
     >

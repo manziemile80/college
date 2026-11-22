@@ -165,7 +165,7 @@ export default function StockDashboard() {
           title="Stock Dashboard"
           description="Inventory levels, reorder alerts and purchase orders."
           actions={
-            <Button variant="outline" className="gap-2" asChild>
+            <Button variant="outline" className="g-2" asChild>
               <Link to="/stock">
                 Stock items <ArrowRight className="h-4 w-4" />
               </Link>
@@ -174,10 +174,10 @@ export default function StockDashboard() {
         />
 
         {/* Stats */}
-        <div className="row gap-3 sm:col-6 xl:col-3">
+        <div className="row g-2 col-md-6 xl:col-3">
           {stats.map((s) => (
             <Card key={s.label}>
-              <CardContent className="d-flex align-items-center gap-3 p-4">
+              <CardContent className="d-flex align-items-center g-3 p-4">
                 <div className={`d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] ${s.cls}`}>
                   <s.icon className="h-5 w-5" />
                 </div>
@@ -193,8 +193,8 @@ export default function StockDashboard() {
         {loading ? (
           <div className="d-flex justify-content-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
         ) : (
-          <div className="row gap-5 lg:col-4">
-            <div className="space-y-5 lg:col-span-2">
+          <div className="row g-4 col-lg-3">
+            <div className="space-y-5 col-lg-6">
               <Card>
                 <CardContent className="p-5">
                   <h2 className="mb-4 fw-semibold text-slate-900">Inventory levels</h2>
@@ -209,7 +209,7 @@ export default function StockDashboard() {
                         const low = Number(it.quantity) <= min;
                         return (
                           <div key={it.id}>
-                            <div className="mb-1 d-flex align-items-center justify-content-between gap-3 fs-13">
+                            <div className="mb-1 d-flex align-items-center justify-content-between g-3 fs-13">
                               <span className="fw-medium text-slate-900">{it.name}</span>
                               <span className={low ? 'text-red-600' : 'text-slate-500'}>
                                 {it.quantity} {it.unit} Â· min {min}
@@ -232,7 +232,7 @@ export default function StockDashboard() {
                   ) : (
                     <div className="space-y-3">
                       {orders.map((o) => (
-                        <div key={o.id} className="d-flex flex-wrap align-items-center justify-content-between gap-3 rounded-[10px] border border-slate-200 p-3">
+                        <div key={o.id} className="d-flex flex-wrap align-items-center justify-content-between g-3 rounded-[10px] border border-slate-200 p-3">
                           <div className="min-w-[180px]">
                             <p className="fw-medium text-slate-900">{itemName(o.item_id)}</p>
                             <p className="fs-12.5 text-slate-500">
@@ -241,16 +241,16 @@ export default function StockDashboard() {
                               {o.expected_date ? ` Â· expected ${o.expected_date}` : ''}
                             </p>
                           </div>
-                          <div className="d-flex align-items-center gap-2">
+                          <div className="d-flex align-items-center g-2">
                             <Badge className={statusStyles[o.status] || ''}>{o.status}</Badge>
                             {canManage && o.status === 'pending' && (
-                              <Button size="sm" variant="outline" className="gap-1" onClick={() => updateStatus(o, 'ordered')}>
+                              <Button size="sm" variant="outline" className="g-1" onClick={() => updateStatus(o, 'ordered')}>
                                 <Truck className="h-3.5 w-3.5" />Mark ordered
                               </Button>
                             )}
                             {canManage && (o.status === 'pending' || o.status === 'ordered') && (
                               <>
-                                <Button size="sm" className="gap-1" onClick={() => updateStatus(o, 'received')}>
+                                <Button size="sm" className="g-1" onClick={() => updateStatus(o, 'received')}>
                                   <CheckCircle2 className="h-3.5 w-3.5" />Received
                                 </Button>
                                 <Button size="sm" variant="outline" onClick={() => updateStatus(o, 'cancelled')}>Cancel</Button>
@@ -274,7 +274,7 @@ export default function StockDashboard() {
                   ) : (
                     <div className="space-y-2">
                       {lowStock.map((it) => (
-                        <div key={it.id} className="d-flex align-items-center justify-content-between gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3">
+                        <div key={it.id} className="d-flex align-items-center justify-content-between g-2 rounded-[10px] border border-red-200 bg-red-50 p-3">
                           <div>
                             <p className="fs-13.5 fw-medium text-red-700">{it.name}</p>
                             <p className="fs-12.5 text-red-600">
@@ -320,7 +320,7 @@ export default function StockDashboard() {
                     <div><Label>Supplier</Label>
                       <Input value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} placeholder="e.g. Rebero Suppliers Ltd" />
                     </div>
-                    <div className="row col-6 gap-3">
+                    <div className="row col-6 g-3">
                       <div><Label>Quantity</Label>
                         <Input type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
                       </div>
@@ -348,6 +348,8 @@ export default function StockDashboard() {
     </DashboardLayout>
   );
 }
+
+
 
 
 
