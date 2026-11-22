@@ -142,7 +142,7 @@ export default function Quizzes() {
       description: aiDraft.description.trim().slice(0, 1000) || null,
       subject_id: aiSubject || null,
       class_id: aiClass || null,
-      is_published: false,
+      is_published: true,
       created_by: user!.id,
     }).select('id').single();
     if (error || !quiz) {
@@ -164,7 +164,7 @@ export default function Quizzes() {
     );
     setAiBusy(false);
     if (qErr) return toast({ title: 'Quiz saved, but questions failed', description: qErr.message, variant: 'destructive' });
-    toast({ title: 'Quiz saved as draft', description: 'Review it under Questions, then publish when ready.' });
+    toast({ title: 'Quiz published', description: 'Students can now see and take this quiz.' });
     setAiOpen(false);
     setAiDraft(null);
     setAiMaterial('');
@@ -602,7 +602,7 @@ export default function Quizzes() {
               <DialogFooter className="gap-2">
                 <Button variant="outline" onClick={() => setAiDraft(null)} disabled={aiBusy}>Back</Button>
                 <Button onClick={saveAiQuiz} disabled={aiBusy || aiDraft.questions.length === 0}>
-                  {aiBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save as draft quiz
+                  {aiBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Publish quiz
                 </Button>
               </DialogFooter>
             </div>
