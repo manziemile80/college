@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { supabase } from '@/integrations/supabase/client';
+import { canPublishQuiz } from '@/lib/quizPublishing';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -58,6 +59,8 @@ interface Question {
   sort_order: number;
 }
 
+type PendingQuestion = Omit<Question, 'id' | 'quiz_id'>;
+
 interface Attempt {
   id: string;
   quiz_id: string;
@@ -86,6 +89,8 @@ export default function Quizzes() {
 
   const [quizOpen, setQuizOpen] = useState(false);
   const [quizForm, setQuizForm] = useState(emptyQuiz);
+  const [newQuizQuestions, setNewQuizQuestions] = useState<PendingQuestion[]>([]);
+  const [savingQuiz, setSavingQuiz] = useState(false);
 
   const [manageQuiz, setManageQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -136,6 +141,9 @@ export default function Quizzes() {
     if (!aiDraft.title.trim()) return toast({ title: 'Title is required', variant: 'destructive' });
     const bad = aiDraft.questions.findIndex((q) => !q.question_text.trim() || !q.option_a.trim() || !q.option_b.trim());
     if (bad >= 0) return toast({ title: `Question ${bad + 1} needs text and options A/B`, variant: 'destructive' });
+    if (!canPublishQuiz(aiDraft.questions)) {
+      return toast({ title: 'Every correct answer needs option text', variant: 'destructive' });
+    }
     setAiBusy(true);
     const { data: quiz, error } = await supabase.from('quizzes').insert({
       title: aiDraft.title.trim().slice(0, 150),
@@ -192,27 +200,103 @@ export default function Quizzes() {
     setLoading(false);
   };
 
+  const openNewQuiz = () => {
+    setQuizForm(emptyQuiz);
+    setNewQuizQuestions([]);
+    setQuestionForm(emptyQuestion);
+    setQuizOpen(true);
+  };
+
+  const addNewQuizQuestion = () => {
+    if (!questionForm.question_text.trim() || !questionForm.option_a.trim() || !questionForm.option_b.trim()) {
+      toast({ title: 'Question and options A/B are required', variant: 'destructive' });
+      return;
+    }
+    const selectedOption = questionForm[`option_${questionForm.correct_option}` as 'option_a'];
+    if (!selectedOption.trim()) {
+      toast({ title: 'The correct answer needs option text', variant: 'destructive' });
+      return;
+    }
+
+    setNewQuizQuestions((current) => [
+      ...current,
+      {
+        question_text: questionForm.question_text.trim().slice(0, 1000),
+        option_a: questionForm.option_a.trim().slice(0, 300),
+        option_b: questionForm.option_b.trim().slice(0, 300),
+        option_c: questionForm.option_c.trim().slice(0, 300) || null,
+        option_d: questionForm.option_d.trim().slice(0, 300) || null,
+        correct_option: questionForm.correct_option,
+        points: Math.min(Math.max(Number(questionForm.points) || 1, 1), 20),
+        sort_order: current.length + 1,
+      },
+    ]);
+    setQuestionForm(emptyQuestion);
+  };
+
   const saveQuiz = async () => {
     if (!quizForm.title.trim()) {
       toast({ title: 'Title is required', variant: 'destructive' });
       return;
     }
-    const { error } = await supabase.from('quizzes').insert({
+    if (quizForm.is_published && !canPublishQuiz(newQuizQuestions)) {
+      toast({ title: 'Add at least one complete question before publishing', variant: 'destructive' });
+      return;
+    }
+
+    setSavingQuiz(true);
+    const { data: quiz, error } = await supabase.from('quizzes').insert({
       title: quizForm.title.trim().slice(0, 150),
       description: quizForm.description.trim().slice(0, 1000) || null,
       subject_id: quizForm.subject_id || null,
       class_id: quizForm.class_id || null,
       time_limit_minutes: quizForm.time_limit_minutes ? Number(quizForm.time_limit_minutes) : null,
-      is_published: quizForm.is_published,
+      is_published: false,
       created_by: user!.id,
-    });
-    if (error) {
-      toast({ title: 'Could not create quiz', description: error.message, variant: 'destructive' });
+    }).select('id').single();
+    if (error || !quiz) {
+      setSavingQuiz(false);
+      toast({ title: 'Could not create quiz', description: error?.message, variant: 'destructive' });
       return;
     }
-    toast({ title: 'Quiz created' });
+
+    if (newQuizQuestions.length > 0) {
+      const { error: questionsError } = await supabase.from('quiz_questions').insert(
+        newQuizQuestions.map((question) => ({ ...question, quiz_id: quiz.id })),
+      );
+      if (questionsError) {
+        setSavingQuiz(false);
+        toast({
+          title: 'Quiz saved as a draft, but its questions could not be added',
+          description: questionsError.message,
+          variant: 'destructive',
+        });
+        setQuizOpen(false);
+        fetchAll();
+        return;
+      }
+    }
+
+    if (quizForm.is_published) {
+      const { error: publishError } = await supabase.from('quizzes').update({ is_published: true }).eq('id', quiz.id);
+      if (publishError) {
+        setSavingQuiz(false);
+        toast({ title: 'Quiz saved as a draft, but could not be published', description: publishError.message, variant: 'destructive' });
+        setQuizOpen(false);
+        fetchAll();
+        return;
+      }
+    }
+
+    setSavingQuiz(false);
+    toast({
+      title: quizForm.is_published ? 'Quiz published' : 'Draft quiz created',
+      description: quizForm.is_published ? 'Students can now see and take this quiz.' : 'Add questions and publish it when ready.',
+    });
     setQuizOpen(false);
     setQuizForm(emptyQuiz);
+    setNewQuizQuestions([]);
+    setQuestionForm(emptyQuestion);
     fetchAll();
   };
 
@@ -238,6 +322,11 @@ export default function Quizzes() {
       toast({ title: 'Question and options A/B are required', variant: 'destructive' });
       return;
     }
+    const selectedOption = questionForm[`option_${questionForm.correct_option}` as 'option_a'];
+    if (!selectedOption.trim()) {
+      toast({ title: 'The correct answer needs option text', variant: 'destructive' });
+      return;
+    }
     const { error } = await supabase.from('quiz_questions').insert({
       quiz_id: manageQuiz.id,
       question_text: questionForm.question_text.trim().slice(0, 1000),
@@ -259,6 +348,26 @@ export default function Quizzes() {
   const removeQuestion = async (id: string) => {
     await supabase.from('quiz_questions').delete().eq('id', id);
     if (manageQuiz) openManage(manageQuiz);
+  };
+
+  const publishQuiz = async () => {
+    if (!manageQuiz) return;
+    if (!canPublishQuiz(questions)) {
+      toast({ title: 'Add at least one complete question before publishing', variant: 'destructive' });
+      return;
+    }
+
+    setSavingQuiz(true);
+    const { error } = await supabase.from('quizzes').update({ is_published: true }).eq('id', manageQuiz.id);
+    setSavingQuiz(false);
+    if (error) {
+      toast({ title: 'Could not publish quiz', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    setManageQuiz({ ...manageQuiz, is_published: true });
+    toast({ title: 'Quiz published', description: 'Students can now see and take this quiz.' });
+    fetchAll();
   };
 
   const startQuiz = async (quiz: Quiz) => {
@@ -333,7 +442,7 @@ export default function Quizzes() {
               <Button variant="outline" className="gap-2" onClick={() => { setAiDraft(null); setAiOpen(true); }}>
                 <Sparkles className="h-4 w-4" /> Generate with AI
               </Button>
-              <Button className="gap-2" onClick={() => setQuizOpen(true)}>
+              <Button className="gap-2" onClick={openNewQuiz}>
                 <Plus className="h-4 w-4" /> New Quiz
               </Button>
             </div>
@@ -441,8 +550,8 @@ export default function Quizzes() {
       )}
 
       {/* Create quiz */}
-      <Dialog open={quizOpen} onOpenChange={setQuizOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <Dialog open={quizOpen} onOpenChange={(open) => !savingQuiz && setQuizOpen(open)}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>New Quiz</DialogTitle>
           </DialogHeader>
@@ -489,6 +598,80 @@ export default function Quizzes() {
                 />
               </div>
             </div>
+
+            <div className="space-y-3 rounded-xl border border-border p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Questions and answer key</p>
+                  <p className="text-xs text-muted-foreground">Add every question before publishing the quiz.</p>
+                </div>
+                <Badge variant="secondary">{newQuizQuestions.length}</Badge>
+              </div>
+
+              {newQuizQuestions.map((question, index) => (
+                <div key={`${question.sort_order}-${question.question_text}`} className="flex items-start justify-between gap-2 rounded-lg bg-muted/40 p-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{index + 1}. {question.question_text}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Correct: {question.correct_option.toUpperCase()} · {question.points} pt(s)
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Remove new question ${index + 1}`}
+                    onClick={() => setNewQuizQuestions((current) =>
+                      current.filter((_, i) => i !== index).map((q, i) => ({ ...q, sort_order: i + 1 })),
+                    )}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+
+              <div className="space-y-2 rounded-lg border border-dashed border-border p-3">
+                <Textarea
+                  placeholder="Question"
+                  maxLength={1000}
+                  value={questionForm.question_text}
+                  onChange={(e) => setQuestionForm({ ...questionForm, question_text: e.target.value })}
+                />
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input placeholder="Option A" maxLength={300} value={questionForm.option_a} onChange={(e) => setQuestionForm({ ...questionForm, option_a: e.target.value })} />
+                  <Input placeholder="Option B" maxLength={300} value={questionForm.option_b} onChange={(e) => setQuestionForm({ ...questionForm, option_b: e.target.value })} />
+                  <Input placeholder="Option C (optional)" maxLength={300} value={questionForm.option_c} onChange={(e) => setQuestionForm({ ...questionForm, option_c: e.target.value })} />
+                  <Input placeholder="Option D (optional)" maxLength={300} value={questionForm.option_d} onChange={(e) => setQuestionForm({ ...questionForm, option_d: e.target.value })} />
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <Label>Correct option</Label>
+                    <Select value={questionForm.correct_option} onValueChange={(v) => setQuestionForm({ ...questionForm, correct_option: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="a">A</SelectItem>
+                        <SelectItem value="b">B</SelectItem>
+                        <SelectItem value="c">C</SelectItem>
+                        <SelectItem value="d">D</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Points</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={questionForm.points}
+                      onChange={(e) => setQuestionForm({ ...questionForm, points: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <Button variant="outline" className="gap-2" onClick={addNewQuizQuestion}>
+                  <Plus className="h-4 w-4" /> Add Question
+                </Button>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
               <div>
                 <p className="text-sm font-medium text-foreground">Published</p>
@@ -501,8 +684,11 @@ export default function Quizzes() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setQuizOpen(false)}>Cancel</Button>
-            <Button onClick={saveQuiz}>Create</Button>
+            <Button variant="outline" onClick={() => setQuizOpen(false)} disabled={savingQuiz}>Cancel</Button>
+            <Button onClick={saveQuiz} disabled={savingQuiz}>
+              {savingQuiz && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {quizForm.is_published ? 'Publish quiz' : 'Create draft'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -682,6 +868,15 @@ export default function Quizzes() {
               <Plus className="h-4 w-4" /> Add Question
             </Button>
           </div>
+          {!manageQuiz?.is_published && (
+            <DialogFooter className="gap-2 sm:justify-between">
+              <p className="text-xs text-muted-foreground">This is a draft. Students cannot see it yet.</p>
+              <Button onClick={publishQuiz} disabled={savingQuiz}>
+                {savingQuiz && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Publish quiz
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
 
