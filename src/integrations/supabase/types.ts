@@ -1299,6 +1299,7 @@ export type Database = {
           notes: string | null
           quantity: number
           unit: string
+          unit_price: number
           updated_at: string
         }
         Insert: {
@@ -1312,6 +1313,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           unit?: string
+          unit_price?: number
           updated_at?: string
         }
         Update: {
@@ -1325,6 +1327,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           unit?: string
+          unit_price?: number
           updated_at?: string
         }
         Relationships: []

@@ -56,7 +56,7 @@ const statusStyles: Record<string, string> = {
 export default function StockDashboard() {
   const { role, user } = useAuth();
   const { toast } = useToast();
-  const canManage = role === 'admin' || role === 'stock_manager';
+  const canManage = role === 'stock_manager';
 
   const [items, setItems] = useState<StockItem[]>([]);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);

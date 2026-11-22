@@ -51,8 +51,8 @@ export const navItems: NavItem[] = [
   { label: 'Academic Reports', href: '/academic-reports', icon: FileText, roles: ['admin', 'teacher', 'parent', 'student', 'dos'], group: 'Records' },
   { label: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'teacher', 'parent', 'viewer', 'dos'], group: 'Records' },
 
-  { label: 'Stock Management', href: '/stock', icon: Package, roles: ['admin', 'stock_manager', 'teacher'], group: 'Operations' },
-  { label: 'Stock Dashboard', href: '/stock-dashboard', icon: Boxes, roles: ['admin', 'stock_manager', 'teacher'], group: 'Operations' },
+  { label: 'Stock Management', href: '/stock', icon: Package, roles: ['stock_manager'], group: 'Operations' },
+  { label: 'Stock Dashboard', href: '/stock-dashboard', icon: Boxes, roles: ['stock_manager'], group: 'Operations' },
 
   { label: 'Users', href: '/users', icon: Users, roles: ['admin'], group: 'Admin' },
   { label: 'Settings', href: '/settings', icon: Settings, roles: ['admin'], group: 'Admin' },

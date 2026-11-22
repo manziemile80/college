@@ -28,6 +28,7 @@ import Assignments from "./pages/Assignments";
 import Quizzes from "./pages/Quizzes";
 import Stock from "./pages/Stock";
 import StockDashboard from "./pages/StockDashboard";
+import { StockOnly } from "./components/auth/StockOnly";
 import Discipline from "./pages/Discipline";
 import EnrollmentPage from "./pages/Enrollment";
 
@@ -60,8 +61,8 @@ const App = () => (
             <Route path="/materials" element={<Materials />} />
             <Route path="/assignments" element={<Assignments />} />
             <Route path="/quizzes" element={<Quizzes />} />
-            <Route path="/stock" element={<Stock />} />
-            <Route path="/stock-dashboard" element={<StockDashboard />} />
+            <Route path="/stock" element={<StockOnly><Stock /></StockOnly>} />
+            <Route path="/stock-dashboard" element={<StockOnly><StockDashboard /></StockOnly>} />
             <Route path="/discipline" element={<Discipline />} />
             <Route path="/enrollment" element={<EnrollmentPage />} />
             <Route path="/users" element={<Users />} />

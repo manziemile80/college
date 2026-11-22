@@ -1,0 +1,1 @@
+ALTER TABLE public.stock_items ADD COLUMN IF NOT EXISTS unit_price numeric NOT NULL DEFAULT 0;

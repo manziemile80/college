@@ -27,6 +27,7 @@ interface StockItem {
   unit: string;
   quantity: number;
   min_quantity: number;
+  unit_price: number;
   location: string | null;
   notes: string | null;
 }
@@ -46,6 +47,7 @@ const emptyItem = {
   unit: 'pcs',
   quantity: '0',
   min_quantity: '0',
+  unit_price: '0',
   location: '',
   notes: '',
 };
@@ -55,7 +57,7 @@ const categories = ['general', 'stationery', 'furniture', 'ict', 'kitchen', 'cle
 export default function Stock() {
   const { role, user } = useAuth();
   const { toast } = useToast();
-  const canManage = role === 'admin' || role === 'stock_manager';
+  const canManage = role === 'stock_manager';
 
   const [items, setItems] = useState<StockItem[]>([]);
   const [movements, setMovements] = useState<Movement[]>([]);
@@ -102,6 +104,7 @@ export default function Stock() {
       unit: item.unit,
       quantity: String(item.quantity),
       min_quantity: String(item.min_quantity),
+      unit_price: String(item.unit_price ?? 0),
       location: item.location || '',
       notes: item.notes || '',
     });
@@ -119,9 +122,27 @@ export default function Stock() {
       unit: form.unit.trim().slice(0, 30) || 'pcs',
       quantity: Math.max(Number(form.quantity) || 0, 0),
       min_quantity: Math.max(Number(form.min_quantity) || 0, 0),
+      unit_price: Math.max(Number(form.unit_price) || 0, 0),
       location: form.location.trim().slice(0, 150) || null,
       notes: form.notes.trim().slice(0, 500) || null,
     };
+    if (!editingId) {
+      const existing = items.find((i) => i.name.trim().toLowerCase() === payload.name.toLowerCase());
+      if (existing) {
+        const addQty = payload.quantity;
+        if (addQty > 0) {
+          const { error: mErr } = await supabase.from('stock_movements').insert({
+            item_id: existing.id, movement_type: 'in', quantity: addQty, reason: 'Added stock', recorded_by: user!.id,
+          });
+          if (mErr) return toast({ title: 'Could not add stock', description: mErr.message, variant: 'destructive' });
+        }
+        if (payload.unit_price > 0) await supabase.from('stock_items').update({ unit_price: payload.unit_price }).eq('id', existing.id);
+        toast({ title: 'Stock updated', description: `${existing.name}: ${Number(existing.quantity)} + ${addQty} = ${Number(existing.quantity) + addQty} ${existing.unit}` });
+        setOpen(false);
+        fetchAll();
+        return;
+      }
+    }
     const { error } = editingId
       ? await supabase.from('stock_items').update(payload).eq('id', editingId)
       : await supabase.from('stock_items').insert({ ...payload, created_by: user!.id });
@@ -270,6 +291,10 @@ export default function Stock() {
                       {item.category}
                       {item.location ? ` · ${item.location}` : ''}
                     </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Unit price: {Number(item.unit_price || 0).toLocaleString()} RWF · Total value:{' '}
+                      <span className="font-semibold text-foreground">{(Number(item.unit_price || 0) * Number(item.quantity)).toLocaleString()} RWF</span>
+                    </p>
                     {low && (
                       <p className="mt-1 text-xs font-medium text-destructive">
                         At or below minimum level ({item.min_quantity} {item.unit})
@@ -280,10 +305,10 @@ export default function Stock() {
                     {canManage && (
                       <>
                         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openMove(item, 'in')}>
-                          <ArrowDownCircle className="h-4 w-4" /> Receive
+                          <ArrowDownCircle className="h-4 w-4" /> Stock In
                         </Button>
                         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openMove(item, 'out')}>
-                          <ArrowUpCircle className="h-4 w-4" /> Issue
+                          <ArrowUpCircle className="h-4 w-4" /> Stock Out
                         </Button>
                       </>
                     )}
@@ -355,6 +380,13 @@ export default function Stock() {
               </div>
             </div>
             <div>
+              <Label>Unit price (RWF per {form.unit || 'unit'})</Label>
+              <Input type="number" min={0} value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
+              {!editingId && items.some((i) => i.name.trim().toLowerCase() === form.name.trim().toLowerCase()) && (
+                <p className="mt-1 text-xs text-primary">This item already exists — the quantity will be added to the current total.</p>
+              )}
+            </div>
+            <div>
               <Label>Storage location</Label>
               <Input value={form.location} maxLength={150} onChange={(e) => setForm({ ...form, location: e.target.value })} />
             </div>
@@ -375,7 +407,7 @@ export default function Stock() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {moveType === 'in' ? 'Receive stock' : 'Issue stock'} — {moveItem?.name}
+              {moveType === 'in' ? 'Stock in' : 'Stock out'} — {moveItem?.name}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
