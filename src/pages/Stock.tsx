@@ -9,16 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Pencil, Search, Loader2, Package, ArrowDownCircle, ArrowUpCircle, History } from 'lucide-react';
+import { Plus, Trash2, Pencil, Search, Loader2, Package, ArrowDownCircle, ArrowUpCircle, History, X } from 'lucide-react';
 
 interface StockItem {
   id: string;
@@ -209,264 +203,193 @@ export default function Stock() {
   );
   const lowStock = items.filter((i) => Number(i.quantity) <= Number(i.min_quantity));
 
+  const totalValue = items.reduce((s, i) => s + Number(i.unit_price || 0) * Number(i.quantity || 0), 0);
+
   return (
     <DashboardLayout>
-      <PageHeader
-        eyebrow="Operations"
-        title="Stock Management"
-        description={
-          canManage
-            ? 'Track school supplies, record what comes in and what is issued out.'
-            : 'View the school stock list and current quantities.'
-        }
-        actions={
-          canManage ? (
-            <Button className="gap-2" onClick={openNew}>
-              <Plus className="h-4 w-4" /> New Item
-            </Button>
-          ) : undefined
-        }
-      />
-
-      <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Items tracked</p>
-            <p className="text-2xl font-semibold text-foreground">{items.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Low or out of stock</p>
-            <p className="text-2xl font-semibold text-destructive">{lowStock.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Movements recorded</p>
-            <p className="text-2xl font-semibold text-foreground">{movements.length}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mb-4 relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          placeholder="Search item or category"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+      <div className="space-y-6 animate-fade-in">
+        <PageHeader
+          eyebrow="Operations"
+          title="Stock Management"
+          description={canManage ? 'Track school supplies, record what comes in and what is issued out.' : 'View the school stock list and current quantities.'}
+          actions={canManage ? (
+            <Button className="gap-2" onClick={openNew}><Plus className="h-4 w-4" />New Item</Button>
+          ) : undefined}
         />
-      </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-[12.5px] text-slate-500">Items tracked</p>
+              <p className="text-[30px] font-bold text-slate-900">{items.length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-[12.5px] text-slate-500">Low or out of stock</p>
+              <p className="text-[30px] font-bold text-red-600">{lowStock.length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-[12.5px] text-slate-500">Total value (RWF)</p>
+              <p className="text-[30px] font-bold text-slate-900">{totalValue.toLocaleString()}</p>
+            </CardContent>
+          </Card>
         </div>
-      ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center py-14 text-center">
-            <Package className="mb-3 h-10 w-10 text-muted-foreground" />
-            <p className="font-medium text-foreground">No stock items yet</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((item) => {
-            const low = Number(item.quantity) <= Number(item.min_quantity);
-            return (
-              <Card key={item.id} className="flex flex-col rounded-2xl">
-                <CardContent className="flex flex-1 flex-col gap-3 p-5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Package className="h-5 w-5" />
+
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input className="pl-9" placeholder="Search item or category" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+        ) : filtered.length === 0 ? (
+          <Card><CardContent className="flex flex-col items-center py-14 text-center">
+            <Package className="mb-3 h-10 w-10 text-slate-400" />
+            <p className="font-medium text-slate-900">No stock items yet</p>
+          </CardContent></Card>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((item) => {
+              const low = Number(item.quantity) <= Number(item.min_quantity);
+              return (
+                <Card key={item.id} className="flex flex-col">
+                  <CardContent className="flex flex-1 flex-col gap-3 p-5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-emerald-50 text-emerald-600">
+                        <Package className="h-5 w-5" />
+                      </div>
+                      <Badge variant={low ? 'destructive' : 'secondary'}>{item.quantity} {item.unit}</Badge>
                     </div>
-                    <Badge variant={low ? 'destructive' : 'secondary'}>
-                      {item.quantity} {item.unit}
-                    </Badge>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">{item.name}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground capitalize">
-                      {item.category}
-                      {item.location ? ` · ${item.location}` : ''}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Unit price: {Number(item.unit_price || 0).toLocaleString()} RWF · Total value:{' '}
-                      <span className="font-semibold text-foreground">{(Number(item.unit_price || 0) * Number(item.quantity)).toLocaleString()} RWF</span>
-                    </p>
-                    {low && (
-                      <p className="mt-1 text-xs font-medium text-destructive">
-                        At or below minimum level ({item.min_quantity} {item.unit})
-                      </p>
-                    )}
-                  </div>
-                  <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-                    {canManage && (
-                      <>
-                        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openMove(item, 'in')}>
-                          <ArrowDownCircle className="h-4 w-4" /> Stock In
-                        </Button>
-                        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openMove(item, 'out')}>
-                          <ArrowUpCircle className="h-4 w-4" /> Stock Out
-                        </Button>
-                      </>
-                    )}
-                    <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setHistoryItem(item)}>
-                      <History className="h-4 w-4" /> History
-                    </Button>
-                    {canManage && (
-                      <>
-                        <Button variant="ghost" size="icon" aria-label="Edit item" onClick={() => openEdit(item)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" aria-label="Delete item" onClick={() => removeItem(item.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Add / edit item */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Item' : 'New Item'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Item name</Label>
-              <Input value={form.name} maxLength={150} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label>Category</Label>
-                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Unit (pcs, box, kg...)</Label>
-                <Input value={form.unit} maxLength={30} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
-              </div>
-              <div>
-                <Label>Quantity in stock</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={form.quantity}
-                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Minimum level</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={form.min_quantity}
-                  onChange={(e) => setForm({ ...form, min_quantity: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Unit price (RWF per {form.unit || 'unit'})</Label>
-              <Input type="number" min={0} value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
-              {!editingId && items.some((i) => i.name.trim().toLowerCase() === form.name.trim().toLowerCase()) && (
-                <p className="mt-1 text-xs text-primary">This item already exists — the quantity will be added to the current total.</p>
-              )}
-            </div>
-            <div>
-              <Label>Storage location</Label>
-              <Input value={form.location} maxLength={150} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-            </div>
-            <div>
-              <Label>Notes</Label>
-              <Textarea value={form.notes} maxLength={500} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={saveItem}>{editingId ? 'Save Changes' : 'Add Item'}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Receive / issue */}
-      <Dialog open={!!moveItem} onOpenChange={(o) => !o && setMoveItem(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {moveType === 'in' ? 'Stock in' : 'Stock out'} — {moveItem?.name}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Currently in stock: {moveItem?.quantity} {moveItem?.unit}
-            </p>
-            <div>
-              <Label>Amount</Label>
-              <Input type="number" min={1} value={moveQty} onChange={(e) => setMoveQty(e.target.value)} />
-            </div>
-            <div>
-              <Label>Reason / reference</Label>
-              <Input
-                value={moveReason}
-                maxLength={300}
-                placeholder={moveType === 'in' ? 'Purchase, donation...' : 'Given to class, repair...'}
-                onChange={(e) => setMoveReason(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setMoveItem(null)}>Cancel</Button>
-            <Button onClick={saveMovement}>Record</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* History */}
-      <Dialog open={!!historyItem} onOpenChange={(o) => !o && setHistoryItem(null)}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{historyItem?.name} — Movements</DialogTitle>
-          </DialogHeader>
-          {(() => {
-            const rows = movements.filter((m) => m.item_id === historyItem?.id);
-            if (rows.length === 0) return <p className="text-sm text-muted-foreground">No movements recorded yet.</p>;
-            return (
-              <div className="space-y-2">
-                {rows.map((m) => (
-                  <div key={m.id} className="flex items-center justify-between rounded-xl border border-border p-3">
                     <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {m.movement_type === 'in' ? 'Received' : 'Issued'} {m.quantity} {historyItem?.unit}
+                      <h3 className="font-semibold text-slate-900">{item.name}</h3>
+                      <p className="mt-1 text-[13px] text-slate-500 capitalize">{item.category}{item.location ? ` · ${item.location}` : ''}</p>
+                      <p className="mt-1 text-[12.5px] text-slate-500">
+                        Unit price: {Number(item.unit_price || 0).toLocaleString()} RWF · Total value:{' '}
+                        <span className="font-semibold text-slate-900">{(Number(item.unit_price || 0) * Number(item.quantity)).toLocaleString()} RWF</span>
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(m.movement_date).toLocaleDateString()}
-                        {m.reason ? ` · ${m.reason}` : ''}
-                      </p>
+                      {low && (
+                        <p className="mt-1 text-[12.5px] font-medium text-red-600">
+                          At or below minimum level ({item.min_quantity} {item.unit})
+                        </p>
+                      )}
                     </div>
-                    <Badge variant={m.movement_type === 'in' ? 'secondary' : 'outline'}>
-                      {m.movement_type === 'in' ? '+' : '−'}{m.quantity}
-                    </Badge>
-                  </div>
-                ))}
+                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+                      {canManage && (
+                        <>
+                          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openMove(item, 'in')}>
+                            <ArrowDownCircle className="h-4 w-4" />Stock In
+                          </Button>
+                          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openMove(item, 'out')}>
+                            <ArrowUpCircle className="h-4 w-4" />Stock Out
+                          </Button>
+                        </>
+                      )}
+                      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setHistoryItem(item)}><History className="h-4 w-4" />History</Button>
+                      {canManage && (
+                        <>
+                          <Button variant="edit" size="icon" aria-label="Edit item" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="destructive" size="icon" aria-label="Delete item" onClick={() => removeItem(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Add / edit item */}
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>{editingId ? 'Edit Item' : 'New Item'}</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div><Label>Item name</Label><Input value={form.name} maxLength={150} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div><Label>Category</Label>
+                  <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Unit (pcs, box, kg...)</Label><Input value={form.unit} maxLength={30} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
+                <div><Label>Quantity in stock</Label><Input type="number" min={0} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /></div>
+                <div><Label>Minimum level</Label><Input type="number" min={0} value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} /></div>
               </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
+              <div>
+                <Label>Unit price (RWF per {form.unit || 'unit'})</Label>
+                <Input type="number" min={0} value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
+                {!editingId && items.some((i) => i.name.trim().toLowerCase() === form.name.trim().toLowerCase()) && (
+                  <p className="mt-1 text-[12.5px] text-emerald-600">This item already exists — the quantity will be added to the current total.</p>
+                )}
+              </div>
+              <div><Label>Storage location</Label><Input value={form.location} maxLength={150} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
+              <div><Label>Notes</Label><Textarea value={form.notes} maxLength={500} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={saveItem}>{editingId ? 'Save Changes' : 'Add Item'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Receive / issue */}
+        <Dialog open={!!moveItem} onOpenChange={(o) => !o && setMoveItem(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>{moveType === 'in' ? 'Stock in' : 'Stock out'} — {moveItem?.name}</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <p className="text-[13px] text-slate-500">Currently in stock: {moveItem?.quantity} {moveItem?.unit}</p>
+              <div><Label>Amount</Label><Input type="number" min={1} value={moveQty} onChange={(e) => setMoveQty(e.target.value)} /></div>
+              <div>
+                <Label>Reason / reference</Label>
+                <Input value={moveReason} maxLength={300} placeholder={moveType === 'in' ? 'Purchase, donation...' : 'Given to class, repair...'} onChange={(e) => setMoveReason(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setMoveItem(null)}>Cancel</Button>
+              <Button onClick={saveMovement}>Record</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* History */}
+        <Dialog open={!!historyItem} onOpenChange={(o) => !o && setHistoryItem(null)}>
+          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+            <DialogHeader><DialogTitle>{historyItem?.name} — Movements</DialogTitle></DialogHeader>
+            {(() => {
+              const rows = movements.filter((m) => m.item_id === historyItem?.id);
+              if (rows.length === 0) return <p className="text-[13px] text-slate-500">No movements recorded yet.</p>;
+              return (
+                <div className="space-y-2">
+                  {rows.map((m) => (
+                    <div key={m.id} className="flex items-center justify-between rounded-[10px] border border-slate-200 p-3">
+                      <div>
+                        <p className="text-[14px] font-medium text-slate-900">
+                          {m.movement_type === 'in' ? 'Received' : 'Issued'} {m.quantity} {historyItem?.unit}
+                        </p>
+                        <p className="text-[12.5px] text-slate-500">
+                          {new Date(m.movement_date).toLocaleDateString()}
+                          {m.reason ? ` · ${m.reason}` : ''}
+                        </p>
+                      </div>
+                      <Badge className={m.movement_type === 'in' ? 'bg-green-100 text-emerald-700' : 'bg-red-100 text-red-800'}>
+                        {m.movement_type === 'in' ? '+' : '−'}{m.quantity}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
+      </div>
     </DashboardLayout>
   );
 }

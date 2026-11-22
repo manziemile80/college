@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { BookOpen, Loader2, Plus, Trash2, Pencil } from 'lucide-react';
+import { BookOpen, Loader2, Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Subject { id: string; name: string; code: string; description: string | null; }
@@ -78,20 +79,18 @@ export default function Subjects() {
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary">School</p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Subjects</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Manage academic subjects offered at the school</p>
-          </div>
-          {canManage && (
+        <PageHeader
+          eyebrow="School"
+          title="Subjects"
+          description="Manage academic subjects offered at the school with codes and descriptions."
+          actions={canManage ? (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button onClick={openCreate}><Plus className="h-4 w-4" /> Add Subject</Button>
+                <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" />Add Subject</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>{editingId ? 'Edit Subject' : 'New Subject'}</DialogTitle></DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4 mt-2">
                   <div className="space-y-2">
                     <Label>Subject Name</Label>
                     <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Mathematics" required />
@@ -104,22 +103,27 @@ export default function Subjects() {
                     <Label>Description (optional)</Label>
                     <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                   </div>
-                  <Button type="submit" disabled={saving} className="w-full">
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (editingId ? 'Update' : 'Create')}
-                  </Button>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                    <Button type="submit" disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (editingId ? 'Update' : 'Create')}</Button>
+                  </div>
                 </form>
               </DialogContent>
             </Dialog>
-          )}
-        </div>
+          ) : undefined}
+        />
 
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><BookOpen className="h-5 w-5" /> All Subjects</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-[18px]"><BookOpen className="h-5 w-5 text-emerald-600" /> All Subjects</CardTitle></CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
             ) : subjects.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">No subjects yet</p>
+              <div className="empty-state">
+                <BookOpen className="h-12 w-12 text-slate-400 mb-4" />
+                <h3 className="text-[18px] font-semibold text-slate-900">No subjects yet</h3>
+                <p className="text-[13px] text-slate-500">Create the first subject for your school</p>
+              </div>
             ) : (
               <Table>
                 <TableHeader>
@@ -127,24 +131,20 @@ export default function Subjects() {
                     <TableHead>Name</TableHead>
                     <TableHead>Code</TableHead>
                     <TableHead>Description</TableHead>
-                    {canManage && <TableHead className="w-28">Actions</TableHead>}
+                    {canManage && <TableHead className="text-right">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {subjects.map((s) => (
                     <TableRow key={s.id}>
-                      <TableCell className="font-medium">{s.name}</TableCell>
-                      <TableCell><span className="rounded bg-muted px-2 py-1 text-xs font-mono">{s.code}</span></TableCell>
-                      <TableCell className="text-muted-foreground">{s.description || '-'}</TableCell>
+                      <TableCell className="font-medium text-slate-900">{s.name}</TableCell>
+                      <TableCell><span className="rounded-[8px] bg-slate-100 px-2.5 py-1 text-[12.5px] font-mono text-slate-700">{s.code}</span></TableCell>
+                      <TableCell className="text-[13px] text-slate-500">{s.description || '-'}</TableCell>
                       {canManage && (
                         <TableCell>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => openEdit(s)} aria-label="Edit subject">
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDelete(s.id)} aria-label="Delete subject">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                          <div className="flex justify-end gap-1">
+                            <Button variant="edit" size="icon" onClick={() => openEdit(s)} aria-label="Edit subject"><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="destructive" size="icon" onClick={() => handleDelete(s.id)} aria-label="Delete subject"><Trash2 className="h-4 w-4" /></Button>
                           </div>
                         </TableCell>
                       )}

@@ -8,31 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { History, Loader2, Search, UserPlus, UserMinus, ArrowLeftRight } from 'lucide-react';
+import { History, Loader2, Search, UserPlus, UserMinus, ArrowLeftRight, CheckCircle } from 'lucide-react';
 
 const currentYear = () => {
   const now = new Date();
@@ -42,14 +24,10 @@ const currentYear = () => {
 
 const statusBadge = (status: string) => {
   switch (status) {
-    case 'active':
-      return <Badge className="bg-success/15 text-success">Active</Badge>;
-    case 'transferred':
-      return <Badge className="bg-warning/15 text-warning">Transferred</Badge>;
-    case 'removed':
-      return <Badge className="bg-muted text-muted-foreground">Removed</Badge>;
-    default:
-      return <Badge variant="secondary">{status}</Badge>;
+    case 'active': return <Badge className="bg-green-100 text-emerald-700">Active</Badge>;
+    case 'transferred': return <Badge className="bg-amber-100 text-amber-700">Transferred</Badge>;
+    case 'removed': return <Badge className="bg-red-100 text-red-800">Removed</Badge>;
+    default: return <Badge variant="secondary">{status}</Badge>;
   }
 };
 
@@ -87,7 +65,6 @@ export default function EnrollmentPage() {
     setClasses(classList);
     const assigned = csRes.data ? [...new Set((csRes.data as { class_id: string }[]).map((r) => r.class_id))] : [];
     setAssignedClassIds(assigned);
-    // Default select first available class
     const available = isTeacher ? classList.filter((c) => assigned.includes(c.id)) : classList;
     if (available.length > 0) setClassId((prev) => prev || available[0].id);
   }, [isTeacher, user?.id]);
@@ -111,15 +88,9 @@ export default function EnrollmentPage() {
     }
   }, [classId, academicYear]);
 
-  useEffect(() => {
-    fetchClasses();
-  }, [fetchClasses]);
+  useEffect(() => { fetchClasses(); }, [fetchClasses]);
+  useEffect(() => { fetchEnrollments(); }, [fetchEnrollments]);
 
-  useEffect(() => {
-    fetchEnrollments();
-  }, [fetchEnrollments]);
-
-  // Students available for enrolling: not already enrolled in this class/year
   useEffect(() => {
     if (!canManage) return;
     supabase
@@ -157,7 +128,6 @@ export default function EnrollmentPage() {
     if (!user || !classId) return;
     setSaving(true);
     try {
-      // Re-activate a previous enrollment for the same class/year if it exists
       const existing = await supabase
         .from('enrollments')
         .select('id, status')
@@ -207,11 +177,7 @@ export default function EnrollmentPage() {
         .update({ status: 'removed' })
         .eq('id', enrollment.id);
       if (error) throw error;
-      await supabase.rpc('log_audit', {
-        _action: 'remove_enrollment',
-        _entity: 'enrollments',
-        _entity_id: enrollment.id,
-      });
+      await supabase.rpc('log_audit', { _action: 'remove_enrollment', _entity: 'enrollments', _entity_id: enrollment.id });
       toast.success('Enrollment removed');
       fetchEnrollments();
     } catch (e: any) {
@@ -262,22 +228,17 @@ export default function EnrollmentPage() {
         <PageHeader
           eyebrow="School"
           title="Student Enrollment"
-          description="Enroll students in classes, transfer them between classes, and keep a full history of changes."
+          description="Enroll students in classes, transfer between classes, and view enrollment history."
         />
 
-        {/* Filters */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="space-y-2 sm:w-1/2">
             <Label>Class</Label>
             <Select value={classId} onValueChange={setClassId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select class" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
               <SelectContent>
                 {availableClasses.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name} ({c.grade_level})
-                  </SelectItem>
+                  <SelectItem key={c.id} value={c.id}>{c.name} ({c.grade_level})</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -288,17 +249,14 @@ export default function EnrollmentPage() {
           </div>
         </div>
 
-        {/* Enroll new students (class picker only) */}
         {canManage && classId && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <UserPlus className="h-4 w-4" /> Enroll a student
-              </CardTitle>
+              <CardTitle className="flex items-center gap-2 text-[18px]"><UserPlus className="h-5 w-5 text-emerald-600" /> Enroll a student</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   className="pl-9"
                   placeholder="Search by name, student ID or registration number..."
@@ -307,24 +265,17 @@ export default function EnrollmentPage() {
                 />
               </div>
               {availableStudents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No matching students to enroll in this class for {academicYear}.
-                </p>
+                <p className="text-[13px] text-slate-500">No matching students to enroll in this class for {academicYear}.</p>
               ) : (
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {availableStudents.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center justify-between rounded-lg border border-border p-3"
-                    >
+                    <div key={s.id} className="flex items-center justify-between rounded-[10px] border border-slate-200 bg-white p-3">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {s.first_name} {s.last_name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{s.student_id}</p>
+                        <p className="truncate text-[14px] font-medium text-slate-900">{s.first_name} {s.last_name}</p>
+                        <p className="text-[12.5px] text-slate-500">{s.student_id}</p>
                       </div>
                       <Button size="sm" onClick={() => handleEnroll(s)} disabled={saving}>
-                        <UserPlus className="h-4 w-4 mr-1" /> Enroll
+                        <UserPlus className="h-4 w-4 mr-1" />Enroll
                       </Button>
                     </div>
                   ))}
@@ -334,90 +285,78 @@ export default function EnrollmentPage() {
           </Card>
         )}
 
-        {/* Enrolled list */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
+            <CardTitle className="text-[16px]">
               Enrollments — {classes.find((c) => c.id === classId)?.name || 'Select a class'} · {academicYear}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
+              <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
             ) : enrollments.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">
-                No enrollments for this class and year yet.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Student ID</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="hidden sm:table-cell">Enrolled</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {enrollments.map((e) => (
-                      <TableRow key={e.id}>
-                        <TableCell className="font-medium">
-                          {e.student
-                            ? `${e.student.first_name} ${e.student.last_name}`
-                            : e.student_id}
-                        </TableCell>
-                        <TableCell>{e.student?.student_id || '—'}</TableCell>
-                        <TableCell>{statusBadge(e.status)}</TableCell>
-                        <TableCell className="hidden text-muted-foreground sm:table-cell">
-                          {format(new Date(e.created_at), 'MMM d, yyyy')}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {canManage && (
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => openHistory(e)}
-                                title="Enrollment history"
-                              >
-                                <History className="h-4 w-4" />
-                              </Button>
-                              {e.status === 'active' && (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    title="Transfer to another class"
-                                    onClick={() => {
-                                      setTransferFor(e);
-                                      setTransferClass('');
-                                    }}
-                                  >
-                                    <ArrowLeftRight className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="text-destructive"
-                                    title="Remove enrollment"
-                                    onClick={() => handleRemove(e)}
-                                  >
-                                    <UserMinus className="h-4 w-4" />
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="empty-state">
+                <CheckCircle className="h-12 w-12 text-slate-400 mb-4" />
+                <h3 className="text-[18px] font-semibold text-slate-900">No enrollments for this class and year yet.</h3>
+                <p className="text-[13px] text-slate-500">Enroll students above to get started.</p>
               </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Student ID</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden sm:table-cell">Enrolled</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {enrollments.map((e) => (
+                    <TableRow key={e.id}>
+                      <TableCell className="font-medium text-slate-900">
+                        {e.student ? `${e.student.first_name} ${e.student.last_name}` : e.student_id}
+                      </TableCell>
+                      <TableCell className="text-[13px] text-slate-500">{e.student?.student_id || '—'}</TableCell>
+                      <TableCell>{statusBadge(e.status)}</TableCell>
+                      <TableCell className="hidden text-[13px] text-slate-500 sm:table-cell">
+                        {format(new Date(e.created_at), 'MMM d, yyyy')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {canManage && (
+                          <div className="flex justify-end gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => openHistory(e)} title="Enrollment history" aria-label="Enrollment history">
+                              <History className="h-4 w-4" />
+                            </Button>
+                            {e.status === 'active' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => { setTransferFor(e); setTransferClass(''); }}
+                                  title="Transfer to another class"
+                                  aria-label="Transfer to another class"
+                                >
+                                  <ArrowLeftRight className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleRemove(e)}
+                                  title="Remove enrollment"
+                                  aria-label="Remove enrollment"
+                                >
+                                  <UserMinus className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>
@@ -426,24 +365,20 @@ export default function EnrollmentPage() {
       {/* History dialog */}
       <Dialog open={!!historyFor} onOpenChange={(open) => !open && setHistoryFor(null)}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Enrollment History</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Enrollment History</DialogTitle></DialogHeader>
           {historyLoading ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
+            <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
           ) : history.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">No history recorded.</p>
+            <p className="py-6 text-center text-[13px] text-slate-500">No history recorded.</p>
           ) : (
             <div className="space-y-3 py-2">
               {history.map((h) => (
-                <div key={h.id} className="flex items-start justify-between gap-3 border-b border-border pb-2 last:border-0">
+                <div key={h.id} className="flex items-start justify-between gap-3 border-b border-slate-200 pb-2 last:border-0">
                   <div>
-                    <p className="text-sm font-medium capitalize text-foreground">{h.action}</p>
-                    <p className="text-xs text-muted-foreground">{h.details}</p>
+                    <p className="text-[14px] font-medium capitalize text-slate-900">{h.action}</p>
+                    <p className="text-[12.5px] text-slate-500">{h.details}</p>
                   </div>
-                  <p className="whitespace-nowrap text-xs text-muted-foreground">
+                  <p className="whitespace-nowrap text-[12.5px] text-slate-500">
                     {format(new Date(h.created_at), 'MMM d, yyyy HH:mm')}
                   </p>
                 </div>
@@ -456,34 +391,26 @@ export default function EnrollmentPage() {
       {/* Transfer dialog */}
       <Dialog open={!!transferFor} onOpenChange={(open) => !open && setTransferFor(null)}>
         <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Transfer Student</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Transfer Student</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label>Move to class</Label>
               <Select value={transferClass} onValueChange={setTransferClass}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select target class" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select target class" /></SelectTrigger>
                 <SelectContent>
                   {classes
                     .filter((c) => c.id !== transferFor?.class_id)
                     .map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name} ({c.grade_level})
-                      </SelectItem>
+                      <SelectItem key={c.id} value={c.id}>{c.name} ({c.grade_level})</SelectItem>
                     ))}
                 </SelectContent>
               </Select>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[12.5px] text-slate-500">
               The change is recorded in the enrollment history. Confirm before transferring.
             </p>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setTransferFor(null)}>
-                Cancel
-              </Button>
+              <Button variant="outline" onClick={() => setTransferFor(null)}>Cancel</Button>
               <Button onClick={handleTransfer} disabled={saving || !transferClass}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm Transfer'}
               </Button>

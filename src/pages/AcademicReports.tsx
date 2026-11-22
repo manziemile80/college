@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,7 +47,6 @@ export default function AcademicReports() {
   const [logoData, setLogoData] = useState<string | null>(null);
 
   useEffect(() => {
-    // Preload logo as data URL for jsPDF
     fetch(schoolLogo)
       .then((r) => r.blob())
       .then((blob) => new Promise<string>((res) => {
@@ -83,7 +83,6 @@ export default function AcademicReports() {
     })();
   }, [classId, year]);
 
-  // Aggregate per student per term across all subjects
   const aggregates: StudentAggregate[] = useMemo(() => {
     const list: StudentAggregate[] = students.map((stu) => {
       const studentMarks = marks.filter((m) => m.student_id === stu.id);
@@ -100,13 +99,11 @@ export default function AcademicReports() {
       const annualPct = totalCount > 0 ? annualTotal / totalCount : 0;
       return { student: stu, termTotals, termPct, annualTotal, annualPct };
     });
-    // Rank by annual pct desc
     const ranked = [...list].sort((a, b) => b.annualPct - a.annualPct);
     ranked.forEach((a, i) => { a.position = i + 1; });
     return ranked;
   }, [students, marks]);
 
-  // Per-term positions (rank within class for each term's percentage)
   const termPositions = useMemo(() => {
     const map: Record<string, Record<string, number>> = { term1: {}, term2: {}, term3: {} };
     TERMS.forEach((t) => {
@@ -124,23 +121,19 @@ export default function AcademicReports() {
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
 
-    // School logo (top-left)
     if (logoData) {
       try { doc.addImage(logoData, 'PNG', 10, 6, 18, 18); } catch (_) { /* ignore */ }
     }
-    // School name header
     doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
     doc.text('COLLEGE DE REBERO', pageW / 2, 10, { align: 'center' });
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
     doc.text('Excellence in Education • Rwanda', pageW / 2, 15, { align: 'center' });
 
-    // Title bar
     doc.setDrawColor(0); doc.setLineWidth(0.5);
     doc.rect(pageW / 2 - 60, 19, 120, 8);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
     doc.text("STUDENT'S ASSESSMENT REPORT", pageW / 2, 24.5, { align: 'center' });
 
-    // School info table
     autoTable(doc, {
       startY: 30,
       theme: 'grid',
@@ -154,7 +147,6 @@ export default function AcademicReports() {
     });
     let y = (doc as any).lastAutoTable.finalY + 4;
 
-    // Per-subject marks table with terms side by side
     const subjectRows: any[] = [];
     const subjectIds = Array.from(new Set(marks.filter((m) => m.student_id === agg.student.id).map((m) => m.subject_id)));
     subjectIds.forEach((sid, idx) => {
@@ -164,7 +156,7 @@ export default function AcademicReports() {
         return m ? [m.cat_score.toFixed(0), m.exam_score.toFixed(0), (m.cat_score + m.exam_score).toFixed(0)] : ['', '', ''];
       };
       const t1 = cell('term1'), t2 = cell('term2'), t3 = cell('term3');
-      const totals = [t1, t2, t3].map((t) => t[2] ? Number(t[2]) : 0);
+      const totals = [t1, t2, t3].map((t) => (t[2] ? Number(t[2]) : 0));
       const counted = totals.filter((v) => v > 0).length;
       const annual = counted > 0 ? (totals.reduce((s, v) => s + v, 0) / counted).toFixed(1) : '';
       subjectRows.push([
@@ -177,16 +169,8 @@ export default function AcademicReports() {
       ]);
     });
 
-    // Locked column widths so summary row lines up under subject table
     const COL_WIDTHS: Record<number, number> = {
-      0: 8,   // #
-      1: 50,  // MODULE
-      2: 14, 3: 14, 4: 14,   // T1: CAT, Exam, Tot
-      5: 14, 6: 14, 7: 14,   // T2
-      8: 14, 9: 14, 10: 14,  // T3
-      11: 18, // Annual
-      12: 18, // A.%
-      13: 20, // DES
+      0: 8, 1: 50, 2: 14, 3: 14, 4: 14, 5: 14, 6: 14, 7: 14, 8: 14, 9: 14, 10: 14, 11: 18, 12: 18, 13: 20,
     };
     const subjectColumnStyles: Record<number, any> = { 1: { halign: 'left', cellWidth: COL_WIDTHS[1] } };
     Object.entries(COL_WIDTHS).forEach(([k, v]) => {
@@ -219,12 +203,10 @@ export default function AcademicReports() {
     });
     y = (doc as any).lastAutoTable.finalY;
 
-    // Summary row: TOTAL / PERCENTAGE / POSITION
     const posT = (t: string) => {
       const p = termPos[t]?.[agg.student.id];
       return p ? `${p} / ${totalStudents}` : '-';
     };
-    // Mirror subject-table grid: label spans #+MODULE, each term spans its 3 sub-cols, annual spans Annual+A.%+DES
     const labelCell = (txt: string) => ({ content: txt, colSpan: 2, styles: { halign: 'left' as const, fillColor: [240, 240, 245] as [number, number, number] } });
     const termCell = (txt: string) => ({ content: txt, colSpan: 3 });
     const annualCell = (txt: string) => ({ content: txt, colSpan: 3 });
@@ -261,7 +243,6 @@ export default function AcademicReports() {
     });
     y = (doc as any).lastAutoTable.finalY + 12;
 
-    // Signatures
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
     doc.text(`Done at College De Rebero, on ${new Date().toLocaleDateString()}`, 14, y);
     y += 14;
@@ -273,7 +254,6 @@ export default function AcademicReports() {
     doc.text('Director of Studies', pageW / 2, y + 5, { align: 'center' });
     doc.text('School Manager', pageW - 80, y + 5);
 
-    // Footer
     doc.setDrawColor(150); doc.setLineWidth(0.2);
     doc.line(10, pageH - 14, pageW - 10, pageH - 14);
     doc.setFontSize(8); doc.setTextColor(100);
@@ -309,19 +289,24 @@ export default function AcademicReports() {
     toast.success(`Generated ${aggregates.length} reports`);
   };
 
+  const avg = filtered.length
+    ? filtered.reduce((s, a) => s + a.annualPct, 0) / filtered.length
+    : 0;
+  const top = filtered[0];
+  const bottom = filtered[filtered.length - 1];
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary">Records</p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Academic Reports</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Ranked class performance with downloadable termly reports</p>
-        </div>
+        <PageHeader
+          eyebrow="Records"
+          title="Academic Reports"
+          description="Ranked class performance with downloadable termly reports."
+        />
 
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Filters</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
                 <Label>Class</Label>
                 <Select value={classId} onValueChange={setClassId}>
@@ -337,68 +322,100 @@ export default function AcademicReports() {
                 <Label>Academic Year</Label>
                 <Input value={year} onChange={(e) => setYear(e.target.value)} placeholder="2026" />
               </div>
-              <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-2">
                 <Label>Search Student</Label>
                 <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
                   <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name or ID..." className="pl-8" />
                 </div>
+              </div>
+              <div className="flex items-end">
+                <Button onClick={generateClassBatch} disabled={aggregates.length === 0} className="gap-2 w-full sm:w-auto">
+                  <Download className="h-4 w-4" /> Download All Reports
+                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Class ranking summary */}
+        {classId && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[13px] text-slate-500">Class Average</p>
+                    <p className={`text-[32px] font-bold tracking-tight ${avg >= 50 ? 'text-emerald-700' : 'text-red-700'}`}>{avg.toFixed(1)}%</p>
+                  </div>
+                  <FileText className="h-9 w-9 text-emerald-600" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[13px] text-slate-500">Top Performer</p>
+                    <p className="text-[32px] font-bold text-slate-900 truncate">{top?.student.first_name} {top?.student.last_name}</p>
+                    <p className="text-[13px] text-emerald-600">{top ? top.annualPct.toFixed(1) + '%' : '—'}</p>
+                  </div>
+                  <Users className="h-9 w-9 text-emerald-600" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[13px] text-slate-500">Needs Attention</p>
+                    <p className="text-[32px] font-bold text-slate-900 truncate">{bottom?.student.first_name} {bottom?.student.last_name}</p>
+                    <p className="text-[13px] text-amber-700">{bottom ? bottom.annualPct.toFixed(1) + '%' : '—'}</p>
+                  </div>
+                  <FileText className="h-9 w-9 text-amber-600" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {classId && (
           <Card>
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Class Ranking ({aggregates.length})</CardTitle>
-                <Button onClick={generateClassBatch} disabled={aggregates.length === 0}>
-                  <Download className="h-4 w-4" /> Download All Reports
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-              ) : filtered.length === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">No students</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">Pos</TableHead>
-                      <TableHead>Student</TableHead>
-                      <TableHead>ID</TableHead>
-                      <TableHead className="text-center">Term 1 %</TableHead>
-                      <TableHead className="text-center">Term 2 %</TableHead>
-                      <TableHead className="text-center">Term 3 %</TableHead>
-                      <TableHead className="text-center font-bold">Annual %</TableHead>
-                      <TableHead className="w-32">Action</TableHead>
+            <CardContent className="p-0 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">Pos</TableHead>
+                    <TableHead>Student</TableHead>
+                    <TableHead>ID</TableHead>
+                    <TableHead className="text-center">Term 1 %</TableHead>
+                    <TableHead className="text-center">Term 2 %</TableHead>
+                    <TableHead className="text-center">Term 3 %</TableHead>
+                    <TableHead className="text-center font-semibold">Annual %</TableHead>
+                    <TableHead className="w-32 text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((a) => (
+                    <TableRow key={a.student.id}>
+                      <TableCell className="font-bold text-slate-900">{a.position}</TableCell>
+                      <TableCell className="font-medium text-slate-900">{a.student.first_name} {a.student.last_name}</TableCell>
+                      <TableCell className="text-[12.5px] text-slate-500">{a.student.student_id}</TableCell>
+                      <TableCell className="text-center">{a.termPct.term1 > 0 ? a.termPct.term1.toFixed(1) : '-'}</TableCell>
+                      <TableCell className="text-center">{a.termPct.term2 > 0 ? a.termPct.term2.toFixed(1) : '-'}</TableCell>
+                      <TableCell className="text-center">{a.termPct.term3 > 0 ? a.termPct.term3.toFixed(1) : '-'}</TableCell>
+                      <TableCell className={`text-center font-bold ${a.annualPct >= 50 ? 'text-emerald-700' : 'text-red-700'}`}>
+                        {a.annualPct.toFixed(2)}%
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="outline" onClick={() => generateOne(a)} disabled={generating === a.student.id} className="gap-2">
+                          {generating === a.student.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} PDF
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((a) => (
-                      <TableRow key={a.student.id}>
-                        <TableCell className="font-bold">{a.position}</TableCell>
-                        <TableCell className="font-medium">{a.student.first_name} {a.student.last_name}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{a.student.student_id}</TableCell>
-                        <TableCell className="text-center">{a.termPct.term1 > 0 ? a.termPct.term1.toFixed(1) : '-'}</TableCell>
-                        <TableCell className="text-center">{a.termPct.term2 > 0 ? a.termPct.term2.toFixed(1) : '-'}</TableCell>
-                        <TableCell className="text-center">{a.termPct.term3 > 0 ? a.termPct.term3.toFixed(1) : '-'}</TableCell>
-                        <TableCell className={`text-center font-bold ${a.annualPct >= 50 ? 'text-success' : 'text-destructive'}`}>
-                          {a.annualPct.toFixed(2)}%
-                        </TableCell>
-                        <TableCell>
-                          <Button size="sm" variant="outline" onClick={() => generateOne(a)} disabled={generating === a.student.id}>
-                            {generating === a.student.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} PDF
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         )}

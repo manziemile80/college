@@ -2,132 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Conduct - Student Behavior Management System Design System */
+/* ============================================================
+   College De Rebero — Student Behavior Management System
+   Design System (spec v1)
+   ============================================================ */
 
 @layer base {
   :root {
-    /* Primary - Refined emerald (calm, readable) */
-    --primary: 160 84% 39%;
+    /* ── Primary — Primary green #059669 ─────────────── */
+    --primary: 161.4 94% 30%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Slate */
-    --secondary: 215 16% 47%;
-    --secondary-foreground: 0 0% 100%;
-
-    /* Backgrounds */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-
-    /* Cards & Surfaces */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    /* Muted surfaces */
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-
-    /* Accent - Primary dark */
-    --accent: 160 84% 32%;
+    /* ── Dark green #047857 (accent for stats, dark text) ─ */
+    --accent: 162.9 94% 24%;
     --accent-foreground: 0 0% 100%;
 
-    /* Status Colors */
-    --success: 142 71% 45%;
+    /* ── Secondary — Light gray #F1F5F9 bg, dark navy text ─ */
+    --secondary: 214.3 30.7% 95.5%;
+    --secondary-foreground: 222.2 47% 11%;
+
+    /* ── Backgrounds ───────────────────────────────────── */
+    --background: 210 40% 98%;          /* #F8FAFC Main background */
+    --foreground: 222.2 47% 11%;        /* #0F172A Primary text */
+    --card: 0 0% 100%;                  /* #FFFFFF Card background */
+    --card-foreground: 222.2 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47% 11%;
+
+    /* ── Muted ─────────────────────────────────────────── */
+    --muted: 214.3 30.7% 95.5%;         /* #F1F5F9 — table headers, subtle areas */
+    --muted-foreground: 215.4 16% 47%;  /* #64748B Secondary text */
+
+    /* ── Status colors ─────────────────────────────────── */
+    --success: 142.1 71% 45%;
     --success-foreground: 0 0% 100%;
-
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 10%;
-
-    --destructive: 0 72% 51%;
+    --warning: 32.1 95% 44%;            /* #D97706 Warning orange */
+    --warning-foreground: 22.7 83% 31%; /* dark text on warning bg */
+    --destructive: 0 72% 51%;           /* #DC2626 Danger red */
     --destructive-foreground: 0 0% 100%;
-
-    --info: 160 84% 39%;
+    --info: 160.1 84% 39%;
     --info-foreground: 0 0% 100%;
 
-    /* Score Colors */
-    --score-excellent: 142 71% 45%;
-    --score-good: 160 84% 39%;
-    --score-average: 38 92% 50%;
-    --score-poor: 0 72% 51%;
-
-    /* UI Elements */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 160 84% 39%;
+    /* ── UI elements ───────────────────────────────────── */
+    --border: 214.3 32% 91%;            /* #E2E8F0 Border */
+    --input: 214.3 32% 91%;             /* input border #CBD5E1-ish */
+    --ring: 161.4 94% 30%;
     --radius: 0.75rem;
 
-    /* Sidebar - charcoal slate with emerald accents */
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
+    /* ── Sidebar — Deep navy #0F172A ───────────────────── */
+    --sidebar-background: 222.2 47% 11%;          /* #0F172A */
+    --sidebar-foreground: 212.7 40% 78%;          /* #CBD5E1 inactive nav text */
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 160 84% 39%;
-    --sidebar-accent: 160 84% 32%;
+    --sidebar-primary-foreground: 161.4 94% 30%;
+    --sidebar-accent: 161.4 94% 30%;              /* #059669 active nav */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 160 84% 39%;
-
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.04);
-    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.07), 0 2px 4px -2px hsl(222 47% 11% / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.08), 0 4px 6px -4px hsl(222 47% 11% / 0.06);
-    --shadow-xl: 0 20px 25px -5px hsl(222 47% 11% / 0.08), 0 8px 10px -6px hsl(222 47% 11% / 0.06);
-
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(160 84% 32%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(215 16% 47%) 0%, hsl(215 20% 55%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(160 84% 32%) 54%, hsl(160 84% 39%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
+    --sidebar-border: 222.2 47% 15%;
+    --sidebar-ring: 161.4 94% 30%;
   }
 
   .dark {
     --primary: 158 64% 50%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 215 20% 55%;
-    --secondary-foreground: 0 0% 100%;
-
-    --background: 222 84% 5%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-
-    --muted: 222 47% 13%;
-    --muted-foreground: 215 20% 65%;
-
     --accent: 158 64% 50%;
     --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
+    --secondary: 222 47% 13%;
+    --secondary-foreground: 210 40% 98%;
+    --background: 222 84% 5%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --muted: 222 47% 13%;
+    --muted-foreground: 215 20% 65%;
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 158 64% 50%;
-
     --sidebar-background: 222 47% 9%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 0 0% 100%;
     --sidebar-primary-foreground: 158 64% 50%;
-    --sidebar-accent: 160 84% 28%;
+    --sidebar-accent: 158 64% 28%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 217 33% 14%;
     --sidebar-ring: 158 64% 50%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
@@ -136,121 +103,253 @@
   }
 }
 
+/* ============================================================
+   Typography scale (spec §3)
+   ============================================================ */
 @layer components {
-  /* Card variants */
-  .card-elevated {
-    @apply bg-card rounded-xl border border-border;
-    box-shadow: var(--shadow-md);
+  /* Main page headings — 30px / 700 */
+  .page-h1 {
+    @apply text-[30px] font-bold tracking-tight text-foreground;
   }
-
-  .card-score {
-    @apply relative overflow-hidden rounded-xl border border-border bg-card p-6;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease-in-out;
+  /* Section headings — 20px / 600 */
+  .section-title {
+    @apply text-[20px] font-semibold tracking-tight text-foreground;
   }
-
-  .card-score:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+  /* Card headings — 16px / 600 */
+  .card-title {
+    @apply text-[16px] font-semibold text-foreground;
   }
-
-  /* Stat cards */
-  .stat-card {
-    @apply flex flex-col gap-2 rounded-xl border border-border bg-card p-6;
-    box-shadow: var(--shadow-sm);
+  /* Normal text — 14px / 400 */
+  .body-text {
+    @apply text-[14px] font-medium text-foreground;
   }
-
-  .stat-card-primary {
-    @apply stat-card bg-primary text-primary-foreground border-none;
+  /* Form labels — 14px / 500 */
+  .label-text {
+    @apply text-[14px] font-semibold text-foreground;
   }
-
-  .stat-card-secondary {
-    @apply stat-card bg-secondary text-secondary-foreground border-none;
+  /* Table content — 13–14px */
+  .table-cell {
+    @apply text-[13px];
   }
-
-  /* Score badges */
-  .score-badge {
-    @apply inline-flex items-center justify-center rounded-full px-3 py-1 text-sm font-medium;
+  /* Small descriptions — 12px */
+  .small-text {
+    @apply text-[12px] text-muted-foreground;
   }
-
-  .score-excellent {
-    @apply bg-success/15 text-success;
+  /* Sidebar nav — 14–15px / 500 */
+  .nav-label {
+    @apply text-[14.5px] font-medium;
   }
-
-  .score-good {
-    @apply bg-primary/15 text-primary;
-  }
-
-  .score-average {
-    @apply bg-warning/15 text-warning;
-  }
-
-  .score-poor {
-    @apply bg-destructive/15 text-destructive;
-  }
-
-  /* Navigation */
-  .nav-item {
-    @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200;
-    @apply text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent;
-  }
-
-  .nav-item-active {
-    @apply nav-item bg-sidebar-accent text-sidebar-foreground;
-  }
-
-  /* Dashboard Grid */
-  .dashboard-grid {
-    @apply grid gap-6;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  }
-
-  /* Form styles */
-  .form-input {
-    @apply flex h-11 w-full rounded-lg border border-input bg-card px-4 py-2 text-sm;
-    @apply ring-offset-background placeholder:text-muted-foreground;
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-    @apply disabled:cursor-not-allowed disabled:opacity-50;
-    transition: all 0.2s ease;
-  }
-
-  .form-input:focus {
-    @apply border-primary/50;
-  }
-
-  /* Table styles */
-  .data-table {
-    @apply w-full border-collapse;
-  }
-
-  .data-table th {
-    @apply px-4 py-3 text-left text-sm font-semibold text-muted-foreground bg-muted/50;
-  }
-
-  .data-table td {
-    @apply px-4 py-4 text-sm border-b border-border;
-  }
-
-  .data-table tr:hover td {
-    @apply bg-muted/30;
-  }
-
-  /* Hero section */
-  .hero-gradient {
-    background: var(--gradient-hero);
-  }
-
-  /* Loading spinner */
-  .spinner {
-    @apply animate-spin rounded-full border-2 border-muted border-t-primary;
+  /* Dashboard statistics — 28–32px / 700 */
+  .stat-value {
+    @apply text-[30px] font-bold tracking-tight;
   }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* ============================================================
+   Status badge classes (spec §8 — consistent badges)
+   ============================================================ */
+@layer components {
+  /* Active — light green #DCFCE7 bg, dark green text #047857 */
+  .badge-active {
+    @apply bg-green-100 text-emerald-700;
+  }
+  /* Pending — #FEF3C7 bg, dark orange text */
+  .badge-pending {
+    @apply bg-amber-100 text-amber-800;
+  }
+  /* Rejected — #FEE2E2 bg, dark red text */
+  .badge-rejected {
+    @apply bg-red-100 text-red-800;
+  }
+  /* Completed — #DBEAFE bg, dark blue text */
+  .badge-completed {
+    @apply bg-blue-100 text-blue-900;
+  }
+}
+
+/* ============================================================
+   Card / panel system (spec §12)
+   ============================================================ */
+@layer components {
+  .card-surface {
+    @apply bg-white rounded-[14px] border border-slate-200;
+    box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03), 0 1px 3px 0 rgba(15, 23, 42, 0.04);
   }
 
+  .card-surface:hover {
+    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  }
+
+  /* Stat card (dashboard) */
+  .stat-card {
+    @apply card-surface p-6;
+  }
+
+  .stat-card-icon {
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-[10px] border border-slate-200 bg-slate-50 text-slate-600;
+  }
+}
+
+/* ============================================================
+   Input system (spec §9)
+   ============================================================ */
+@layer components {
+  .form-input {
+    @apply flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-foreground;
+    @apply placeholder:text-muted-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .form-input:hover {
+    border-color: hsl(var(--border));
+  }
+
+  .form-input:focus-visible {
+    border-color: hsl(var(--primary));
+  }
+}
+
+/* ============================================================
+   Table system (spec §8)
+   ============================================================ */
+@layer components {
+  .data-table {
+    @apply w-full border-collapse rounded-[14px] overflow-hidden;
+  }
+
+  .data-table th {
+    @apply px-4 py-3 text-left text-[13px] font-semibold text-muted-foreground bg-slate-50;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .data-table td {
+    @apply px-4 py-4 text-[13px] text-foreground border-b border-slate-200;
+  }
+
+  .data-table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .data-table tr:hover td {
+    background-color: hsl(var(--muted) / 0.45);
+  }
+
+  .data-table td.text-right, .data-table th.text-right {
+    text-align: right;
+  }
+}
+
+/* ============================================================
+   Action button system (spec §10)
+   ============================================================ */
+@layer components {
+  /* Primary — emerald green, white text, rounded, subtle hover */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white;
+    @apply shadow-sm transition-all duration-200;
+    @apply hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600;
+    @apply disabled:opacity-50;
+  }
+
+  /* Secondary — light gray bg, dark navy text */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-slate-100 px-4 py-2 text-sm font-medium text-slate-900;
+    @apply shadow-sm transition-all duration-200;
+    @apply hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400;
+    @apply disabled:opacity-50;
+  }
+
+  /* Edit — blue accent */
+  .btn-edit {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-blue-600 bg-white px-3 py-2 text-sm font-medium text-blue-600;
+    @apply transition-all duration-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600;
+    @apply disabled:opacity-50;
+  }
+
+  /* Delete — red accent */
+  .btn-delete {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-red-600 bg-white px-3 py-2 text-sm font-medium text-red-600;
+    @apply transition-all duration-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600;
+    @apply disabled:opacity-50;
+  }
+}
+
+/* ============================================================
+   Misc layout utilities
+   ============================================================ */
+@layer utilities {
+  /* Page content padding (spec §12: 32px desktop) */
+  .page-space {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Empty state block */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12;
+  }
+}
+
+/* ============================================================
+   Legacy tokens kept for compatibility
+   ============================================================ */
+@layer components {
+  .card-elevated {
+    @apply card-surface;
+  }
+
+  .card-score {
+    @apply relative overflow-hidden rounded-[14px] border border-slate-200 bg-white p-6;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+  }
+
+  .card-score:hover {
+    box-shadow: 0 6px 18px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.06);
+    transform: translateY(-2px);
+  }
+
+  .stat-card-primary {
+    @apply stat-card border-none;
+  }
+
+  .score-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium;
+  }
+
+  .score-excellent { @apply bg-green-100 text-emerald-700; }
+  .score-good { @apply bg-emerald-50 text-emerald-700; }
+  .score-average { @apply bg-amber-100 text-amber-800; }
+  .score-poor { @apply bg-red-100 text-red-800; }
+
+  .nav-item {
+    @apply flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[15px] font-medium transition-all duration-200;
+    @apply text-slate-300 hover:text-white hover:bg-white/10;
+  }
+
+  .nav-item-active {
+    @apply flex items-center gap-3 rounded-[12px] bg-emerald-600 px-3 py-2.5 text-[15px] font-medium text-white;
+  }
+
+  .dashboard-grid {
+    @apply grid gap-5;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .hero-gradient {
+    background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--primary)) 100%);
+  }
+
+  .spinner {
+    @apply animate-spin rounded-full border-2 border-slate-300 border-t-emerald-600;
+  }
+}
+
+/* ============================================================
+   Animations (subtle, professional)
+   ============================================================ */
+@layer utilities {
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
   }
@@ -265,32 +364,16 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }

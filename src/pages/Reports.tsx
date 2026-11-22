@@ -1,18 +1,14 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { BehaviorCategory } from '@/types/database';
-import { BarChart3, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { BarChart3, Loader2, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, ComposedChart, Area } from 'recharts';
 
 const categoryLabels: Record<BehaviorCategory, string> = {
   discipline: 'Discipline',
@@ -21,13 +17,13 @@ const categoryLabels: Record<BehaviorCategory, string> = {
   participation: 'Participation',
 };
 
-const COLORS = ['hsl(152, 60%, 40%)', 'hsl(174, 60%, 40%)', 'hsl(38, 92%, 50%)', 'hsl(200, 80%, 50%)'];
+const COLORS = ['#059669', '#2563EB', '#D97706', '#DC2626'];
 
 export default function Reports() {
   const { role } = useAuth();
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('month');
-  const [categoryData, setCategoryData] = useState<{ name: string; average: number }[]>([]);
+  const [categoryData, setCategoryData] = useState<{ name: string; average: number; count: number }[]>([]);
   const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
   const [distributionData, setDistributionData] = useState<{ name: string; value: number }[]>([]);
   const [stats, setStats] = useState({
@@ -35,6 +31,7 @@ export default function Reports() {
     avgScore: 0,
     highestCategory: '',
     lowestCategory: '',
+    daysWithActivity: 0,
   });
 
   useEffect(() => {
@@ -44,7 +41,6 @@ export default function Reports() {
   const fetchReportData = async () => {
     setLoading(true);
     try {
-      // Calculate date range
       const now = new Date();
       let startDate = new Date();
       if (timeRange === 'week') {
@@ -55,7 +51,6 @@ export default function Reports() {
         startDate.setFullYear(now.getFullYear() - 1);
       }
 
-      // Fetch scores within range
       const { data: scores } = await supabase
         .from('behavior_scores')
         .select('*')
@@ -65,12 +60,11 @@ export default function Reports() {
         setCategoryData([]);
         setTrendData([]);
         setDistributionData([]);
-        setStats({ totalScores: 0, avgScore: 0, highestCategory: '-', lowestCategory: '-' });
+        setStats({ totalScores: 0, avgScore: 0, highestCategory: '-', lowestCategory: '-', daysWithActivity: 0 });
         setLoading(false);
         return;
       }
 
-      // Calculate category averages
       const categoryScores: Record<BehaviorCategory, number[]> = {
         discipline: [],
         respect: [],
@@ -85,10 +79,10 @@ export default function Reports() {
       const catData = Object.entries(categoryScores).map(([cat, arr]) => ({
         name: categoryLabels[cat as BehaviorCategory],
         average: arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0,
+        count: arr.length,
       }));
       setCategoryData(catData);
 
-      // Calculate trend (group by date)
       const dateGroups: Record<string, number[]> = {};
       scores.forEach((s) => {
         const date = s.score_date;
@@ -102,10 +96,9 @@ export default function Reports() {
           score: Math.round(arr.reduce((a, b) => a + b, 0) / arr.length),
         }))
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        .slice(-14);
+        .slice(-30);
       setTrendData(trend);
 
-      // Calculate distribution
       const distribution = [
         { name: 'Excellent (80-100)', value: scores.filter((s) => s.score >= 80).length },
         { name: 'Good (60-79)', value: scores.filter((s) => s.score >= 60 && s.score < 80).length },
@@ -114,14 +107,14 @@ export default function Reports() {
       ];
       setDistributionData(distribution);
 
-      // Calculate stats
       const totalAvg = Math.round(scores.reduce((a, s) => a + s.score, 0) / scores.length);
-      const sortedCats = catData.sort((a, b) => b.average - a.average);
+      const sortedCats = [...catData].sort((a, b) => b.average - a.average);
       setStats({
         totalScores: scores.length,
         avgScore: totalAvg,
         highestCategory: sortedCats[0]?.name || '-',
         lowestCategory: sortedCats[sortedCats.length - 1]?.name || '-',
+        daysWithActivity: Object.keys(dateGroups).length,
       });
     } catch (error) {
       console.error('Error fetching report data:', error);
@@ -133,116 +126,92 @@ export default function Reports() {
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary">Records</p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Reports</h1>
-            <p className="mt-1 text-sm sm:text-base text-muted-foreground">
-              Analyze behavior trends and performance metrics
-            </p>
-          </div>
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="week">Last 7 days</SelectItem>
-              <SelectItem value="month">Last 30 days</SelectItem>
-              <SelectItem value="year">Last year</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <PageHeader
+          eyebrow="Records"
+          title="Reports"
+          description="Analyze behavior trends, category averages and the score distribution over time."
+          actions={
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-full sm:w-44"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">Last 7 days</SelectItem>
+                <SelectItem value="month">Last 30 days</SelectItem>
+                <SelectItem value="year">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          }
+        />
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+          <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
         ) : (
           <>
-            {/* Stats Cards */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Stats cards */}
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="stat-card p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Scores</p>
-                      <p className="text-3xl font-bold">{stats.totalScores}</p>
+                      <p className="text-[13px] text-slate-500">Total Scores</p>
+                      <p className="stat-value">{stats.totalScores}</p>
                     </div>
-                    <BarChart3 className="h-8 w-8 text-muted-foreground" />
+                    <BarChart3 className="h-8 w-8 text-slate-400" />
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="stat-card p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Average Score</p>
-                      <p className="text-3xl font-bold">{stats.avgScore}</p>
+                      <p className="text-[13px] text-slate-500">Average Score</p>
+                      <p className={`text-[32px] font-bold tracking-tight ${stats.avgScore >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{stats.avgScore}</p>
                     </div>
-                    {stats.avgScore >= 60 ? (
-                      <TrendingUp className="h-8 w-8 text-success" />
-                    ) : (
-                      <TrendingDown className="h-8 w-8 text-destructive" />
-                    )}
+                    {stats.avgScore >= 0 ? <TrendingUp className="h-8 w-8 text-emerald-600" /> : <TrendingDown className="h-8 w-8 text-red-600" />}
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="stat-card p-6">
                   <div>
-                    <p className="text-sm text-muted-foreground">Best Category</p>
-                    <p className="text-xl font-bold text-success">{stats.highestCategory}</p>
+                    <p className="text-[13px] text-slate-500">Best Category</p>
+                    <p className="text-[30px] font-bold text-emerald-600">{stats.highestCategory}</p>
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="stat-card p-6">
                   <div>
-                    <p className="text-sm text-muted-foreground">Needs Attention</p>
-                    <p className="text-xl font-bold text-warning">{stats.lowestCategory}</p>
+                    <p className="text-[13px] text-slate-500">Needs Attention</p>
+                    <p className="text-[30px] font-bold text-amber-600">{stats.lowestCategory}</p>
+                    <p className="mt-1 text-[12.5px] text-slate-500">Active days: {stats.daysWithActivity}</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Charts */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Category Averages */}
+            <div className="grid gap-5 lg:grid-cols-2">
               <Card>
-                <CardHeader>
-                  <CardTitle>Average Scores by Category</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Average Scores by Category</CardTitle></CardHeader>
                 <CardContent>
                   {categoryData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={categoryData}>
+                      <BarChart data={categoryData} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                          }}
-                        />
-                        <Bar dataKey="average" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        <XAxis type="number" stroke="#64748b" fontSize={12} />
+                        <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={12} width={100} />
+                        <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+                        <Bar dataKey="average" fill="#059669" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                      No data available
-                    </div>
+                    <div className="flex items-center justify-center h-[300px] text-[13px] text-slate-500">No data available</div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Score Distribution */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Score Distribution</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Score Distribution</CardTitle></CardHeader>
                 <CardContent>
                   {distributionData.some((d) => d.value > 0) ? (
                     <ResponsiveContainer width="100%" height={300}>
@@ -251,9 +220,9 @@ export default function Reports() {
                           data={distributionData}
                           cx="50%"
                           cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          paddingAngle={5}
+                          innerRadius={70}
+                          outerRadius={115}
+                          paddingAngle={3}
                           dataKey="value"
                         >
                           {distributionData.map((entry, index) => (
@@ -261,48 +230,44 @@ export default function Reports() {
                           ))}
                         </Pie>
                         <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                          }}
+                          contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                          formatter={(v) => [v, '']}
                         />
-                        <Legend />
+                        <Legend wrapperStyle={{ fontSize: 12, color: '#64748b' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                      No data available
-                    </div>
+                    <div className="flex items-center justify-center h-[300px] text-[13px] text-slate-500">No data available</div>
                   )}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Trend Chart */}
+            {/* Trend chart */}
             <Card>
               <CardHeader>
-                <CardTitle>Score Trend Over Time</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-emerald-600" />
+                  <CardTitle>Score Trend Over Time</CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
                 {trendData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={trendData}>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <ComposedChart data={trendData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} />
+                      <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
+                      <YAxis stroke="#64748b" fontSize={12} domain={[0, 100]} />
                       <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                        }}
+                        contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                        labelStyle={{ color: '#0f172a' }}
                       />
-                      <Bar dataKey="score" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
+                      <Area type="monotone" dataKey="score" stroke="#059669" strokeWidth={2} fill="#059669" fillOpacity={0.1} />
+                      <Bar dataKey="score" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                    </ComposedChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                  <div className="flex items-center justify-center h-[320px] text-[13px] text-slate-500">
                     No data available for this time range
                   </div>
                 )}

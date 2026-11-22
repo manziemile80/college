@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
@@ -7,25 +7,23 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Announcement, BehaviorScoreWithDetails, DisciplineIncident } from '@/types/database';
 import {
-  GraduationCap,
-  Users,
-  ClipboardList,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  BookOpen,
-  Gavel,
-  Boxes,
-  Pencil,
-  UserPlus,
-  Megaphone,
+  GraduationCap, Users, ClipboardList, TrendingUp, AlertTriangle,
+  CheckCircle, BookOpen, Gavel, Boxes, Pencil, UserPlus,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/layout/PageHeader';
+import {
+  PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts';
+
+const PIE_COLORS = ['#059669', '#DC2626', '#D97706', '#2563EB'];
 
 export default function Dashboard() {
   const { role, profile, user } = useAuth();
   const [stats, setStats] = useState<Record<string, number>>({});
+  const [attendanceStats, setAttendanceStats] = useState({ present: 0, absent: 0, late: 0, excused: 0 });
   const [recentScores, setRecentScores] = useState<BehaviorScoreWithDetails[]>([]);
   const [recentIncidents, setRecentIncidents] = useState<DisciplineIncident[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -57,10 +55,7 @@ export default function Dashboard() {
       }
       if (role === 'teacher') {
         next.myClasses = await count('classes', ['teacher_id', user?.id || '']);
-        next.myPendingIncidents = await count('discipline_incidents', [
-          'reported_by',
-          user?.id || '',
-        ]);
+        next.myPendingIncidents = await count('discipline_incidents', ['reported_by', user?.id || '']);
       }
       if (role === 'dos') {
         next.totalSubjects = await count('subjects');
@@ -78,12 +73,34 @@ export default function Dashboard() {
         next.myChildren = await count('students');
       }
 
-      // Recent behavior scores (RLS scopes these per role)
+      // Attendance statistics (real data: current academic year)
+      const yearStart = `${new Date().getFullYear()}-01-01`;
+      const { data: attRows } = await supabase
+        .from('attendance')
+        .select('status')
+        .gte('attendance_date', yearStart);
+      const att = { present: 0, absent: 0, late: 0, excused: 0 };
+      (attRows || []).forEach((r: any) => {
+        if (r.status in att) att[r.status]++;
+      });
+      setAttendanceStats(att);
+
+      // Academic performance (real data: average marks & pass rate for current academic year)
+      const year = `${new Date().getFullYear()}`;
+      const { data: markRows } = await supabase
+        .from('marks')
+        .select('cat_score, exam_score')
+        .eq('academic_year', year);
+      const totals = (markRows || []).map((m: any) => Number(m.cat_score || 0) + Number(m.exam_score || 0));
+      const avgMarks = totals.length ? totals.reduce((a, b) => a + b, 0) / totals.length : 0;
+      const passRate = totals.length ? (totals.filter((t) => t >= 50).length / totals.length) * 100 : 0;
+      next.avgMarks = Math.round(avgMarks * 10) / 10;
+      next.passRate = Math.round(passRate);
+
+      // Recent behavior scores
       const scoresRes = await supabase
         .from('behavior_scores')
-        .select(
-          '*, student:students(*, class:classes(*)), teacher:profiles!behavior_scores_teacher_id_fkey(*)'
-        )
+        .select('*, student:students(*, class:classes(*)), teacher:profiles!behavior_scores_teacher_id_fkey(*)')
         .order('created_at', { ascending: false })
         .limit(10);
       setRecentScores((scoresRes.data as unknown as BehaviorScoreWithDetails[]) || []);
@@ -95,7 +112,7 @@ export default function Dashboard() {
           .select('*, student:students(*, class:classes(*)), rule:discipline_rules(*)')
           .order('created_at', { ascending: false })
           .limit(5);
-        setRecentIncidents((incRes.data as unknown as DisciplineIncident[]) || []);
+        setRecentIncidents((incRes.data as DisciplineIncident[]) || []);
       }
 
       // Announcements for everyone
@@ -133,129 +150,77 @@ export default function Dashboard() {
     viewer: 'Viewer',
   };
 
+  const attendanceData = useMemo(() => [
+    { name: 'Present', value: attendanceStats.present },
+    { name: 'Absent', value: attendanceStats.absent },
+    { name: 'Late', value: attendanceStats.late },
+    { name: 'Excused', value: attendanceStats.excused },
+  ].filter((d) => d.value > 0 || true), [attendanceStats]);
+
+  const totalAttendance = attendanceStats.present + attendanceStats.absent + attendanceStats.late + attendanceStats.excused;
+
   const renderStats = () => {
     switch (role) {
       case 'admin':
       case 'teacher':
       case 'viewer':
         return (
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="primary" />
-            <StatCard title="Total Classes" value={stats.totalClasses || 0} icon={Users} variant="secondary" />
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="secondary" />
+            <StatCard title="Total Classes" value={stats.totalClasses || 0} icon={Users} variant="tertiary" />
             {role !== 'viewer' && (
               <StatCard title="Behavior Scores" value={stats.totalScores || 0} subtitle="All time" icon={ClipboardList} />
             )}
             {role === 'admin' && (
-              <StatCard title="Stock Items" value={stats.stockItems || 0} subtitle="Inventory" icon={Boxes} />
+              <StatCard title="Stock Items" value={stats.stockItems || 0} subtitle="Inventory" icon={Boxes} variant="secondary" />
             )}
             {role === 'teacher' && (
               <>
-                <StatCard title="My Classes" value={stats.myClasses || 0} icon={BookOpen} />
-                <StatCard title="My Reports" value={stats.myPendingIncidents || 0} subtitle="Incidents reported" icon={Gavel} />
+                <StatCard title="My Classes" value={stats.myClasses || 0} icon={BookOpen} variant="secondary" />
+                <StatCard title="My Reports" value={stats.myPendingIncidents || 0} subtitle="Incidents reported" icon={Gavel} variant="danger" />
               </>
             )}
           </div>
         );
       case 'dos':
         return (
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="primary" />
-            <StatCard title="Classes" value={stats.totalClasses || 0} icon={Users} variant="secondary" />
-            <StatCard title="Subjects" value={stats.totalSubjects || 0} icon={BookOpen} />
-            <StatCard title="Active Enrollments" value={stats.activeEnrollments || 0} icon={UserPlus} variant="success" />
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="secondary" />
+            <StatCard title="Classes" value={stats.totalClasses || 0} icon={Users} variant="tertiary" />
+            <StatCard title="Subjects" value={stats.totalSubjects || 0} icon={BookOpen} variant="secondary" />
+            <StatCard title="Active Enrollments" value={stats.activeEnrollments || 0} icon={UserPlus} />
           </div>
         );
       case 'dod':
         return (
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard title="Pending Reviews" value={stats.pendingIncidents || 0} icon={AlertTriangle} variant="warning" />
-            <StatCard title="Reviewed Incidents" value={stats.reviewedIncidents || 0} icon={CheckCircle} variant="success" />
-            <StatCard title="Total Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} />
-            <StatCard title="Recent Incidents" value={recentIncidents.length} subtitle="Last 5" icon={Gavel} variant="secondary" />
+            <StatCard title="Reviewed Incidents" value={stats.reviewedIncidents || 0} icon={CheckCircle} variant="secondary" />
+            <StatCard title="Total Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} variant="tertiary" />
+            <StatCard title="Recent Incidents" value={recentIncidents.length} subtitle="Last 5" icon={Gavel} variant="danger" />
           </div>
         );
       case 'stock_manager':
         return (
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Stock Items" value={stats.stockItems || 0} icon={Boxes} variant="primary" />
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard title="Stock Items" value={stats.stockItems || 0} icon={Boxes} />
           </div>
         );
       case 'parent':
         return (
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Linked Children" value={stats.myChildren || 0} icon={GraduationCap} variant="primary" />
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard title="Linked Child" value={stats.myChildren || 0} icon={GraduationCap} />
           </div>
         );
       case 'student':
         return (
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} variant="primary" />
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard title="Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} />
           </div>
         );
       default:
         return null;
     }
-  };
-
-  const renderRecent = () => {
-    if (role === 'dod') {
-      return (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Gavel className="h-5 w-5 text-muted-foreground" />
-              Recent Incidents
-            </CardTitle>
-            <Link to="/discipline" className="text-sm text-primary hover:underline">
-              View all
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {recentIncidents.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">No incidents recorded.</p>
-            ) : (
-              <div className="space-y-3">
-                {recentIncidents.map((i) => (
-                  <div key={i.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {i.student ? `${i.student.first_name} ${i.student.last_name}` : 'Student'}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">{i.description}</p>
-                    </div>
-                    <Badge
-                      className={
-                        i.status === 'pending'
-                          ? 'bg-warning/15 text-warning'
-                          : i.status === 'reviewed'
-                            ? 'bg-success/15 text-success'
-                            : 'bg-muted text-muted-foreground'
-                      }
-                    >
-                      {i.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      );
-    }
-    if (role === 'stock_manager') return null;
-    return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-muted-foreground" />
-            Recent Behavior Scores
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RecentScoresTable scores={recentScores} loading={loading} />
-        </CardContent>
-      </Card>
-    );
   };
 
   const renderQuickActions = () => {
@@ -264,7 +229,7 @@ export default function Dashboard() {
       actions.push(
         { to: '/scores?action=new', icon: ClipboardList, title: 'Record Score', desc: 'Add a new behavior score for a student' },
         { to: '/students?action=new', icon: GraduationCap, title: 'Add Student', desc: 'Register a new student in the system' },
-        { to: '/reports', icon: TrendingUp, title: 'View Reports', desc: 'Generate and view behavior reports' }
+        { to: '/reports', icon: TrendingUp, title: 'View Reports', desc: 'Generate and view behavior reports' },
       );
     }
     if (role === 'teacher' || role === 'dos' || role === 'admin') {
@@ -273,31 +238,31 @@ export default function Dashboard() {
     if (role === 'dod') {
       actions.push(
         { to: '/discipline', icon: Gavel, title: 'Review Incidents', desc: 'Review pending discipline incidents' },
-        { to: '/scores?action=new', icon: ClipboardList, title: 'Deduct Marks', desc: 'Assign conduct mark deductions' }
+        { to: '/scores?action=new', icon: ClipboardList, title: 'Deduct Marks', desc: 'Assign conduct mark deductions' },
       );
     }
     if (role === 'dos') {
       actions.push(
         { to: '/classes', icon: BookOpen, title: 'Manage Classes', desc: 'Classes and teacher assignments' },
-        { to: '/subjects', icon: Pencil, title: 'Manage Subjects', desc: 'Subjects offered at the school' }
+        { to: '/subjects', icon: Pencil, title: 'Manage Subjects', desc: 'Subjects offered at the school' },
       );
     }
     if (role === 'stock_manager') {
       actions.push(
         { to: '/stock-dashboard', icon: Boxes, title: 'Stock Dashboard', desc: 'Inventory levels and reorder alerts' },
-        { to: '/stock', icon: ClipboardList, title: 'Manage Stock', desc: 'Record stock in and out' }
+        { to: '/stock', icon: ClipboardList, title: 'Manage Stock', desc: 'Record stock in and out' },
       );
     }
     if (actions.length === 0) return null;
     return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {actions.map((a) => (
           <Link key={a.to} to={a.to}>
-            <Card className="border-dashed border-2 hover:border-primary/50 hover:bg-muted/50 transition-all cursor-pointer h-full">
+            <Card className="h-full cursor-pointer transition-colors hover:border-emerald-300">
               <CardContent className="flex flex-col items-center justify-center py-8">
-                <a.icon className="h-10 w-10 text-muted-foreground mb-3" />
-                <h3 className="font-semibold text-foreground">{a.title}</h3>
-                <p className="text-sm text-muted-foreground text-center mt-1">{a.desc}</p>
+                <a.icon className="mb-3 h-10 w-10 text-emerald-600" />
+                <h3 className="text-[16px] font-semibold text-slate-900">{a.title}</h3>
+                <p className="mt-1 text-[13px] text-slate-500 text-center">{a.desc}</p>
               </CardContent>
             </Card>
           </Link>
@@ -308,14 +273,14 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary">Dashboard</p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Dashboard</p>
+          <h1 className="page-h1">
             {getGreeting()}, {profile?.full_name?.split(' ')[0] || 'there'}
           </h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">
+          <p className="max-w-2xl text-[12.5px] text-muted-foreground">
             {roleCopy[role || ''] ? `${roleCopy[role || '']} dashboard — ` : ''}
             Your school at a glance — students, conduct records, academics and e-learning activity.
           </p>
@@ -323,28 +288,138 @@ export default function Dashboard() {
 
         {renderStats()}
 
+        {/* Attendance statistics (real data) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Attendance Statistics {totalAttendance > 0 ? `· ${totalAttendance} days this year` : ''}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: 'Present', value: attendanceStats.present, cls: 'text-emerald-600' },
+                { label: 'Absent', value: attendanceStats.absent, cls: 'text-red-600' },
+                { label: 'Late', value: attendanceStats.late, cls: 'text-amber-600' },
+                { label: 'Excused', value: attendanceStats.excused, cls: 'text-blue-600' },
+              ].map((s) => (
+                <div key={s.label} className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-[13px] font-medium text-slate-500">{s.label}</p>
+                  <p className={cn('stat-value', s.cls)}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie data={attendanceData} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={2} dataKey="value">
+                  {attendanceData.map((d, i) => (
+                    <Cell key={d.name} fill={PIE_COLORS[i]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+                <Legend wrapperStyle={{ fontSize: 12, color: '#64748b' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Discipline statistics (real data) */}
+        {role === 'dod' || role === 'admin' ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Discipline Statistics</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-[13px] font-medium text-slate-500">Pending reviews</p>
+                  <p className="stat-value text-amber-600">{stats.pendingIncidents || 0}</p>
+                </div>
+                <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-[13px] font-medium text-slate-500">Reviewed incidents</p>
+                  <p className="stat-value text-emerald-600">{stats.reviewedIncidents || 0}</p>
+                </div>
+              </div>
+              {recentIncidents.length > 0 && (
+                <div className="space-y-2">
+                  {recentIncidents.map((i) => (
+                    <div key={i.id} className="flex items-center justify-between gap-3 rounded-[10px] border border-slate-200 p-3">
+                      <p className="truncate text-[13px] font-medium text-slate-900">
+                        {i.student ? `${i.student.first_name} ${i.student.last_name}` : 'Student'}
+                        {i.rule?.title ? ` · ${i.rule.title}` : ''}
+                      </p>
+                      <Badge className={i.status === 'pending' ? 'badge-pending' : i.status === 'reviewed' ? 'badge-completed' : 'badge-rejected'}>
+                        {i.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {/* Academic performance (real data: avg marks + pass rate) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Academic Performance — {new Date().getFullYear()}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+                <p className="text-[13px] font-medium text-slate-500">Average Marks (/100)</p>
+                <p className="stat-value text-emerald-600">{stats.avgMarks ?? 0}</p>
+                <p className="mt-1 text-[12.5px] text-slate-500">Average CAT + Exam total this year</p>
+              </div>
+              <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
+                <p className="text-[13px] font-medium text-slate-500">Pass Rate</p>
+                <p className="stat-value text-emerald-600">{stats.passRate ?? 0}%</p>
+                <p className="mt-1 text-[12.5px] text-slate-500">Students with total ≥ 50 this year</p>
+              </div>
+            </div>
+            <div className="h-[220px]">
+              <BarChart data={[
+                { label: 'CAT (40)', pct: Math.round(stats.avgMarks ? (stats.avgMarks / 100) * 40 : 0) },
+                { label: 'Exam (60)', pct: Math.round(stats.avgMarks ? (stats.avgMarks / 100) * 60 : 0) },
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" stroke="#64748b" fontSize={12} />
+                <YAxis stroke="#64748b" fontSize={12} domain={[0, 40]} />
+                <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+                <Bar dataKey="pct" fill="#059669" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Announcements */}
         {announcements.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Megaphone className="h-5 w-5 text-muted-foreground" />
-                Announcements
-              </CardTitle>
+              <CardTitle>Announcements</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {announcements.map((a) => (
-                <div key={a.id} className="rounded-lg border border-border p-3">
-                  <p className="text-sm font-medium text-foreground">{a.title}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{a.body}</p>
+                <div key={a.id} className="rounded-[10px] border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-[14px] font-medium text-slate-900">{a.title}</p>
+                  <p className="mt-1 text-[13px] text-slate-500">{a.body}</p>
                 </div>
               ))}
             </CardContent>
           </Card>
         )}
 
-        {renderRecent()}
+        {/* Recent behavior scores */}
+        {role !== 'dod' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Behavior Scores</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RecentScoresTable scores={recentScores} loading={loading} />
+            </CardContent>
+          </Card>
+        )}
 
+        {/* Quick actions */}
         {renderQuickActions()}
       </div>
     </DashboardLayout>

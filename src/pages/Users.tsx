@@ -2,7 +2,8 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -20,15 +21,27 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Profile, AppRole } from '@/types/database';
-import { Users, Loader2, Shield, ShieldCheck, ShieldAlert, Trash2 } from 'lucide-react';
+import { Users, Loader2, ShieldCheck, Shield, ShieldAlert, Trash2, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 interface UserWithRole extends Profile {
   role?: AppRole | null;
 }
+
+const roleIcons: Record<AppRole, typeof ShieldCheck> = {
+  admin: ShieldAlert,
+  teacher: ShieldCheck,
+  parent: Shield,
+  student: Shield,
+  stock_manager: Shield,
+  dos: ShieldCheck,
+  dod: ShieldAlert,
+  viewer: Shield,
+};
 
 export default function UsersPage() {
   const { role: currentRole, user: currentUser } = useAuth();
@@ -40,6 +53,7 @@ export default function UsersPage() {
   const [editName, setEditName] = useState('');
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -81,7 +95,6 @@ export default function UsersPage() {
     setFormLoading(true);
 
     try {
-      // Update profile name
       if (editName && editName !== selectedUser.full_name) {
         const { error: pErr } = await supabase
           .from('profiles')
@@ -89,7 +102,6 @@ export default function UsersPage() {
           .eq('user_id', selectedUser.user_id);
         if (pErr) throw pErr;
       }
-      // Check if user already has a role
       const { data: existingRole } = await supabase
         .from('user_roles')
         .select('id')
@@ -97,19 +109,15 @@ export default function UsersPage() {
         .single();
 
       if (existingRole) {
-        // Update existing role
         const { error } = await supabase
           .from('user_roles')
           .update({ role: newRole })
           .eq('user_id', selectedUser.user_id);
-
         if (error) throw error;
       } else {
-        // Insert new role
         const { error } = await supabase
           .from('user_roles')
           .insert({ user_id: selectedUser.user_id, role: newRole });
-
         if (error) throw error;
       }
 
@@ -138,31 +146,30 @@ export default function UsersPage() {
     }
   };
 
-  const getRoleIcon = (role?: AppRole | null) => {
-    switch (role) {
-      case 'admin':
-        return <ShieldAlert className="h-4 w-4" />;
-      case 'teacher':
-        return <ShieldCheck className="h-4 w-4" />;
-      case 'parent':
-        return <Shield className="h-4 w-4" />;
-      default:
-        return null;
-    }
+  const getRoleBadge = (role?: AppRole | null) => {
+    if (!role) return <Badge variant="secondary">No role</Badge>;
+    return (
+      <Badge variant="secondary" className="flex items-center gap-1.5">
+        <span className="text-[13px] font-semibold text-slate-700 uppercase">{role}</span>
+      </Badge>
+    );
   };
 
-  const getRoleBadgeClass = (role?: AppRole | null) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-destructive/15 text-destructive';
-      case 'teacher':
-        return 'bg-secondary/15 text-secondary';
-      case 'parent':
-        return 'bg-primary/15 text-primary';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
+  const roleMeta: Record<AppRole, { label: string; icon: typeof ShieldCheck; badge: string }> = {
+    admin: { label: 'Administrator', icon: ShieldAlert, badge: 'bg-red-100 text-red-800' },
+    teacher: { label: 'Teacher', icon: ShieldCheck, badge: 'bg-emerald-100 text-emerald-700' },
+    parent: { label: 'Parent', icon: Shield, badge: 'bg-blue-100 text-blue-700' },
+    student: { label: 'Student', icon: Shield, badge: 'bg-amber-100 text-amber-800' },
+    stock_manager: { label: 'Stock Manager', icon: Shield, badge: 'bg-slate-100 text-slate-700' },
+    dos: { label: 'Director of Studies', icon: ShieldCheck, badge: 'bg-emerald-100 text-emerald-700' },
+    dod: { label: 'Director of Discipline', icon: ShieldAlert, badge: 'bg-red-100 text-red-800' },
+    viewer: { label: 'Viewer (read-only)', icon: Shield, badge: 'bg-slate-100 text-slate-700' },
   };
+
+  const filteredUsers = users.filter((u) =>
+    u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <DashboardLayout>
@@ -173,155 +180,127 @@ export default function UsersPage() {
           description="Manage user accounts and role assignments across the school system."
         />
 
-        {/* Users List */}
+        <div className="relative w-full sm:max-w-xs">
+          <span className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+            <Users className="h-4 w-4" />
+          </span>
+          <Input placeholder="Search users by name or email..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+        </div>
+
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : users.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold text-foreground">No users found</h3>
-              <p className="text-muted-foreground">Users will appear here when they sign up</p>
-            </CardContent>
-          </Card>
+          <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+        ) : filteredUsers.length === 0 ? (
+          <Card><CardContent className="flex flex-col items-center justify-center py-12">
+            <Users className="h-12 w-12 text-slate-400 mb-4" />
+            <h3 className="text-[18px] font-semibold text-slate-900">No users found</h3>
+            <p className="text-[13px] text-slate-500">Users will appear here when they sign up</p>
+          </CardContent></Card>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border bg-card">
-            <table className="w-full min-w-[640px]">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                    User
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                    Role
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                    Joined
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
-                          {user.full_name.charAt(0)}
-                        </div>
-                        <span className="font-medium text-foreground">{user.full_name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">{user.email}</td>
-                    <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${getRoleBadgeClass(
-                          user.role
-                        )}`}
-                      >
-                        {getRoleIcon(user.role)}
-                        {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'No Role'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-muted-foreground">
-                      {format(new Date(user.created_at), 'MMM d, yyyy')}
-                    </td>
-                    <td className="px-4 py-4">
-                    {isAdmin ? (
-                    <div className="flex gap-2">
-                      <Dialog
-                        open={isAssignDialogOpen && selectedUser?.id === user.id}
-                        onOpenChange={(open) => {
-                          setIsAssignDialogOpen(open);
-                          if (!open) setSelectedUser(null);
-                        }}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setNewRole(user.role || 'teacher');
-                              setEditName(user.full_name);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-sm">
-                          <DialogHeader>
-                            <DialogTitle>Edit User</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4 mt-4">
-                            <div className="space-y-2">
-                              <Label>Full Name</Label>
-                              <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Role</Label>
-                            <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="admin">Administrator</SelectItem>
-                                <SelectItem value="teacher">Teacher</SelectItem>
-                                <SelectItem value="parent">Parent</SelectItem>
-                                <SelectItem value="student">Student</SelectItem>
-                                <SelectItem value="stock_manager">Stock Manager</SelectItem>
-                                <SelectItem value="dos">Director of Studies</SelectItem>
-                                <SelectItem value="dod">Director of Discipline</SelectItem>
-                                <SelectItem value="viewer">Viewer (read-only)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            </div>
-                            <div className="flex justify-end gap-3">
-                              <Button
-                                variant="outline"
-                                onClick={() => setIsAssignDialogOpen(false)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button onClick={handleAssignRole} disabled={formLoading}>
-                                {formLoading ? (
-                                  <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Saving...
-                                  </>
-                                ) : (
-                                  'Save'
-                                )}
-                              </Button>
-                            </div>
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => {
+                  const meta = user.role ? roleMeta[user.role] : null;
+                  const Icon = meta?.icon || Shield;
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-medium">
+                            {user.full_name?.charAt(0)}
                           </div>
-                        </DialogContent>
-                      </Dialog>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteUser(user)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">View only</span>
-                    )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium text-slate-900">{user.full_name}</p>
+                            <p className="text-[12.5px] text-slate-500">{user.role ? meta?.label : 'No role'}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-[13px] text-slate-500">{user.email}</TableCell>
+                      <TableCell>
+                        {user.role ? (
+                          <Badge className={meta?.badge}>
+                            <Icon className="h-3.5 w-3.5 mr-1" />
+                            {meta?.label}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">No Role</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-[13px] text-slate-500">
+                        {format(new Date(user.created_at), 'MMM d, yyyy')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {isAdmin ? (
+                          <div className="flex justify-end gap-1.5">
+                            <Dialog
+                              open={isAssignDialogOpen && selectedUser?.id === user.id}
+                              onOpenChange={(open) => {
+                                setIsAssignDialogOpen(open);
+                                if (!open) setSelectedUser(null);
+                              }}
+                            >
+                              <DialogTrigger asChild>
+                                <Button variant="edit" size="sm" onClick={() => {
+                                  setSelectedUser(user);
+                                  setNewRole(user.role || 'teacher');
+                                  setEditName(user.full_name);
+                                }}>
+                                  <Pencil className="h-4 w-4" />Edit
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-sm">
+                                <DialogHeader><DialogTitle>Edit User</DialogTitle></DialogHeader>
+                                <div className="space-y-4 mt-2">
+                                  <div className="space-y-2">
+                                    <Label>Full Name</Label>
+                                    <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>Role</Label>
+                                    <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
+                                      <SelectTrigger><SelectValue /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="admin">Administrator</SelectItem>
+                                        <SelectItem value="teacher">Teacher</SelectItem>
+                                        <SelectItem value="parent">Parent</SelectItem>
+                                        <SelectItem value="student">Student</SelectItem>
+                                        <SelectItem value="stock_manager">Stock Manager</SelectItem>
+                                        <SelectItem value="dos">Director of Studies</SelectItem>
+                                        <SelectItem value="dod">Director of Discipline</SelectItem>
+                                        <SelectItem value="viewer">Viewer (read-only)</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="flex justify-end gap-3">
+                                    <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
+                                    <Button onClick={handleAssignRole} disabled={formLoading}>
+                                      {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : 'Save'}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user)} aria-label="Delete user"><Trash2 className="h-4 w-4" /></Button>
+                          </div>
+                        ) : (
+                          <span className="text-[13px] text-slate-500">View only</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </Card>
         )}
       </div>
     </DashboardLayout>

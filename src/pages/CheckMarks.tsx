@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, UserCheck, FileText } from 'lucide-react';
 import logo from '@/assets/college-rebero-logo.png';
+import { Badge } from '@/components/ui/badge';
 
 type Row = { student_name: string; class_name: string | null; subject: string; term: string; academic_year: string; cat_score: number; exam_score: number; total: number };
 const termLabel: Record<string, string> = { term1: 'Term 1', term2: 'Term 2', term3: 'Term 3' };
@@ -33,52 +35,100 @@ export default function CheckMarks() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="mx-auto max-w-3xl space-y-4">
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="College De Rebero" className="h-12 w-12 object-contain" />
-          <div>
-            <h1 className="text-xl font-bold">College De Rebero</h1>
-            <p className="text-sm text-muted-foreground">Check your marks</p>
+    <div className="min-h-screen bg-background p-3 sm:p-5">
+      <div className="mx-auto max-w-3xl space-y-5">
+        {/* Header */}
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100">
+              <img src={logo} alt="College De Rebero" className="h-7 w-7 object-contain" />
+            </div>
+            <div>
+              <h1 className="text-[22px] font-bold text-slate-900">College De Rebero</h1>
+              <p className="text-[13px] text-slate-500">Check your marks</p>
+            </div>
           </div>
-          <Link to="/login" className="ml-auto text-sm text-primary hover:underline">Sign in</Link>
+          <Link to="/login"><Button variant="outline" size="sm">Sign in</Button></Link>
         </div>
+
+        {/* Search form */}
         <Card>
-          <CardContent className="pt-6">
-            <form onSubmit={search} className="flex gap-2">
-              <Input placeholder="Enter your registration number" value={reg} onChange={(e) => setReg(e.target.value)} />
-              <Button type="submit" disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                <span className="ml-1">Search</span>
-              </Button>
-            </form>
-            {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+          <CardContent className="space-y-4 py-5">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <form onSubmit={search} className="flex w-full max-w-xl gap-2">
+                <Input placeholder="Enter your registration number" value={reg} onChange={(e) => setReg(e.target.value)} className="h-11" />
+                <Button type="submit" className="gap-2" disabled={loading}>
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  Search
+                </Button>
+              </form>
+            </div>
+            {error && (
+              <div className="flex items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3">
+                <p className="text-[13px] text-red-600">{error}</p>
+              </div>
+            )}
+            {rows && rows.length === 0 && (
+              <div className="empty-state">
+                <UserCheck className="h-12 w-12 text-slate-400 mb-3" />
+                <p className="text-[14px] text-slate-500">No marks found for this registration number.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
-        {rows && rows.length === 0 && <p className="text-center text-muted-foreground">No marks found for this registration number.</p>}
+
+        {/* Results */}
         {rows && rows.length > 0 && (
-          <p className="text-sm"><strong>{rows[0].student_name}</strong>{rows[0].class_name ? ` — ${rows[0].class_name}` : ''}</p>
+          <div className="space-y-4">
+            <p className="rounded-[10px] border border-slate-200 bg-slate-50 p-3 text-[14px] font-semibold text-slate-900">
+              {rows[0].student_name} {rows[0].class_name ? ` — ${rows[0].class_name}` : ''}
+            </p>
+            {Object.entries(groups).map(([k, list]) => {
+              const avg = list.reduce((s, r) => s + Number(r.total), 0) / list.length;
+              const passCount = list.filter((r) => r.total >= 50).length;
+              return (
+                <Card key={k}>
+                  <CardContent className="space-y-3 py-5">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-emerald-600" />
+                      <h3 className="font-semibold text-[15px] text-slate-900">{k}</h3>
+                      <Badge className={passCount === list.length ? 'bg-green-100 text-emerald-700' : passCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}>
+                        {passCount}/{list.length} passed
+                      </Badge>
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Subject</TableHead>
+                          <TableHead className="text-right">CAT /40</TableHead>
+                          <TableHead className="text-right">Exam /60</TableHead>
+                          <TableHead className="text-right font-semibold">Total /100</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {list.map((r, i) => (
+                          <TableRow key={i}>
+                            <TableCell className="text-[13px] text-slate-900">{r.subject}</TableCell>
+                            <TableCell className="text-right text-[13px]">{r.cat_score}</TableCell>
+                            <TableCell className="text-right text-[13px]">{r.exam_score}</TableCell>
+                            <TableCell className={`text-right text-[13px] font-bold ${r.total >= 50 ? 'text-emerald-700' : 'text-red-700'}`}>{r.total}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    <p className="text-right text-[14px] font-semibold text-emerald-600">
+                      Average: {avg.toFixed(1)}%
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
-        {Object.entries(groups).map(([k, list]) => {
-          const avg = list.reduce((s, r) => s + Number(r.total), 0) / list.length;
-          return (
-            <Card key={k}>
-              <CardHeader className="pb-2"><CardTitle className="text-base">{k}</CardTitle></CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader><TableRow><TableHead>Subject</TableHead><TableHead>CAT /40</TableHead><TableHead>Exam /60</TableHead><TableHead>Total /100</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {list.map((r, i) => (
-                      <TableRow key={i}><TableCell>{r.subject}</TableCell><TableCell>{r.cat_score}</TableCell><TableCell>{r.exam_score}</TableCell><TableCell className="font-medium">{r.total}</TableCell></TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <p className="mt-2 text-right text-sm font-medium">Average: {avg.toFixed(1)}%</p>
-              </CardContent>
-            </Card>
-          );
-        })}
       </div>
     </div>
   );
 }
+
+import { Badge } from '@/components/ui/badge';
+

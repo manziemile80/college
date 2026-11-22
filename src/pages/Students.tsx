@@ -1,32 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { Student, Class, Parent, StudentParent } from '@/types/database';
-import { Plus, Search, GraduationCap, Loader2, Users, Pencil, Trash2, ChevronDown } from 'lucide-react';
+import { Plus, Search, GraduationCap, Loader2, Users, Pencil, Trash2, Eye, ArrowUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { LinkParentsDialog } from '@/components/students/LinkParentsDialog';
 import { LinkStudentAccountDialog } from '@/components/students/LinkStudentAccountDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 interface LinkedParent extends StudentParent {
   parent?: Parent;
@@ -51,7 +46,6 @@ export default function Students() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [classFilter, setClassFilter] = useState<string>('__all__');
-  const [collapsedClasses, setCollapsedClasses] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (searchParams.get('action') === 'new') {
@@ -63,14 +57,12 @@ export default function Students() {
   const [formLoading, setFormLoading] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentWithClass | null>(null);
-  
-  // Link parents dialog state
+
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
   const [accountStudent, setAccountStudent] = useState<StudentWithClass | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentWithClass | null>(null);
-  
-  // Form state
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [studentId, setStudentId] = useState('');
@@ -221,422 +213,237 @@ export default function Students() {
       student.student_id.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
     if (classFilter === '__all__') return true;
-    if (classFilter === '__none__') return !student.class;
     return student.class?.id === classFilter;
   });
 
-  const toggleClass = (key: string) => {
-    setCollapsedClasses((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  };
+  const badgeForStatus = (status: string) =>
+    status === 'active' ? 'badge-active' : status === 'graduated' ? 'badge-completed' : 'badge-rejected';
 
-  // Group students by class, ordered by class name; unassigned last
-  const groupedByClass = (() => {
-    const groups = new Map<string, { label: string; students: StudentWithClass[] }>();
-    for (const s of filteredStudents) {
-      const key = s.class?.id || '__none__';
-      const label = s.class ? `${s.class.name} (${s.class.grade_level})` : 'No class assigned';
-      if (!groups.has(key)) groups.set(key, { label, students: [] });
-      groups.get(key)!.students.push(s);
-    }
-    return [...groups.entries()].sort(([a], [b]) => {
-      if (a === '__none__') return 1;
-      if (b === '__none__') return -1;
-      return groups.get(a)!.label.localeCompare(groups.get(b)!.label);
-    });
-  })();
+  const remainingCls = (r: number) => (r >= 50 ? 'text-emerald-700' : r >= 25 ? 'text-amber-700' : 'text-red-700');
 
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary">School</p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Students</h1>
-            <p className="mt-1 text-sm sm:text-base text-muted-foreground">
-              Manage student records and information
-            </p>
+        <PageHeader
+          eyebrow="School"
+          title="Students"
+          description="Manage student records — names, classes, enrollment dates and conduct summary."
+          actions={canManage ? (
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-2"><Plus className="h-4 w-4" />Add Student</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-1rem)]">
+                <DialogHeader><DialogTitle className="text-[20px] font-semibold">Add New Student</DialogTitle></DialogHeader>
+                <form onSubmit={handleAddStudent} className="mt-4 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="studentId">Student ID</Label>
+                    <Input id="studentId" value={studentId} onChange={(e) => setStudentId(e.target.value)} placeholder="e.g., STU-2024-001" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="class">Class</Label>
+                    <Select value={classId} onValueChange={setClassId}>
+                      <SelectTrigger><SelectValue placeholder="Select a class" /></SelectTrigger>
+                      <SelectContent>
+                        {classes.map((cls) => (
+                          <SelectItem key={cls.id} value={cls.id}>{cls.name} - {cls.grade_level}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                    <Input id="dateOfBirth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                    <Button type="submit" disabled={formLoading}>
+                      {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Adding...</> : 'Add Student'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          ) : undefined}
+        />
+
+        {/* Search + filters */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input placeholder="Search students..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
           </div>
-          {canManage && (
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="w-full sm:w-auto">
-                <Plus className="h-4 w-4" />
-                Add Student
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-1rem)]">
-              <DialogHeader>
-                <DialogTitle>Add New Student</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddStudent} className="space-y-4 mt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="studentId">Student ID</Label>
-                  <Input
-                    id="studentId"
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    placeholder="e.g., STU-2024-001"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="class">Class</Label>
-                  <Select value={classId} onValueChange={setClassId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {classes.map((cls) => (
-                        <SelectItem key={cls.id} value={cls.id}>
-                          {cls.name} - {cls.grade_level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                  />
-                </div>
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={formLoading}>
-                    {formLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Adding...
-                      </>
-                    ) : (
-                      'Add Student'
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-          )}
-        </div>
-
-        {/* Search */}
-        <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search students..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Class filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setClassFilter('__all__')}
-            className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-              classFilter === '__all__'
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-transparent text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            All ({students.length})
-          </button>
-          {classes.map((cls) => {
-            const count = students.filter((s) => s.class?.id === cls.id).length;
-            if (count === 0) return null;
-            return (
-              <button
-                key={cls.id}
-                type="button"
-                onClick={() => setClassFilter(cls.id)}
-                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  classFilter === cls.id
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-transparent text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                {cls.name} ({count})
-              </button>
-            );
-          })}
-          {students.some((s) => !s.class) && (
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => setClassFilter('__none__')}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                classFilter === '__none__'
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-transparent text-muted-foreground hover:bg-muted'
+              onClick={() => setClassFilter('__all__')}
+              className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                classFilter === '__all__' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
               }`}
             >
-              No class (
-              {students.filter((s) => !s.class).length})
+              All ({students.length})
             </button>
-          )}
+            {classes.map((cls) => {
+              const count = students.filter((s) => s.class?.id === cls.id).length;
+              if (count === 0) return null;
+              return (
+                <button
+                  key={cls.id}
+                  type="button"
+                  onClick={() => setClassFilter(cls.id)}
+                  className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                    classFilter === cls.id ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {cls.name} ({count})
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Students Grid */}
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+          <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
         ) : filteredStudents.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <GraduationCap className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold text-foreground">No students found</h3>
-              <p className="text-muted-foreground">
-                {searchQuery ? 'Try adjusting your search' : 'Add your first student to get started'}
-              </p>
-            </CardContent>
-          </Card>
+          <Card><CardContent className="flex flex-col items-center justify-center py-12">
+            <GraduationCap className="h-12 w-12 text-slate-400 mb-4" />
+            <h3 className="text-[18px] font-semibold text-slate-900">No students found</h3>
+            <p className="text-[13px] text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Add your first student to get started'}</p>
+          </CardContent></Card>
         ) : (
-          <div className="space-y-8">
-            {groupedByClass.map(([key, group]) => (
-              <div key={key} className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => toggleClass(key)}
-                  className="flex w-full items-center gap-3 text-left"
-                  aria-expanded={!collapsedClasses.has(key)}
-                >
-                  <ChevronDown
-                    className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
-                      collapsedClasses.has(key) ? '-rotate-90' : ''
-                    }`}
-                  />
-                  <h2 className="text-lg font-semibold text-foreground">{group.label}</h2>
-                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                    {group.students.length} {group.students.length === 1 ? 'student' : 'students'}
-                  </span>
-                </button>
-                {collapsedClasses.has(key) ? null : (
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {group.students.map((student) => (
-              <Card key={student.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
-                        {student.first_name.charAt(0)}
-                        {student.last_name.charAt(0)}
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Class</TableHead>
+                  <TableHead>Grade</TableHead>
+                  <TableHead>DOB</TableHead>
+                  <TableHead className="text-right">Total Conduct</TableHead>
+                  <TableHead className="text-right">Remaining</TableHead>
+                  {canManage && <TableHead className="text-right">Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredStudents.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white">
+                          {student.first_name.charAt(0)}{student.last_name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900">{student.first_name} {student.last_name}</p>
+                          <p className="text-[12.5px] text-slate-500">{student.student_id}</p>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-base">
-                          {student.first_name} {student.last_name}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">{student.student_id}</p>
-                      </div>
-                    </div>
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        student.status === 'active'
-                          ? 'bg-success/15 text-success'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {student.status}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Class</span>
-                      <span className="font-medium">{student.class?.name || 'Not assigned'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Grade</span>
-                      <span className="font-medium">{student.class?.grade_level || '-'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Enrolled</span>
-                      <span className="font-medium">
-                        {format(new Date(student.enrollment_date), 'MMM d, yyyy')}
+                    </TableCell>
+                    <TableCell>{student.class?.name || 'Not assigned'}</TableCell>
+                    <TableCell className="text-slate-600">{student.class?.grade_level || '-'}</TableCell>
+                    <TableCell className="text-slate-500">{student.date_of_birth ? format(new Date(student.date_of_birth), 'MMM d, yyyy') : '—'}</TableCell>
+                    <TableCell className="text-right font-semibold text-emerald-600">
+                      {student.cumulative_score ?? 0}
+                      <span className="ml-1 text-[12px] font-normal text-slate-500">({student.entries_count ?? 0})</span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className={`font-bold ${remainingCls(student.remaining_marks ?? 100)}`}>
+                        {student.remaining_marks ?? 100} / 100
                       </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Parents</span>
-                      <span className="font-medium">
-                        {student.student_parents?.length || 0} linked
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center pt-2 border-t border-border">
-                      <span className="text-muted-foreground">Total Conduct</span>
-                      <span className="font-semibold text-primary">
-                        {student.cumulative_score ?? 0}
-                        <span className="ml-1 text-xs text-muted-foreground font-normal">
-                          ({student.entries_count ?? 0} entries)
-                        </span>
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Remaining Marks</span>
-                      {(() => {
-                        const r = student.remaining_marks ?? 100;
-                        const cls = r >= 50 ? 'text-success' : r >= 25 ? 'text-warning' : 'text-destructive';
-                        return <span className={`font-bold ${cls}`}>{r} / 100</span>;
-                      })()}
-                    </div>
-                  </div>
-                  {canManage && (<>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-4"
-                    onClick={() => handleOpenLinkDialog(student)}
-                  >
-                    <Users className="h-4 w-4" />
-                    Link Parents
-                  </Button>
-                  {isAdmin && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2"
-                      onClick={() => {
-                        setAccountStudent(student);
-                        setAccountDialogOpen(true);
-                      }}
-                    >
-                      <Users className="h-4 w-4" />
-                      {student.user_id ? 'Change Login Account' : 'Link Login Account'}
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full mt-2"
-                    onClick={() => handleOpenEditDialog(student)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full mt-2 text-destructive hover:text-destructive"
-                    onClick={() => handleDeleteStudent(student)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </Button>
-                  </>)}
-                </CardContent>
-              </Card>
-            ))}
-                </div>
-                )}
-              </div>
-            ))}
+                    </TableCell>
+                    {canManage && (
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1.5">
+                          <Button variant="outline" size="sm" onClick={() => handleOpenLinkDialog(student)} className="gap-1.5">
+                            <Users className="h-4 w-4" />Link
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleOpenEditDialog(student)} className="gap-1.5">
+                            <Pencil className="h-4 w-4" />Edit
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => {
+                            setAccountStudent(student);
+                            setAccountDialogOpen(true);
+                          }} className="gap-1.5">
+                            <Eye className="h-4 w-4" />Account
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(student)} className="gap-1.5">
+                            <Trash2 className="h-4 w-4" />Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
+
+        {/* Status badges preview row */}
+        {students.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-[12.5px] text-slate-600">
+              Total: {students.length} students
+            </span>
+            <span className={cn('rounded-full px-3 py-1 text-[12.5px] font-medium', badgeForStatus('active'))}>Active</span>
+            <span className={cn('rounded-full px-3 py-1 text-[12.5px] font-medium', badgeForStatus('inactive'))}>Inactive</span>
+            {isAdmin && <span className={cn('rounded-full px-3 py-1 text-[12.5px] font-medium', badgeForStatus('graduated'))}>Graduated</span>}
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[12.5px] text-slate-600">
+              <ArrowUp className="h-3 w-3 text-emerald-600" /> In conduct review
+            </span>
           </div>
         )}
 
         {/* Edit Student Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
           setIsEditDialogOpen(open);
-          if (!open) {
-            setEditingStudent(null);
-            resetForm();
-          }
+          if (!open) { setEditingStudent(null); resetForm(); }
         }}>
           <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-1rem)]">
-            <DialogHeader>
-              <DialogTitle>Edit Student</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleEditStudent} className="space-y-4 mt-4">
+            <DialogHeader><DialogTitle>Edit Student</DialogTitle></DialogHeader>
+            <form onSubmit={handleEditStudent} className="mt-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="editFirstName">First Name</Label>
-                  <Input
-                    id="editFirstName"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required
-                  />
+                  <Input id="editFirstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="editLastName">Last Name</Label>
-                  <Input
-                    id="editLastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
-                  />
+                  <Input id="editLastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="editStudentId">Student ID</Label>
-                <Input
-                  id="editStudentId"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
-                  required
-                />
+                <Input id="editStudentId" value={studentId} onChange={(e) => setStudentId(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="editClass">Class</Label>
                 <Select value={classId} onValueChange={setClassId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a class" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select a class" /></SelectTrigger>
                   <SelectContent>
                     {classes.map((cls) => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} - {cls.grade_level}
-                      </SelectItem>
+                      <SelectItem key={cls.id} value={cls.id}>{cls.name} - {cls.grade_level}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="editDob">Date of Birth</Label>
-                <Input
-                  id="editDob"
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                />
+                <Input id="editDob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="editStatus">Status</Label>
                 <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
@@ -644,20 +451,9 @@ export default function Students() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={formLoading}>
-                  {formLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    'Save Changes'
-                  )}
-                </Button>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={formLoading}>{formLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Changes'}</Button>
               </div>
             </form>
           </DialogContent>
@@ -674,7 +470,6 @@ export default function Students() {
           />
         )}
 
-        {/* Link Parents Dialog */}
         {selectedStudent && (
           <LinkParentsDialog
             studentId={selectedStudent.id}

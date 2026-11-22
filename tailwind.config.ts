@@ -13,7 +13,33 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: [
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica Neue",
+          "Arial",
+          "Noto Sans",
+          "sans-serif",
+          "Apple Color Emoji",
+          "Segoe UI Emoji",
+          "Segoe UI Symbol",
+          "Noto Color Emoji",
+        ],
+      },
       colors: {
+        /* Spec palette — College De Rebero design system.
+           These are Tailwind v3 default scale values that match the spec hexes:
+           emerald-600 #059669 (Primary green), emerald-700 #047857 (Dark green),
+           slate-900 #0F172A (Deep navy), slate-50 #F8FAFC (Main background),
+           slate-200 #E2E8F0 (Border), slate-500 #64748B (Secondary text),
+           blue-600 #2563EB (Blue), amber-600 #D97706 (Warning orange),
+           red-600 #DC2626 (Danger red), green-100 #DCFCE7 (Light green). */
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -92,15 +118,12 @@ export default {
           from: { opacity: "0", transform: "translateY(10px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        "hero-bg-1": {
-          "0%, 45%": { opacity: "0.55", transform: "scale(1.05)" },
-          "50%, 95%": { opacity: "0", transform: "scale(1.15)" },
-          "100%": { opacity: "0.55", transform: "scale(1.05)" },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.95)" },
+          to: { opacity: "1", transform: "scale(1)" },
         },
-        "hero-bg-2": {
-          "0%, 45%": { opacity: "0", transform: "scale(1.15)" },
-          "50%, 95%": { opacity: "0.55", transform: "scale(1.05)" },
-          "100%": { opacity: "0", transform: "scale(1.15)" },
+        "spin": {
+          "to": { transform: "rotate(360deg)" },
         },
       },
       animation: {
@@ -108,10 +131,9 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-in-out",
         "slide-up": "slide-up 0.4s ease-out",
-        "hero-bg-1": "hero-bg-1 16s ease-in-out infinite",
-        "hero-bg-2": "hero-bg-2 16s ease-in-out infinite",
+        "scale-in": "scale-in 0.2s ease-out",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 } satisfies Config;

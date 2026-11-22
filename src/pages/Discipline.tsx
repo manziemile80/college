@@ -9,56 +9,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { Gavel, Loader2, Plus, ShieldCheck, XCircle, CheckCircle2 } from 'lucide-react';
+import { Gavel, Loader2, Plus, ShieldCheck, XCircle, CheckCircle2, Users2 } from 'lucide-react';
 
 const MAX_SCORE = 40;
 
 const statusBadge = (status: string) => {
   switch (status) {
-    case 'pending':
-      return <Badge className="bg-warning/15 text-warning">Pending</Badge>;
-    case 'reviewed':
-      return <Badge className="bg-success/15 text-success">Reviewed</Badge>;
-    case 'dismissed':
-      return <Badge className="bg-muted text-muted-foreground">Dismissed</Badge>;
-    default:
-      return <Badge variant="secondary">{status}</Badge>;
+    case 'pending': return <Badge className="bg-amber-100 text-amber-800">Pending</Badge>;
+    case 'reviewed': return <Badge className="bg-green-100 text-emerald-700">Reviewed</Badge>;
+    case 'dismissed': return <Badge className="bg-red-100 text-red-800">Dismissed</Badge>;
+    default: return <Badge variant="secondary">{status}</Badge>;
   }
 };
 
 const severityBadge = (severity: string) => {
   switch (severity) {
-    case 'major':
-      return <Badge className="bg-destructive/15 text-destructive">Major</Badge>;
-    case 'grave':
-      return <Badge className="bg-destructive/15 text-destructive">Grave</Badge>;
-    default:
-      return <Badge className="bg-muted text-muted-foreground">Minor</Badge>;
+    case 'major': return <Badge variant="destructive">Major</Badge>;
+    case 'grave': return <Badge variant="destructive">Grave</Badge>;
+    default: return <Badge variant="secondary">Minor</Badge>;
   }
 };
 
@@ -206,7 +181,6 @@ export default function Discipline() {
       if (error) throw error;
 
       if (status === 'reviewed' && marks > 0) {
-        // Record the deduction through the same cumulative behavior system
         const existing = await supabase
           .from('behavior_scores')
           .select('*')
@@ -311,42 +285,96 @@ export default function Discipline() {
         <PageHeader
           eyebrow="Records"
           title="Discipline"
-          description={
-            isStaff
-              ? 'Report, review and follow up on student discipline incidents.'
-              : 'Discipline incidents recorded for your records.'
-          }
+          description={isStaff ? 'Report, review and follow up on student discipline incidents.' : 'Discipline incidents recorded for your records.'}
+          actions={
+            isStaff ? (
+              <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2"><Plus className="h-4 w-4" /> Report Incident</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader><DialogTitle>Report Incident</DialogTitle></DialogHeader>
+                  <div className="space-y-4 mt-2">
+                    <div className="space-y-2">
+                      <Label>Student</Label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <Input
+                          placeholder="Search student by name or ID..."
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                      <Select value={reportStudent} onValueChange={setReportStudent}>
+                        <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
+                        <SelectContent>
+                          {filteredStudents.map((s) => (
+                            <SelectItem key={s.id} value={s.id}>
+                              {s.first_name} {s.last_name} ({s.student_id})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Rule (optional)</Label>
+                      <Select value={reportRule} onValueChange={setReportRule}>
+                        <SelectTrigger><SelectValue placeholder="No specific rule" /></SelectTrigger>
+                        <SelectContent>
+                          {rules.filter((r) => r.is_active).map((r) => (
+                            <SelectItem key={r.id} value={r.id}>
+                              {r.title} (−{r.marks_deduction})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Date</Label>
+                      <Input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Textarea rows={3} placeholder="What happened?" value={reportDesc} onChange={(e) => setReportDesc(e.target.value)} />
+                    </div>
+                    <div className="flex justify-end gap-3">
+                      <Button variant="outline" onClick={() => setReportOpen(false)}>Cancel</Button>
+                      <Button onClick={handleReport} disabled={reportSaving}>
+                        {reportSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            ) : undefined}
         />
 
-        {/* Rules (DOD / Admin) */}
         {canManageRules && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Gavel className="h-5 w-5 text-muted-foreground" />
-                Discipline Rules
+              <CardTitle className="flex items-center gap-2 text-[18px]">
+                <Gavel className="h-5 w-5 text-emerald-600" /> Discipline Rules
               </CardTitle>
-              <Button size="sm" onClick={() => setRuleOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Add Rule
+              <Button size="sm" onClick={() => setRuleOpen(true)} className="gap-1.5">
+                <Plus className="h-4 w-4" /> Add Rule
               </Button>
             </CardHeader>
             <CardContent>
               {rules.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">
+                <p className="text-[13px] text-slate-500 py-4 text-center">
                   No rules yet. Add rules so teachers can report incidents against them.
                 </p>
               ) : (
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {rules.map((r) => (
-                    <div key={r.id} className="rounded-lg border border-border p-3">
+                    <div key={r.id} className="rounded-[10px] border border-slate-200 bg-slate-50 p-3">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium text-foreground">{r.title}</p>
+                        <p className="text-[14px] font-medium text-slate-900">{r.title}</p>
                         {severityBadge(r.severity)}
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                        {r.description || 'No description'}
-                      </p>
-                      <p className="mt-2 text-xs font-medium text-destructive">
+                      <p className="mt-1 text-[12.5px] text-slate-500 line-clamp-2">{r.description || 'No description'}</p>
+                      <p className="mt-2 text-[12.5px] font-medium text-red-600">
                         −{r.marks_deduction} mark{r.marks_deduction > 1 ? 's' : ''} · {r.category}
                       </p>
                     </div>
@@ -357,311 +385,228 @@ export default function Discipline() {
           </Card>
         )}
 
-        {/* Incidents */}
         <Card>
           <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-muted-foreground" />
-              Incidents
+            <CardTitle className="flex items-center gap-2 text-[18px]">
+              <ShieldCheck className="h-5 w-5 text-emerald-600" /> Incidents
               {isStaff && pendingCount > 0 && (
-                <Badge className="bg-warning/15 text-warning">{pendingCount} pending</Badge>
+                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[12px] font-medium text-amber-800">{pendingCount} pending</span>
               )}
             </CardTitle>
-            <div className="flex flex-wrap items-center gap-2">
-              <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-                <TabsList>
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="pending">Pending</TabsTrigger>
-                  <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
-                  <TabsTrigger value="dismissed">Dismissed</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              {isStaff && (
-                <Button size="sm" onClick={() => setReportOpen(true)}>
-                  <Plus className="h-4 w-4 mr-1" /> Report Incident
-                </Button>
-              )}
-            </div>
+            <Tabs value={statusFilter} onValueChange={setStatusFilter}>
+              <TabsList>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="pending">Pending</TabsTrigger>
+                <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
+                <TabsTrigger value="dismissed">Dismissed</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
+              <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
             ) : filteredIncidents.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">No incidents found.</p>
+              <div className="empty-state"><XCircle className="h-10 w-10 text-slate-400 mb-3" /><p className="text-[14px] text-slate-500">No incidents found.</p></div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="hidden md:table-cell">Rule</TableHead>
-                      <TableHead className="hidden lg:table-cell">Description</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Marks</TableHead>
-                      {canReview && <TableHead className="text-right">Actions</TableHead>}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="hidden md:table-cell">Rule</TableHead>
+                    <TableHead className="hidden lg:table-cell">Description</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Marks</TableHead>
+                    {canReview && <TableHead className="text-right">Actions</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredIncidents.map((i) => (
+                    <TableRow key={i.id}>
+                      <TableCell className="font-medium text-slate-900">
+                        {i.student ? `${i.student.first_name} ${i.student.last_name}` : '—'}
+                      </TableCell>
+                      <TableCell className="text-[13px] text-slate-500">{format(new Date(i.incident_date), 'MMM d, yyyy')}</TableCell>
+                      <TableCell className="hidden max-w-[160px] truncate md:table-cell">{i.rule?.title || '—'}</TableCell>
+                      <TableCell className="hidden max-w-[240px] truncate lg:table-cell">{i.description}</TableCell>
+                      <TableCell>{statusBadge(i.status)}</TableCell>
+                      <TableCell className="text-right font-medium text-slate-600">
+                        {i.marks_deducted > 0 ? `−${i.marks_deducted}` : '—'}
+                      </TableCell>
+                      {canReview && (
+                        <TableCell className="text-right">
+                          {i.status === 'pending' ? (
+                            <div className="flex justify-end gap-2">
+                              <Button size="sm" variant="edit" onClick={() => openReview(i)} className="gap-1.5">
+                                <CheckCircle2 className="h-4 w-4" /> Review
+                              </Button>
+                              <Button size="icon" variant="destructive" onClick={async () => {
+                                setReviewIncident(i);
+                                setReviewMarks('0');
+                                await applyReview('dismissed');
+                              }} aria-label="Dismiss">
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-[12.5px] text-slate-500">{i.follow_up || '—'}</span>
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredIncidents.map((i) => (
-                      <TableRow key={i.id}>
-                        <TableCell className="font-medium">
-                          {i.student ? `${i.student.first_name} ${i.student.last_name}` : '—'}
-                        </TableCell>
-                        <TableCell>{format(new Date(i.incident_date), 'MMM d, yyyy')}</TableCell>
-                        <TableCell className="hidden max-w-[160px] truncate md:table-cell">
-                          {i.rule?.title || '—'}
-                        </TableCell>
-                        <TableCell className="hidden max-w-[240px] truncate lg:table-cell">
-                          {i.description}
-                        </TableCell>
-                        <TableCell>{statusBadge(i.status)}</TableCell>
-                        <TableCell className="text-right font-medium">
-                          {i.marks_deducted > 0 ? `−${i.marks_deducted}` : '—'}
-                        </TableCell>
-                        {canReview && (
-                          <TableCell className="text-right">
-                            {i.status === 'pending' ? (
-                              <div className="flex justify-end gap-2">
-                                <Button size="sm" variant="outline" onClick={() => openReview(i)}>
-                                  <CheckCircle2 className="h-4 w-4 mr-1" /> Review
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-destructive"
-                                  disabled={reviewSaving}
-                                  onClick={async () => {
-                                    setReviewIncident(i);
-                                    setReviewMarks('0');
-                                    await applyReview('dismissed');
-                                  }}
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">
-                                {i.follow_up || '—'}
-                              </span>
-                            )}
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Report Incident Dialog */}
-      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Report Incident</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div className="space-y-2">
-              <Label>Student</Label>
-              <Input
-                placeholder="Search student by name or ID..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <Select value={reportStudent} onValueChange={setReportStudent}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select student" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredStudents.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.first_name} {s.last_name} ({s.student_id})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Rule (optional)</Label>
-              <Select value={reportRule} onValueChange={setReportRule}>
-                <SelectTrigger>
-                  <SelectValue placeholder="No specific rule" />
-                </SelectTrigger>
-                <SelectContent>
-                  {rules
-                    .filter((r) => r.is_active)
-                    .map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.title} (−{r.marks_deduction})
+        {/* Report incident dialog */}
+        <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader><DialogTitle>Report Incident</DialogTitle></DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div className="space-y-2">
+                <Label>Student</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    placeholder="Search student by name or ID..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select value={reportStudent} onValueChange={setReportStudent}>
+                  <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
+                  <SelectContent>
+                    {filteredStudents.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.first_name} {s.last_name} ({s.student_id})
                       </SelectItem>
                     ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Date</Label>
-              <Input
-                type="date"
-                value={reportDate}
-                onChange={(e) => setReportDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                rows={3}
-                placeholder="What happened?"
-                value={reportDesc}
-                onChange={(e) => setReportDesc(e.target.value)}
-              />
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setReportOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleReport} disabled={reportSaving}>
-                {reportSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Review Dialog */}
-      <Dialog open={!!reviewIncident} onOpenChange={(open) => !open && setReviewIncident(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Review Incident</DialogTitle>
-          </DialogHeader>
-          {reviewIncident && (
-            <div className="space-y-4 mt-2">
-              <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                <p className="font-medium text-foreground">
-                  {reviewIncident.student
-                    ? `${reviewIncident.student.first_name} ${reviewIncident.student.last_name}`
-                    : 'Student'}
-                </p>
-                <p className="mt-1 text-muted-foreground">{reviewIncident.description}</p>
-                {reviewIncident.rule && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Rule: {reviewIncident.rule.title} (suggested −{reviewIncident.rule.marks_deduction})
-                  </p>
-                )}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>Marks to deduct (max {MAX_SCORE})</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  max={MAX_SCORE}
-                  value={reviewMarks}
-                  onChange={(e) => setReviewMarks(e.target.value)}
-                />
+                <Label>Rule (optional)</Label>
+                <Select value={reportRule} onValueChange={setReportRule}>
+                  <SelectTrigger><SelectValue placeholder="No specific rule" /></SelectTrigger>
+                  <SelectContent>
+                    {rules.filter((r) => r.is_active).map((r) => (
+                      <SelectItem key={r.id} value={r.id}>{r.title} (−{r.marks_deduction})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>Follow-up action (optional)</Label>
-                <Textarea
-                  rows={2}
-                  placeholder="e.g. Parent contacted, warning issued..."
-                  value={reviewFollowUp}
-                  onChange={(e) => setReviewFollowUp(e.target.value)}
-                />
+                <Label>Date</Label>
+                <Input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea rows={3} placeholder="What happened?" value={reportDesc} onChange={(e) => setReportDesc(e.target.value)} />
               </div>
               <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setReviewIncident(null)}>
-                  Cancel
-                </Button>
-                <Button onClick={() => applyReview('reviewed')} disabled={reviewSaving}>
-                  {reviewSaving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    `Approve & Deduct ${Math.max(0, Math.min(MAX_SCORE, parseInt(reviewMarks, 10) || 0))}`
-                  )}
+                <Button variant="outline" onClick={() => setReportOpen(false)}>Cancel</Button>
+                <Button onClick={handleReport} disabled={reportSaving}>
+                  {reportSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'}
                 </Button>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
 
-      {/* Add Rule Dialog */}
-      <Dialog open={ruleOpen} onOpenChange={setRuleOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Discipline Rule</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div className="space-y-2">
-              <Label>Title</Label>
-              <Input
-                placeholder="e.g. Late coming without excuse"
-                value={ruleTitle}
-                onChange={(e) => setRuleTitle(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+        {/* Review dialog */}
+        <Dialog open={!!reviewIncident} onOpenChange={(open) => !open && setReviewIncident(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader><DialogTitle>Review Incident</DialogTitle></DialogHeader>
+            {reviewIncident && (
+              <div className="space-y-4 mt-2">
+                <div className="rounded-[10px] bg-slate-50 p-3 text-[13px] text-slate-900">
+                  <p className="font-medium">
+                    {reviewIncident.student
+                      ? `${reviewIncident.student.first_name} ${reviewIncident.student.last_name}`
+                      : 'Student'}
+                  </p>
+                  <p className="mt-1 text-slate-500">{reviewIncident.description}</p>
+                  {reviewIncident.rule && (
+                    <p className="mt-1 text-[12.5px] text-slate-500">
+                      Rule: {reviewIncident.rule.title} (suggested −{reviewIncident.rule.marks_deduction})
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>Marks to deduct (max {MAX_SCORE})</Label>
+                  <Input type="number" min={0} max={MAX_SCORE} value={reviewMarks} onChange={(e) => setReviewMarks(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Follow-up action (optional)</Label>
+                  <Textarea rows={2} placeholder="e.g. Parent contacted, warning issued..." value={reviewFollowUp} onChange={(e) => setReviewFollowUp(e.target.value)} />
+                </div>
+                <div className="flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setReviewIncident(null)}>Cancel</Button>
+                  <Button onClick={() => applyReview('reviewed')} disabled={reviewSaving}>
+                    {reviewSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : `Approve & Deduct ${Math.max(0, Math.min(MAX_SCORE, parseInt(reviewMarks, 10) || 0))}`}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Add rule dialog */}
+        <Dialog open={ruleOpen} onOpenChange={setRuleOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader><DialogTitle>Add Discipline Rule</DialogTitle></DialogHeader>
+            <div className="space-y-4 mt-2">
               <div className="space-y-2">
-                <Label>Category</Label>
-                <Select value={ruleCategory} onValueChange={setRuleCategory}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="discipline">Discipline</SelectItem>
-                    <SelectItem value="respect">Respect</SelectItem>
-                    <SelectItem value="attendance">Attendance</SelectItem>
-                    <SelectItem value="participation">Participation</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Title</Label>
+                <Input placeholder="e.g. Late coming without excuse" value={ruleTitle} onChange={(e) => setRuleTitle(e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Category</Label>
+                  <Select value={ruleCategory} onValueChange={setRuleCategory}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="discipline">Discipline</SelectItem>
+                      <SelectItem value="respect">Respect</SelectItem>
+                      <SelectItem value="attendance">Attendance</SelectItem>
+                      <SelectItem value="participation">Participation</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Severity</Label>
+                  <Select value={ruleSeverity} onValueChange={setRuleSeverity}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="minor">Minor</SelectItem>
+                      <SelectItem value="major">Major</SelectItem>
+                      <SelectItem value="grave">Grave</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
-                <Label>Severity</Label>
-                <Select value={ruleSeverity} onValueChange={setRuleSeverity}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="minor">Minor</SelectItem>
-                    <SelectItem value="major">Major</SelectItem>
-                    <SelectItem value="grave">Grave</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Marks deducted (max {MAX_SCORE})</Label>
+                <Input type="number" min={1} max={MAX_SCORE} value={ruleMarks} onChange={(e) => setRuleMarks(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea rows={2} value={ruleDesc} onChange={(e) => setRuleDesc(e.target.value)} />
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setRuleOpen(false)}>Cancel</Button>
+                <Button onClick={handleSaveRule} disabled={ruleSaving}>
+                  {ruleSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Rule'}
+                </Button>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Marks deducted (max {MAX_SCORE})</Label>
-              <Input
-                type="number"
-                min={1}
-                max={MAX_SCORE}
-                value={ruleMarks}
-                onChange={(e) => setRuleMarks(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                rows={2}
-                value={ruleDesc}
-                onChange={(e) => setRuleDesc(e.target.value)}
-              />
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setRuleOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSaveRule} disabled={ruleSaving}>
-                {ruleSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Rule'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </div>
     </DashboardLayout>
   );
 }

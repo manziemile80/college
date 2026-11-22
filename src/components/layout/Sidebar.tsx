@@ -1,9 +1,15 @@
+import { cn } from '@/lib/utils';
 import { SidebarNav } from './SidebarNav';
 
-export function Sidebar() {
+export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
   return (
-    <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-sidebar">
-      <SidebarNav />
+    <aside
+      className={cn(
+        'fixed inset-y-0 left-0 z-40 flex flex-col bg-sidebar',
+        collapsed ? 'w-14' : 'w-[260px]',
+      )}
+    >
+      <SidebarNav collapsed={collapsed} />
     </aside>
   );
 }

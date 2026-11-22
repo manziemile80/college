@@ -6,64 +6,65 @@ interface StatCardProps {
   value: string | number;
   subtitle?: string;
   icon: LucideIcon;
-  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning';
-  trend?: {
-    value: number;
-    label: string;
-  };
+  variant?: 'primary' | 'secondary' | 'tertiary' | 'warning' | 'danger';
 }
 
-export function StatCard({ title, value, subtitle, icon: Icon, variant = 'default', trend }: StatCardProps) {
+export function StatCard({ title, value, subtitle, icon: Icon, variant = 'primary' }: StatCardProps) {
   const variants = {
-    default: 'bg-card border border-border',
-    primary: 'bg-primary text-primary-foreground border-none',
-    secondary: 'bg-secondary text-secondary-foreground border-none',
-    success: 'bg-success text-success-foreground border-none',
-    warning: 'bg-warning text-warning-foreground border-none',
+    primary: {
+      icon: 'bg-emerald-600 text-white',
+      title: 'text-[13px] font-medium text-white/75',
+      value: 'text-[30px] font-bold tracking-tight text-white',
+      sub: 'text-[13px] text-white/70',
+      bg: 'bg-emerald-600',
+      border: 'border-emerald-600',
+    },
+    secondary: {
+      icon: 'bg-slate-200 text-slate-600',
+      title: 'text-[13px] font-medium text-slate-500',
+      value: 'text-[30px] font-bold tracking-tight text-slate-900',
+      sub: 'text-[13px] text-slate-500',
+      bg: 'bg-white',
+      border: 'border-slate-200',
+    },
+    tertiary: {
+      icon: 'bg-slate-100 text-slate-500',
+      title: 'text-[13px] font-medium text-slate-500',
+      value: 'text-[30px] font-bold tracking-tight text-slate-900',
+      sub: 'text-[13px] text-slate-500',
+      bg: 'bg-white',
+      border: 'border-slate-200',
+    },
+    warning: {
+      icon: 'bg-amber-100 text-amber-700',
+      title: 'text-[13px] font-medium text-amber-700',
+      value: 'text-[30px] font-bold tracking-tight text-amber-900',
+      sub: 'text-[13px] text-amber-700',
+      bg: 'bg-white',
+      border: 'border-slate-200',
+    },
+    danger: {
+      icon: 'bg-red-100 text-red-700',
+      title: 'text-[13px] font-medium text-red-700',
+      value: 'text-[30px] font-bold tracking-tight text-red-900',
+      sub: 'text-[13px] text-red-700',
+      bg: 'bg-white',
+      border: 'border-slate-200',
+    },
   };
 
-  const iconVariants = {
-    default: 'bg-muted text-muted-foreground',
-    primary: 'bg-primary-foreground/20 text-primary-foreground',
-    secondary: 'bg-secondary-foreground/20 text-secondary-foreground',
-    success: 'bg-success-foreground/20 text-success-foreground',
-    warning: 'bg-warning-foreground/20 text-warning-foreground',
-  };
-
-  const textVariants = {
-    default: 'text-muted-foreground',
-    primary: 'text-primary-foreground/80',
-    secondary: 'text-secondary-foreground/80',
-    success: 'text-success-foreground/80',
-    warning: 'text-warning-foreground/80',
-  };
+  const v = variants[variant];
 
   return (
-    <div className={cn('rounded-xl p-6 shadow-sm', variants[variant])}>
+    <div className={cn('stat-card', v.bg, v.border)}>
       <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className={cn('text-sm font-medium', textVariants[variant])}>{title}</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight">{value}</p>
-          {subtitle && (
-            <p className={cn('mt-1 text-sm', textVariants[variant])}>{subtitle}</p>
-          )}
-          {trend && (
-            <div className="mt-2 flex items-center gap-1">
-              <span
-                className={cn(
-                  'text-sm font-medium',
-                  trend.value >= 0 ? 'text-success' : 'text-destructive'
-                )}
-              >
-                {trend.value >= 0 ? '+' : ''}
-                {trend.value}%
-              </span>
-              <span className={cn('text-sm', textVariants[variant])}>{trend.label}</span>
-            </div>
-          )}
+        <div className="min-w-0">
+          <p className={v.title}>{title}</p>
+          <p className="mt-2 stat-value">{value}</p>
+          {subtitle && <p className={cn('mt-1', v.sub)}>{subtitle}</p>}
         </div>
-        <div className={cn('flex h-12 w-12 items-center justify-center rounded-lg', iconVariants[variant])}>
-          <Icon className="h-6 w-6" />
+        <div className={cn('stat-card-icon', v.icon)}>
+          <Icon className="h-5.5 w-5.5" />
         </div>
       </div>
     </div>

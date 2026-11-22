@@ -1,11 +1,13 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { CalendarCheck, Loader2, Save, Search } from 'lucide-react';
@@ -15,6 +17,18 @@ import { format } from 'date-fns';
 interface Student { id: string; first_name: string; last_name: string; student_id: string; }
 interface ClassRow { id: string; name: string; }
 type Status = 'present' | 'absent' | 'late' | 'excused';
+
+const statusBadge = (status: Status) => {
+  switch (status) {
+    case 'present': return <Badge className="bg-green-100 text-emerald-700">Present</Badge>;
+    case 'absent': return <Badge variant="destructive">Absent</Badge>;
+    case 'late': return <Badge className="bg-amber-100 text-amber-800">Late</Badge>;
+    case 'excused': return <Badge className="bg-blue-100 text-blue-900">Excused</Badge>;
+    default: return <Badge variant="secondary">{status}</Badge>;
+  }
+};
+
+const statusLabel = (s: Status) => s[0].toUpperCase() + s.slice(1);
 
 export default function Attendance() {
   const { user, role } = useAuth();
@@ -76,87 +90,100 @@ export default function Attendance() {
   }, [students, search]);
 
   const summary = useMemo(() => {
-    const counts = { present: 0, absent: 0, late: 0, excused: 0 };
+    const counts: Record<Status, number> = { present: 0, absent: 0, late: 0, excused: 0 };
     Object.values(statuses).forEach((s) => counts[s]++);
     return counts;
   }, [statuses]);
 
+  const total = summary.present + summary.absent + summary.late + summary.excused;
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary">Records</p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Attendance</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Record daily attendance for your class</p>
-        </div>
+        <PageHeader
+          eyebrow="Records"
+          title="Attendance"
+          description="Record daily attendance for your class."
+        />
 
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><CalendarCheck className="h-5 w-5" /> Select Class & Date</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Class</Label>
-                <Select value={classId} onValueChange={setClassId}>
-                  <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                  <SelectContent>{classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Date</Label>
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Filters */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-2">
+            <Label>Class</Label>
+            <Select value={classId} onValueChange={setClassId}>
+              <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+              <SelectContent>{classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Date</Label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+        </div>
 
         {classId && (
           <Card>
             <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <CardTitle className="text-lg">Roll Call</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    📅 Attendance taken on{' '}
-                    <span className="font-semibold text-foreground">
-                      {format(new Date(date), 'EEEE, MMMM d, yyyy')}
-                    </span>
+                  <CardTitle className="text-[16px]">Roll Call</CardTitle>
+                  <p className="mt-1 text-[13px] text-slate-500">
+                    Attendance taken on <span className="font-semibold text-slate-900">{format(new Date(date), 'EEEE, MMMM d, yyyy')}</span>
                   </p>
                 </div>
-                <div className="flex gap-2 flex-wrap items-center">
-                  <span className="text-sm text-muted-foreground">P:{summary.present} A:{summary.absent} L:{summary.late} E:{summary.excused}</span>
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="pl-8 w-48" />
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex gap-3 rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-slate-600">
+                    <span>Present: {summary.present}</span>
+                    <span>Absent: {summary.absent}</span>
+                    <span>Late: {summary.late}</span>
+                    <span>Excused: {summary.excused}</span>
+                    <span>Total: {total}</span>
                   </div>
-                  {canEdit && <Button onClick={saveAll} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save</Button>}
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
+                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student..." className="w-48 pl-8" />
+                  </div>
+                  {canEdit && (
+                    <Button onClick={saveAll} disabled={saving}>
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {loading ? (
-                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
               ) : filtered.length === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">No students</p>
+                <div className="empty-state"><CalendarCheck className="h-10 w-10 text-slate-400 mb-3" /><p className="text-[14px] text-slate-500">No students in this class</p></div>
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow><TableHead>Student</TableHead><TableHead>ID</TableHead><TableHead className="w-44">Status</TableHead></TableRow>
+                    <TableRow>
+                      <TableHead>Student</TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filtered.map((s) => (
                       <TableRow key={s.id}>
-                        <TableCell className="font-medium">{s.first_name} {s.last_name}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{s.student_id}</TableCell>
-                        <TableCell>
-                          <Select value={statuses[s.id] || 'present'} onValueChange={(v) => setStatus(s.id, v as Status)} disabled={!canEdit}>
-                            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="present">Present</SelectItem>
-                              <SelectItem value="absent">Absent</SelectItem>
-                              <SelectItem value="late">Late</SelectItem>
-                              <SelectItem value="excused">Excused</SelectItem>
-                            </SelectContent>
-                          </Select>
+                        <TableCell className="font-medium text-slate-900">{s.first_name} {s.last_name}</TableCell>
+                        <TableCell className="text-[13px] text-slate-500">{s.student_id}</TableCell>
+                        <TableCell className="text-right">
+                          {canEdit ? (
+                            <Select value={statuses[s.id] || 'present'} onValueChange={(v) => setStatus(s.id, v as Status)}>
+                              <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="present">Present</SelectItem>
+                                <SelectItem value="absent">Absent</SelectItem>
+                                <SelectItem value="late">Late</SelectItem>
+                                <SelectItem value="excused">Excused</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            statusBadge(statuses[s.id] || 'present')
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -166,6 +193,15 @@ export default function Attendance() {
             </CardContent>
           </Card>
         )}
+
+        {/* Status legend */}
+        <div className="flex flex-wrap items-center gap-3">
+          {(['present', 'absent', 'late', 'excused'] as const).map((s) => (
+            <span key={s} className="inline-flex items-center gap-1.5 text-[13px] text-slate-600">
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-100" />{statusLabel(s)}
+            </span>
+          ))}
+        </div>
       </div>
     </DashboardLayout>
   );
