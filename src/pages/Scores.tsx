@@ -418,7 +418,7 @@ export default function Scores() {
                       <span>Parents will be notified via SMS</span>
                     </div>
 
-                    <div className="d-flex d-flex flex-column-reverse sm:d-flex flex-row sm:justify-content-end g-2 pt-1">
+                    <div className="d-flex d-flex flex-col-reverse sm:d-flex flex-row sm:justify-content-end g-2 pt-1">
                       <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} className="w-100 sm:w-auto">Cancel</Button>
                       <Button type="submit" disabled={formLoading || !selectedStudent} className="w-100 sm:w-auto">
                         {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Recording...</> : 'Record Score'}
@@ -511,6 +511,7 @@ export default function Scores() {
     </DashboardLayout>
   );
 }
+
 
 
 

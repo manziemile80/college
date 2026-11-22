@@ -89,7 +89,7 @@ export default function Login() {
           </div>
 
           {/* Large white rounded login container */}
-          <div className="rounded-[22px] border border-slate-200 bg-white px-6 py-8 shadow-lg sm:px-8">
+          <div className="rounded-[22px] border border-slate-200 bg-white px-4 px-sm-6 py-7 shadow-lg">
             <div>
               <h2 className="fs-30 md:fs-34 fw-bold text-slate-900">Welcome back</h2>
               <p className="mt-2 fs-14 text-slate-500">
@@ -197,7 +197,7 @@ export default function Login() {
       {/* Right section â€” promo (large school image + dark green overlay) */}
       <div className="position-relative d-none flex-1 lg:d-flex align-items-center justify-content-center overflow-hidden bg-[#064E3B]">
         <div className="position-absolute inset-0">
-          <img src={schoolImage} alt="School building at College De Rebero" className="h-100 w-100 object-cover" />
+          <img src={schoolImage} alt="School building at College De Rebero" className="w-100 h-100 object-cover" />
           <div className="position-absolute inset-0 bg-[#064E3B] opacity-60" />
         </div>
 

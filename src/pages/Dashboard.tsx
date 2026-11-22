@@ -165,7 +165,7 @@ export default function Dashboard() {
       case 'teacher':
       case 'viewer':
         return (
-          <div className="row g-4 col-md-6 col-xl-3">
+          <div className="stats-grid">
             <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="secondary" />
             <StatCard title="Total Classes" value={stats.totalClasses || 0} icon={Users} variant="tertiary" />
             {role !== 'viewer' && (
@@ -184,7 +184,7 @@ export default function Dashboard() {
         );
       case 'dos':
         return (
-          <div className="row g-4 col-md-6 col-xl-3">
+          <div className="stats-grid">
             <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="secondary" />
             <StatCard title="Classes" value={stats.totalClasses || 0} icon={Users} variant="tertiary" />
             <StatCard title="Subjects" value={stats.totalSubjects || 0} icon={BookOpen} variant="secondary" />
@@ -193,7 +193,7 @@ export default function Dashboard() {
         );
       case 'dod':
         return (
-          <div className="row g-4 col-md-6 col-xl-3">
+          <div className="stats-grid">
             <StatCard title="Pending Reviews" value={stats.pendingIncidents || 0} icon={AlertTriangle} variant="warning" />
             <StatCard title="Reviewed Incidents" value={stats.reviewedIncidents || 0} icon={CheckCircle} variant="secondary" />
             <StatCard title="Total Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} variant="tertiary" />
@@ -202,19 +202,19 @@ export default function Dashboard() {
         );
       case 'stock_manager':
         return (
-          <div className="row g-4 col-md-6 col-xl-3">
+          <div className="stats-grid">
             <StatCard title="Stock Items" value={stats.stockItems || 0} icon={Boxes} />
           </div>
         );
       case 'parent':
         return (
-          <div className="row g-4 col-md-6 col-xl-3">
+          <div className="stats-grid">
             <StatCard title="Linked Child" value={stats.myChildren || 0} icon={GraduationCap} />
           </div>
         );
       case 'student':
         return (
-          <div className="row g-4 col-md-6 col-xl-3">
+          <div className="stats-grid">
             <StatCard title="Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} />
           </div>
         );
@@ -224,47 +224,60 @@ export default function Dashboard() {
   };
 
   const renderQuickActions = () => {
-    const actions: { to: string; icon: typeof ClipboardList; title: string; desc: string }[] = [];
+    const actions: {
+      to: string;
+      icon: typeof ClipboardList;
+      title: string;
+      desc: string;
+      tone?: 'emerald' | 'slate' | 'golden';
+      count?: number;
+      countUnit?: string;
+    }[] = [];
     if (role === 'admin' || role === 'teacher') {
       actions.push(
-        { to: '/scores?action=new', icon: ClipboardList, title: 'Record Score', desc: 'Add a new behavior score for a student' },
-        { to: '/students?action=new', icon: GraduationCap, title: 'Add Student', desc: 'Register a new student in the system' },
+        { to: '/scores?action=new', icon: ClipboardList, title: 'Record Score', desc: 'Add a new behavior score for a student', count: stats.totalScores ?? 0, countUnit: 'records' },
+        { to: '/students?action=new', icon: GraduationCap, title: 'Add Student', desc: 'Register a new student in the system', count: stats.totalStudents ?? 0, countUnit: 'students', tone: 'slate' },
         { to: '/reports', icon: TrendingUp, title: 'View Reports', desc: 'Generate and view behavior reports' },
       );
     }
     if (role === 'teacher' || role === 'dos' || role === 'admin') {
-      actions.push({ to: '/enrollment', icon: UserPlus, title: 'Enroll Students', desc: 'Enroll students in your classes' });
+      actions.push({ to: '/enrollment', icon: UserPlus, title: 'Enroll Students', desc: 'Enroll students in your classes', count: stats.activeEnrollments ?? 0, countUnit: 'active' });
     }
     if (role === 'dod') {
       actions.push(
-        { to: '/discipline', icon: Gavel, title: 'Review Incidents', desc: 'Review pending discipline incidents' },
-        { to: '/scores?action=new', icon: ClipboardList, title: 'Deduct Marks', desc: 'Assign conduct mark deductions' },
+        { to: '/discipline', icon: Gavel, title: 'Review Incidents', desc: 'Review pending discipline incidents', count: stats.pendingIncidents ?? 0, countUnit: 'pending', tone: 'golden' },
+        { to: '/scores?action=new', icon: ClipboardList, title: 'Deduct Marks', desc: 'Assign conduct mark deductions', count: stats.pendingIncidents ?? 0, countUnit: 'pending' },
       );
     }
     if (role === 'dos') {
       actions.push(
-        { to: '/classes', icon: BookOpen, title: 'Manage Classes', desc: 'Classes and teacher assignments' },
-        { to: '/subjects', icon: Pencil, title: 'Manage Subjects', desc: 'Subjects offered at the school' },
+        { to: '/classes', icon: BookOpen, title: 'Manage Classes', desc: 'Classes and teacher assignments', count: stats.totalClasses ?? 0, countUnit: 'classes', tone: 'slate' },
+        { to: '/subjects', icon: Pencil, title: 'Manage Subjects', desc: 'Subjects offered at the school', count: stats.totalSubjects ?? 0, countUnit: 'subjects' },
       );
     }
     if (role === 'stock_manager') {
       actions.push(
-        { to: '/stock-dashboard', icon: Boxes, title: 'Stock Dashboard', desc: 'Inventory levels and reorder alerts' },
+        { to: '/stock-dashboard', icon: Boxes, title: 'Stock Dashboard', desc: 'Inventory levels and reorder alerts', count: stats.stockItems ?? 0, countUnit: 'items' },
         { to: '/stock', icon: ClipboardList, title: 'Manage Stock', desc: 'Record stock in and out' },
       );
     }
     if (actions.length === 0) return null;
     return (
-      <div className="row g-4 md:col-6 col-lg-3">
+      <div className="stats-grid">
         {actions.map((a) => (
-          <Link key={a.to} to={a.to}>
-            <Card className="h-100 cursor-pointer transition-colors hover:border-emerald-300">
-              <CardContent className="d-flex d-flex flex-column align-items-center justify-content-center py-8">
-                <a.icon className="mb-3 h-10 w-10 text-emerald-600" />
-                <h3 className="fs-16 fw-semibold text-slate-900">{a.title}</h3>
-                <p className="mt-1 fs-13 text-slate-500 text-center">{a.desc}</p>
-              </CardContent>
-            </Card>
+          <Link key={a.to} to={a.to} className="w-100">
+            <div className="start-card" style={a.tone === 'golden' ? { borderColor: '#E4D31B', boxShadow: '0 4px 12px rgba(5,150,105,.12)' } : a.tone === 'slate' ? { borderColor: '#E2E8F0' } : { borderColor: '#6EE7B7' }}>
+              <div className="start-icon" style={a.tone === 'slate' ? { backgroundColor: '#F1F5F9' } : a.tone === 'golden' ? { backgroundColor: '#FEF3C7' } : { backgroundColor: '#059669' }}>
+                <a.icon style={a.tone === 'golden' ? { color: '#92400E' } : undefined} />
+              </div>
+              <div className="start-info">
+                <h3 className="start-title">{a.title}</h3>
+                {a.desc && <p className="start-desc">{a.desc}</p>}
+                {a.count !== undefined && (
+                  <p className="start-count">{a.count}<span className="start-count-label">{a.countUnit}</span></p>
+                )}
+              </div>
+            </div>
           </Link>
         ))}
       </div>
@@ -294,7 +307,7 @@ export default function Dashboard() {
             <CardTitle>Attendance Statistics {totalAttendance > 0 ? `Â· ${totalAttendance} days this year` : ''}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="row g-3 col-md-6 col-xl-3">
+            <div className="stats-grid">
               {[
                 { label: 'Present', value: attendanceStats.present, cls: 'text-emerald-600' },
                 { label: 'Absent', value: attendanceStats.absent, cls: 'text-red-600' },
@@ -328,7 +341,7 @@ export default function Dashboard() {
               <CardTitle>Discipline Statistics</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="row g-3 col-md-6 col-xl-3">
+              <div className="stats-grid">
                 <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
                   <p className="fs-13 fw-medium text-slate-500">Pending reviews</p>
                   <p className="stat-value text-amber-600">{stats.pendingIncidents || 0}</p>
@@ -363,7 +376,7 @@ export default function Dashboard() {
             <CardTitle>Academic Performance â€” {new Date().getFullYear()}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="row g-4 col-md-6">
+            <div className="row g-3 col-md-6">
               <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
                 <p className="fs-13 fw-medium text-slate-500">Average Marks (/100)</p>
                 <p className="stat-value text-emerald-600">{stats.avgMarks ?? 0}</p>

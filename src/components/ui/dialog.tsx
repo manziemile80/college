@@ -57,7 +57,7 @@ const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 DialogHeader.displayName = "DialogHeader";
 
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("d-flex d-d-flex d-flex-column-reverse sm:d-d-flex d-flex-row sm:justify-content-end sm:space-x-2", className)} {...props} />
+  <div className={cn("d-flex d-d-flex d-flex-col-reverse sm:d-d-flex d-flex-row sm:justify-content-end sm:space-x-2", className)} {...props} />
 );
 DialogFooter.displayName = "DialogFooter";
 
@@ -93,6 +93,7 @@ export {
   DialogTitle,
   DialogDescription,
 };
+
 
 
 

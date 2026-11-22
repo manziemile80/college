@@ -49,7 +49,7 @@ const AlertDialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDiv
 AlertDialogHeader.displayName = "AlertDialogHeader";
 
 const AlertDialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("d-flex d-d-flex d-flex-column-reverse sm:d-d-flex d-flex-row sm:justify-content-end sm:space-x-2", className)} {...props} />
+  <div className={cn("d-flex d-d-flex d-flex-col-reverse sm:d-d-flex d-flex-row sm:justify-content-end sm:space-x-2", className)} {...props} />
 );
 AlertDialogFooter.displayName = "AlertDialogFooter";
 
@@ -102,5 +102,6 @@ export {
   AlertDialogAction,
   AlertDialogCancel,
 };
+
 
 

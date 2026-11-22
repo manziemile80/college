@@ -174,7 +174,7 @@ export default function StockDashboard() {
         />
 
         {/* Stats */}
-        <div className="row g-2 col-md-6 xl:col-3">
+        <div className="row g-2 col-md-6 col-xl-3">
           {stats.map((s) => (
             <Card key={s.label}>
               <CardContent className="d-flex align-items-center g-3 p-4">
