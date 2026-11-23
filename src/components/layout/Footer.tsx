@@ -6,56 +6,49 @@ const LIVE_SITE_URL = 'https://college-mis-beta.vercel.app/';
 
 export function Footer() {
   return (
-    <footer className="mt-8 border-top border-slate-200 bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="row g-4 row-cols-1 row-cols-md-2 row-cols-xl-4">
-          <div className="col d-flex align-items-center flex-wrap g-3">
-            <img src={schoolLogo} alt="College De Rebero" className="h-9 w-9 object-contain" />
-            <div className="min-w-0">
-              <p className="fw-semibold text-slate-900">College De Rebero</p>
-              <p className="fs-12 text-muted-foreground">Behavior Management System</p>
+    <footer className="mt-6 border-top border-secondary-subtle pt-4 pb-6 text-main">
+      <div className="row g-4">
+        <div className="col-12 col-sm-6 col-lg-3 d-flex flex-column gap-3">
+          <div className="d-flex align-items-center gap-2">
+            <img src={schoolLogo} alt="College De Rebero" width={36} height={36} className="object-contain" />
+            <div>
+              <p className="fw-semibold mb-0">College De Rebero</p>
+              <p className="text-muted bd-fs-sm mb-0">Behavior Management System</p>
             </div>
-            <a
-              href={LIVE_SITE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open the live site"
-              className="d-inline-flex w-100 flex-wrap align-items-center gap-2 mt-1 rounded-[8px] border border-slate-200 bg-white px-3 py-2 text-start fs-13 fw-medium text-slate-700 transition-colors hover:border-emerald-300 hover:text-emerald-700"
-            >
-              Live site
-              <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" />
-            </a>
           </div>
+          <a
+            href={LIVE_SITE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-outline-primary btn-sm w-100 d-inline-flex align-items-center justify-content-center gap-1"
+            aria-label="Open the live site"
+          >
+            Live site
+            <ArrowUpRight className="bd-fs-sm" />
+          </a>
+        </div>
 
-          <div className="col space-y-2">
-            <p className="fs-12 fw-semibold text-uppercase tracking-wider text-slate-600">School</p>
-            <ul className="space-y-1.5 fs-12.5 text-muted-foreground">
-              <li><span className="d-inline-flex align-items-center g-2"><Building2 className="h-3.5 w-3.5 text-emerald-600" /> East Campus, Kigali</span></li>
-              <li><span className="d-inline-flex align-items-center g-2"><MapPin className="h-3.5 w-3.5 text-emerald-600" /> Gicumbi, Ruvune, Rebero</span></li>
-            </ul>
-          </div>
+        <div className="col-12 col-sm-6 col-lg-3">
+          <p className="fw-semibold mb-3">School</p>
+          <ul className="list-unstyled mb-0 d-flex flex-column gap-1">
+            <li className="d-flex align-items-center gap-2 text-muted bd-fs-sm"><Building2 /> East Campus, Kigali</li>
+            <li className="d-flex align-items-center gap-2 text-muted bd-fs-sm"><MapPin /> Gicumbi, Ruvune, Rebero</li>
+          </ul>
+        </div>
 
-          <div className="col space-y-2">
-            <p className="fs-12 fw-semibold text-uppercase tracking-wider text-slate-600">Contact</p>
-            <ul className="space-y-1.5 fs-12.5 text-muted-foreground">
-              <li><span className="d-inline-flex align-items-center g-2"><Phone className="h-3.5 w-3.5 text-emerald-600" /> +250 788 000 000</span></li>
-              <li><span className="d-inline-flex align-items-center g-2"><Mail className="h-3.5 w-3.5 text-emerald-600" /> info@collegederebero.rw</span></li>
-            </ul>
-          </div>
+        <div className="col-12 col-sm-6 col-lg-3">
+          <p className="fw-semibold mb-3">Contact</p>
+          <ul className="list-unstyled mb-0 d-flex flex-column gap-1">
+            <li className="d-flex align-items-center gap-2 text-muted bd-fs-sm"><Phone /> +250 788 000 000</li>
+            <li className="d-flex align-items-center gap-2 text-muted bd-fs-sm"><Mail /> info@collegederebero.rw</li>
+          </ul>
+        </div>
 
-          <div className="col space-y-2">
-            <p className="fs-12 fw-semibold text-uppercase tracking-wider text-slate-600">Excellence Â· Discipline Â· Integrity</p>
-            <p className="fs-12.5 text-muted-foreground">
-              Â© {new Date().getFullYear()} College De Rebero. All rights reserved.
-            </p>
-          </div>
+        <div className="col-12 col-sm-6 col-lg-3 d-flex flex-column justify-content-end">
+          <p className="fw-semibold mb-3">Excellence &middot; Discipline &middot; Integrity</p>
+          <p className="text-muted bd-fs-sm">© {new Date().getFullYear()} College De Rebero. All rights reserved.</p>
         </div>
       </div>
     </footer>
   );
 }
-
-
-
-
-

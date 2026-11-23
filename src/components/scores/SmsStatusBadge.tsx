@@ -11,22 +11,22 @@ export function SmsStatusBadge({ status, className }: SmsStatusBadgeProps) {
     sent: {
       icon: CheckCircle,
       label: 'Sent',
-      className: 'bg-success/15 text-success',
+      className: 'text-bg-success bg-success-subtle',
     },
     pending: {
       icon: Clock,
       label: 'Pending',
-      className: 'bg-warning/15 text-warning',
+      className: 'text-bg-warning bg-warning-subtle',
     },
     failed: {
       icon: XCircle,
       label: 'Failed',
-      className: 'bg-destructive/15 text-destructive',
+      className: 'text-bg-danger bg-danger-subtle',
     },
     unknown: {
       icon: AlertCircle,
       label: 'Unknown',
-      className: 'bg-muted text-muted-foreground',
+      className: 'text-bg-secondary bg-secondary-subtle',
     },
   };
 
@@ -36,16 +36,13 @@ export function SmsStatusBadge({ status, className }: SmsStatusBadgeProps) {
   return (
     <span
       className={cn(
-        'd-inline-d-flex align-items-center g-1 rounded-circle px-2 py-0.5 text-xs fw-medium',
+        'badge d-inline-flex align-items-center gap-1 bd-fs-xs',
         config.className,
         className
       )}
     >
-      <Icon className="h-3 w-3" />
+      <Icon className="fs-6" />
       {config.label}
     </span>
   );
 }
-
-
-

@@ -7,9 +7,9 @@ interface ScoreBadgeProps {
 
 export function ScoreBadge({ score, size = 'md' }: ScoreBadgeProps) {
   const getScoreClass = (score: number) => {
-    if (score < 0) return 'bg-red-100 text-red-800';
-    if (score === 0) return 'bg-slate-200 text-slate-600';
-    return 'bg-green-100 text-emerald-700';
+    if (score < 0) return 'text-bg-danger';
+    if (score === 0) return 'text-bg-secondary';
+    return 'text-bg-success';
   };
 
   const getScoreLabel = (score: number) => {
@@ -19,24 +19,15 @@ export function ScoreBadge({ score, size = 'md' }: ScoreBadgeProps) {
   };
 
   const sizeClasses = {
-    sm: 'px-2 py-0.5 text-xs',
-    md: 'px-3 py-1 fs-sm',
-    lg: 'px-4 py-1.5 fs-base',
+    sm: 'px-2 py-0.5 bd-fs-xs',
+    md: 'px-3 py-1 bd-fs-sm',
+    lg: 'px-4 py-1.5 bd-fs-md',
   };
 
   return (
-    <span
-      className={cn(
-        'd-inline-flex align-items-center g-1.5 rounded-circle border fw-medium',
-        getScoreClass(score),
-        sizeClasses[size],
-      )}
-    >
+    <span className={cn('badge d-inline-flex align-items-center gap-1.5', getScoreClass(score), sizeClasses[size])}>
       <span className="fw-bold">{score > 0 ? `+${score}` : score}</span>
-      <span className="opacity-80">â€¢ {getScoreLabel(score)}</span>
+      <span className="opacity-75">• {getScoreLabel(score)}</span>
     </span>
   );
 }
-
-
-

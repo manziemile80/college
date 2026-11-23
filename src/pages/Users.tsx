@@ -1,38 +1,19 @@
 ﻿import { PageHeader } from '@/components/layout/PageHeader';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Profile, AppRole } from '@/types/database';
 import { Users, Loader2, ShieldCheck, Shield, ShieldAlert, Trash2, Pencil } from '@/lib/icons';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface UserWithRole extends Profile {
   role?: AppRole | null;
 }
 
-const roleIcons: Record<AppRole, typeof ShieldCheck> = {
+const roleIcons: Record<AppRole, React.ComponentType<any>> = {
   admin: ShieldAlert,
   teacher: ShieldCheck,
   parent: Shield,
@@ -146,24 +127,15 @@ export default function UsersPage() {
     }
   };
 
-  const getRoleBadge = (role?: AppRole | null) => {
-    if (!role) return <Badge variant="secondary">No role</Badge>;
-    return (
-      <Badge variant="secondary" className="d-flex align-items-center g-1.5">
-        <span className="fs-13 fw-semibold text-slate-700 text-uppercase">{role}</span>
-      </Badge>
-    );
-  };
-
-  const roleMeta: Record<AppRole, { label: string; icon: typeof ShieldCheck; badge: string }> = {
-    admin: { label: 'Administrator', icon: ShieldAlert, badge: 'bg-red-100 text-red-800' },
-    teacher: { label: 'Teacher', icon: ShieldCheck, badge: 'bg-emerald-100 text-emerald-700' },
-    parent: { label: 'Parent', icon: Shield, badge: 'bg-blue-100 text-blue-700' },
-    student: { label: 'Student', icon: Shield, badge: 'bg-amber-100 text-amber-800' },
-    stock_manager: { label: 'Stock Manager', icon: Shield, badge: 'bg-slate-100 text-slate-700' },
-    dos: { label: 'Director of Studies', icon: ShieldCheck, badge: 'bg-emerald-100 text-emerald-700' },
-    dod: { label: 'Director of Discipline', icon: ShieldAlert, badge: 'bg-red-100 text-red-800' },
-    viewer: { label: 'Viewer (read-only)', icon: Shield, badge: 'bg-slate-100 text-slate-700' },
+  const roleMeta: Record<AppRole, { label: string; icon: React.ComponentType<any>; badge: string }> = {
+    admin: { label: 'Administrator', icon: ShieldAlert, badge: 'badge text-bg-danger' },
+    teacher: { label: 'Teacher', icon: ShieldCheck, badge: 'badge text-bg-success' },
+    parent: { label: 'Parent', icon: Shield, badge: 'badge text-bg-info' },
+    student: { label: 'Student', icon: Shield, badge: 'badge text-bg-warning' },
+    stock_manager: { label: 'Stock Manager', icon: Shield, badge: 'badge text-bg-secondary' },
+    dos: { label: 'Director of Studies', icon: ShieldCheck, badge: 'badge text-bg-success' },
+    dod: { label: 'Director of Discipline', icon: ShieldAlert, badge: 'badge text-bg-danger' },
+    viewer: { label: 'Viewer (read-only)', icon: Shield, badge: 'badge text-bg-secondary' },
   };
 
   const filteredUsers = users.filter((u) =>
@@ -171,143 +143,158 @@ export default function UsersPage() {
     u.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const getRoleBadge = (user: UserWithRole) => {
+    if (!user.role) return <span className="badge text-bg-secondary bd-fs-sm">No Role</span>;
+    const meta = roleMeta[user.role];
+    const Icon = meta.icon;
+    return (
+      <span className={cn(meta.badge, 'd-inline-flex align-items-center gap-1 bd-fs-sm')}>
+        <Icon className="fs-6" />
+        {meta.label}
+      </span>
+    );
+  };
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="Administration"
           title="User Management"
           description="Manage user accounts and role assignments across the school system."
         />
 
-        <div className="position-relative w-100 sm:max-w-xs">
-          <span className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
-            <Users className="h-4 w-4" />
-          </span>
-          <Input placeholder="Search users by name or email..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+        <div className="input-group w-100 w-md-auto flex-grow-1">
+          <span className="input-group-text bg-white border-secondary-subtle"><Users className="text-secondary" /></span>
+          <input
+            type="search"
+            className="form-control border-secondary-subtle"
+            placeholder="Search users by name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search users"
+          />
         </div>
 
         {loading ? (
-          <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+          <div className="d-flex align-items-center justify-content-center py-8">
+            <span className="spinner-border spinner-border-lg text-success" role="status" />
+          </div>
         ) : filteredUsers.length === 0 ? (
-          <Card><CardContent className="d-flex d-flex flex-column align-items-center justify-content-center py-12">
-            <Users className="h-12 w-12 text-slate-400 mb-4" />
-            <h3 className="fs-18 fw-semibold text-slate-900">No users found</h3>
-            <p className="fs-13 text-slate-500">Users will appear here when they sign up</p>
-          </CardContent></Card>
+          <div className="card">
+            <div className="card-body d-flex flex-column align-items-center justify-content-center py-10 text-center">
+              <Users className="fs-3 mb-4 text-secondary" />
+              <h3 className="fw-semibold text-main mb-2">No users found</h3>
+              <p className="text-secondary bd-fs-sm mb-0">Users will appear here when they sign up</p>
+            </div>
+          </div>
         ) : (
-          <Card>
-            <div class="table-responsive"><Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="text-end">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => {
-                  const meta = user.role ? roleMeta[user.role] : null;
-                  const Icon = meta?.icon || Shield;
-                  return (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="d-flex align-items-center g-3">
-                          <div className="d-flex h-9 w-9 align-items-center justify-content-center rounded-circle bg-emerald-100 text-emerald-700 fw-medium">
+          <div className="card">
+            <div className="table-responsive">
+              <table className="table table-hover align-middle mb-0">
+                <thead>
+                  <tr className="border-bottom border-secondary-subtle">
+                    <th scope="col">User</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Joined</th>
+                    <th scope="col" className="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id} className="border-bottom border-secondary-subtle">
+                      <td>
+                        <div className="d-flex align-items-center gap-3">
+                          <span className="bd-avatar d-inline-flex align-items-center justify-content-center">
                             {user.full_name?.charAt(0)}
-                          </div>
+                          </span>
                           <div className="min-w-0">
-                            <p className="fw-medium text-slate-900">{user.full_name}</p>
-                            <p className="fs-12.5 text-slate-500">{user.role ? meta?.label : 'No role'}</p>
+                            <p className="fw-medium text-main mb-0">{user.full_name}</p>
+                            <p className="text-muted bd-fs-sm mb-0">{user.role ? roleMeta[user.role].label : 'No role'}</p>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="fs-13 text-slate-500">{user.email}</TableCell>
-                      <TableCell>
-                        {user.role ? (
-                          <Badge className={meta?.badge}>
-                            <Icon className="h-3.5 w-3.5 mr-1" />
-                            {meta?.label}
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">No Role</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="fs-13 text-slate-500">
-                        {format(new Date(user.created_at), 'MMM d, yyyy')}
-                      </TableCell>
-                      <TableCell className="text-end">
+                      </td>
+                      <td className="text-muted bd-fs-sm">{user.email}</td>
+                      <td>{getRoleBadge(user)}</td>
+                      <td className="text-muted bd-fs-sm">{format(new Date(user.created_at), 'MMM d, yyyy')}</td>
+                      <td className="text-end">
                         {isAdmin ? (
-                          <div className="d-flex justify-content-end g-1.5">
-                            <Dialog
-                              open={isAssignDialogOpen && selectedUser?.id === user.id}
-                              onOpenChange={(open) => {
-                                setIsAssignDialogOpen(open);
-                                if (!open) setSelectedUser(null);
+                          <div className="d-flex justify-content-end gap-1">
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setNewRole(user.role || 'teacher');
+                                setEditName(user.full_name);
+                                setIsAssignDialogOpen(true);
                               }}
                             >
-                              <DialogTrigger asChild>
-                                <Button variant="edit" size="sm" onClick={() => {
-                                  setSelectedUser(user);
-                                  setNewRole(user.role || 'teacher');
-                                  setEditName(user.full_name);
-                                }}>
-                                  <Pencil className="h-4 w-4" />Edit
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="sm:max-w-sm">
-                                <DialogHeader><DialogTitle>Edit User</DialogTitle></DialogHeader>
-                                <div className="space-y-4 mt-2">
-                                  <div className="space-y-2">
-                                    <Label>Full Name</Label>
-                                    <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label>Role</Label>
-                                    <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
-                                      <SelectTrigger><SelectValue /></SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="admin">Administrator</SelectItem>
-                                        <SelectItem value="teacher">Teacher</SelectItem>
-                                        <SelectItem value="parent">Parent</SelectItem>
-                                        <SelectItem value="student">Student</SelectItem>
-                                        <SelectItem value="stock_manager">Stock Manager</SelectItem>
-                                        <SelectItem value="dos">Director of Studies</SelectItem>
-                                        <SelectItem value="dod">Director of Discipline</SelectItem>
-                                        <SelectItem value="viewer">Viewer (read-only)</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="d-flex justify-content-end g-3">
-                                    <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
-                                    <Button onClick={handleAssignRole} disabled={formLoading}>
-                                      {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : 'Save'}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                            <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user)} aria-label="Delete user"><Trash2 className="h-4 w-4" /></Button>
+                              <Pencil /> Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1"
+                              onClick={() => handleDeleteUser(user)}
+                            >
+                              <Trash2 /> Delete
+                            </button>
                           </div>
                         ) : (
-                          <span className="fs-13 text-slate-500">View only</span>
+                          <span className="text-muted bd-fs-sm">View only</span>
                         )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table></div>
-          </Card>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── Edit user modal ── */}
+        {isAssignDialogOpen && selectedUser && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">Edit User</h5>
+                    <button type="button" className="btn-close" onClick={() => setIsAssignDialogOpen(false)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-4">
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Full Name</label>
+                      <input className="form-control" value={editName} onChange={(e) => setEditName(e.target.value)} />
+                    </div>
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Role</label>
+                      <select className="form-select" value={newRole} onChange={(e) => setNewRole(e.target.value as AppRole)}>
+                        <option value="admin">Administrator</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="parent">Parent</option>
+                        <option value="student">Student</option>
+                        <option value="stock_manager">Stock Manager</option>
+                        <option value="dos">Director of Studies</option>
+                        <option value="dod">Director of Discipline</option>
+                        <option value="viewer">Viewer (read-only)</option>
+                      </select>
+                    </div>
+                    <div className="d-flex justify-content-end gap-2 pt-2">
+                      <button type="button" className="btn btn-outline-secondary" onClick={() => setIsAssignDialogOpen(false)}>Cancel</button>
+                      <button type="button" className="btn btn-success" onClick={handleAssignRole} disabled={formLoading}>
+                        {formLoading ? <><span className="spinner-border spinner-border-sm" /> Saving...</> : 'Save'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </DashboardLayout>
   );
 }
-
-
-
-
-

@@ -2,16 +2,15 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, LogOut, Sun, Moon, UserCog } from '@/lib/icons';
-import { Button } from '@/components/ui/button';
 import schoolLogo from '@/assets/college-rebero-logo.png';
+import { UserCog, LogOut, Sun, Moon, ChevronLeft, ChevronRight } from '@/lib/icons';
 import { navItems, roleBadges, NavItem } from './navItems';
 
 interface SidebarNavProps {
   collapsed?: boolean;
-  /** Called when a navigation link is selected (closes the mobile Sheet). */
+  /** Called when a navigation link is selected. */
   onLinkSelect?: () => void;
-  /** Called by the expand/collapse button (provided at tablet width). */
+  /** Called by the collapse/expand button. */
   onCollapseToggle?: () => void;
 }
 
@@ -21,46 +20,46 @@ export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }
   const location = useLocation();
 
   const visible = navItems.filter((item) => role && item.roles.includes(role));
-
   const badge = role ? roleBadges[role] : null;
 
+  /* ── Collapsed (icon-only) sidebar ── */
   if (collapsed) {
     return (
       <>
-        <div className="d-flex h-16 align-items-center justify-content-center border-bottom border-sidebar-border">
-          <img src={schoolLogo} alt="College De Rebero" width={32} height={32} className="h-8 w-8 object-contain" />
+        <div className="bd-sidebar-header d-flex justify-content-center align-items-center px-2">
+          <img src={schoolLogo} alt="College De Rebero" width={28} height={28} />
         </div>
-        <nav className="d-flex flex-1 d-flex flex-column align-items-center g-1.5 overflow-y-auto px-2 py-4">
+        <nav className="d-flex flex-grow-1 flex-column align-items-center gap-1 overflow-y-auto px-2 py-3">
           {visible.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              <Button
+              <Link
                 key={item.href}
-                variant="ghost"
-                size="icon"
-                asChild
-                className="position-relative h-11 w-11 rounded-3xl p-0 text-white hover:bg-white/10"
+                to={item.href}
+                onClick={() => onLinkSelect?.()}
+                className={cn('bd-nav-link-icon-only position-relative text-main', isActive && 'active')}
+                aria-label={item.label}
+                title={item.label}
+                data-bs-dismiss="offcanvas"
               >
-                <Link to={item.href} aria-label={item.label} title={item.label} onClick={() => onLinkSelect?.()}>
-                  <item.icon className="h-5 w-5" />
-                  {isActive && <span className="position-absolute -top-1.5 left-1/2 h-1 w-6 -translate-x-1/2 rounded-circle bg-emerald-600" />}
-                </Link>
-              </Button>
+                <item.icon className="bd-nav-icon" />
+                {isActive && <span className="bd-active-dot" aria-hidden="true" />}
+              </Link>
             );
           })}
         </nav>
-        <div className="d-flex d-flex flex-column g-2 border-top border-sidebar-border px-2 py-3">
-          <Button variant="ghost" asChild className="h-10 w-100 justify-content-center rounded-3xl text-white hover:bg-white/10" onClick={() => onLinkSelect?.()}>
-            <Link to="/settings">
-              <UserCog className="h-5 w-5" />
-            </Link>
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => { signOut(); onLinkSelect?.(); }} className="h-10 w-10 self-center rounded-3xl text-white hover:bg-white/10" aria-label="Sign out">
-            <LogOut className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => onCollapseToggle?.()} className="mx-auto h-10 w-10 rounded-3xl text-white hover:bg-white/10" aria-label="Expand sidebar">
-            <ChevronRight className="h-5 w-5" />
-          </Button>
+        <div className="d-flex flex-column align-items-center gap-1 border-top border-light pt-2 px-2 py-3">
+          <button type="button" className="bd-nav-link-icon-only text-main" onClick={() => onCollapseToggle?.()} aria-label="Expand sidebar" title="Expand sidebar">
+            <ChevronRight className="bd-nav-icon" />
+          </button>
+          <button
+            type="button"
+            className="bd-nav-link-icon-only text-main"
+            onClick={() => { signOut(); onLinkSelect?.(); }}
+            aria-label="Sign out"
+          >
+            <LogOut className="bd-nav-icon" />
+          </button>
         </div>
       </>
     );
@@ -69,51 +68,36 @@ export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }
   return (
     <>
       {/* Institution header */}
-      <div className="d-flex h-16 align-items-center g-3 border-bottom border-sidebar-border px-6">
-        <img src={schoolLogo} alt="College De Rebero" width={32} height={32} className="h-8 w-8 object-contain" />
+      <div className="bd-sidebar-header">
+        <img src={schoolLogo} alt="College De Rebero" width={28} height={28} />
         <div className="min-w-0">
-          <p className="truncate fs-15 fw-bold leading-tight text-white">College De Rebero</p>
-          <p className="truncate fs-11 leading-tight text-slate-400">School &amp; E-Learning</p>
+          <p className="fw-semibold text-main mb-0">College De Rebero</p>
+          <p className="text-muted bd-fs-sm mt-1 mb-0">School &amp; E-Learning</p>
         </div>
       </div>
 
       {/* User profile section */}
-      <div className="border-bottom border-sidebar-border px-5 py-5" onClick={() => onLinkSelect?.()}>
-        <div className="d-flex align-items-center g-3">
-          <div className="d-flex h-10 w-10 shrink-0 align-items-center justify-content-center rounded-circle bg-emerald-600 fs-sm fw-semibold text-white">
-            {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate fs-14.5 fw-semibold text-white">{profile?.full_name || 'User'}</p>
-            {badge && (
-              <span className={cn('mt-0.5 d-inline-flex rounded-circle px-2.5 py-0.5 fs-11 fw-medium', badge.className)}>
-                {badge.label}
-              </span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="rounded-md p-1.5 text-slate-400 hover:bg-white/10 hover:text-white"
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
+      <div className="bd-sidebar-user px-3 py-3" onClick={() => onLinkSelect?.()}>
+        <span className="bd-avatar">{profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}</span>
+        <div className="min-w-0 flex-grow-1 d-flex flex-column gap-0.5">
+          <p className="fw-semibold text-main mb-0 text-truncate">{profile?.full_name || 'User'}</p>
+          {badge && <span className={cn('align-self-start', badge.className)}>{badge.label}</span>}
         </div>
+        <button type="button" onClick={toggleTheme} className="btn bd-btn-ghost d-inline-flex align-items-center p-2" aria-label="Toggle theme" title="Toggle theme">
+          {theme === 'dark' ? <Sun className="bd-nav-icon" /> : <Moon className="bd-nav-icon" />}
+        </button>
       </div>
 
       {/* Navigation groups */}
-      <nav className="flex-1 space-y-6 overflow-y-auto px-4 py-5">
+      <nav className="d-flex flex-grow-1 flex-column overflow-y-auto px-2 py-3 gap-1">
         {Object.entries(
           visible.reduce<Record<string, NavItem[]>>((acc, item) => {
             acc[item.group] = [...(acc[item.group] || []), item];
             return acc;
           }, {}),
         ).map(([group, items]) => (
-          <div key={group} className="space-y-1">
-            <p className="px-3 pb-2 pt-1 fs-11 fw-semibold text-uppercase tracking-widest text-slate-400">
-              {group}
-            </p>
+          <div key={group} className="d-flex flex-column gap-1">
+            <p className="bd-nav-section-title px-3 py-1">{group}</p>
             {items.map((item) => {
               const isActive = location.pathname === item.href;
               return (
@@ -121,16 +105,16 @@ export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }
                   key={item.href}
                   to={item.href}
                   onClick={() => onLinkSelect?.()}
-                  className={cn(
-                    'nav-item-link group d-flex align-items-center g-3 rounded-[12px] px-3 py-3 fs-14.5 fw-medium transition-all duration-200',
-                    isActive
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-slate-300 hover:bg-white/10 hover:text-white',
-                  )}
+                  className={cn('bd-nav-link', isActive && 'active')}
+                  data-bs-dismiss="offcanvas"
                 >
-                  <item.icon className="h-5 w-5 shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                  {isActive && <span className="ms-auto h-1.5 w-1.5 shrink-0 rounded-circle bg-white" />}
+                  <item.icon className="bd-nav-icon" />
+                  <span className="flex-grow-1 text-truncate">{item.label}</span>
+                  {isActive && (
+                    <span className="ms-auto d-inline-flex align-items-center" aria-hidden="true">
+                      <span className="bd-active-dot" />
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -138,22 +122,26 @@ export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }
         ))}
       </nav>
 
-      {/* Collapse button (tablet) */}
-      <div className="border-top border-sidebar-border px-4 py-3 d-flex justify-content-center">
-        <Button
-          variant="ghost"
-          size="icon"
+      {/* Footer actions */}
+      <div className="bd-sidebar-footer">
+        <Link to="/settings" className="bd-nav-link" onClick={() => onLinkSelect?.()}>
+          <UserCog className="bd-nav-icon" />
+          <span className="flex-grow-1 text-truncate">Profile &amp; account</span>
+        </Link>
+        <button type="button" className="bd-nav-link d-inline-flex w-100 p-2" onClick={() => { signOut(); onLinkSelect?.(); }}>
+          <LogOut className="bd-nav-icon text-danger" />
+          <span>Sign out</span>
+        </button>
+        <button
+          type="button"
+          className="bd-nav-link mx-auto d-inline-flex p-2"
           onClick={() => onCollapseToggle?.()}
-          className="h-10 w-10 rounded-3xl text-slate-300 hover:bg-white/10"
           aria-label="Collapse sidebar"
+          title="Collapse sidebar"
         >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
+          <ChevronLeft className="bd-nav-icon" />
+        </button>
       </div>
     </>
   );
 }
-
-
-
-

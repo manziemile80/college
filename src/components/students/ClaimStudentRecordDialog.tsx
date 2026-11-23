@@ -1,16 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, UserCheck } from '@/lib/icons';
 
@@ -73,55 +63,67 @@ export function ClaimStudentRecordDialog({ open, onOpenChange, onLinked }: Props
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Find your student profile</DialogTitle>
-          <DialogDescription>
-            Pick your name so your answers are saved under your record.
-          </DialogDescription>
-        </DialogHeader>
-        <Input
-          placeholder="Search your name or student number"
-          value={search}
-          maxLength={80}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        {loading ? (
-          <div className="d-flex justify-content-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <p className="py-6 text-center fs-sm text-muted-foreground">
-            No matching profile found. Ask your school administrator to add you.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {filtered.map((r) => (
-              <div key={r.id} className="d-flex align-items-center justify-content-between g-2 rounded-xl border border-border p-3">
-                <div>
-                  <p className="fs-sm fw-medium text-foreground">
-                    {r.first_name} {r.last_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{r.student_id}</p>
+    <>
+      {open && (
+        <>
+          <div className="bd-modal-backdrop" />
+          <div className="bd-modal show">
+            <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header d-flex align-items-center justify-content-between border-bottom border-secondary-subtle py-3">
+                  <h5 className="modal-title fw-semibold text-main mb-0">Find your student profile</h5>
+                  <button type="button" className="btn-close" onClick={() => onOpenChange(false)} aria-label="Close" />
                 </div>
-                <Button size="sm" className="g-1.5" disabled={saving === r.id} onClick={() => claim(r)}>
-                  {saving === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
-                  This is me
-                </Button>
+                <div className="modal-body d-flex flex-column gap-3">
+                  <input
+                    className="form-control"
+                    placeholder="Search your name or student number"
+                    value={search}
+                    maxLength={80}
+                    onChange={(e) => setSearch(e.target.value)}
+                    aria-label="Search student"
+                  />
+                  {loading ? (
+                    <div className="d-flex justify-content-center py-8">
+                      <span className="spinner-border spinner-border-lg text-success" role="status" />
+                    </div>
+                  ) : filtered.length === 0 ? (
+                    <p className="text-muted bd-fs-sm text-center py-6 mb-0">
+                      No matching profile found. Ask your school administrator to add you.
+                    </p>
+                  ) : (
+                    <div className="d-flex flex-column gap-2">
+                      {filtered.map((r) => (
+                        <div key={r.id} className="d-flex align-items-center justify-content-between gap-2 rounded-3 border border-secondary-subtle p-3">
+                          <div>
+                            <p className="fw-medium text-main mb-0">{r.first_name} {r.last_name}</p>
+                            <p className="text-muted bd-fs-sm mb-0">{r.student_id}</p>
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1"
+                            disabled={saving === r.id}
+                            onClick={() => claim(r)}
+                          >
+                            {saving === r.id ? (
+                              <><span className="spinner-border spinner-border-sm" /> This is me</>
+                            ) : (
+                              <><UserCheck /> This is me</>
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="modal-footer d-flex justify-content-end">
+                  <button type="button" className="btn btn-outline-secondary" onClick={() => onOpenChange(false)}>Close</button>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
-        )}
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      )}
+    </>
   );
 }
-
-
-

@@ -4,14 +4,6 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Enrollment, EnrollmentHistory, StudentWithClass, Class } from '@/types/database';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { History, Loader2, Search, UserPlus, UserMinus, ArrowLeftRight, CheckCircle } from '@/lib/icons';
@@ -24,10 +16,10 @@ const currentYear = () => {
 
 const statusBadge = (status: string) => {
   switch (status) {
-    case 'active': return <Badge className="bg-green-100 text-emerald-700">Active</Badge>;
-    case 'transferred': return <Badge className="bg-amber-100 text-amber-700">Transferred</Badge>;
-    case 'removed': return <Badge className="bg-red-100 text-red-800">Removed</Badge>;
-    default: return <Badge variant="secondary">{status}</Badge>;
+    case 'active': return <span className="badge text-bg-success bd-fs-sm">Active</span>;
+    case 'transferred': return <span className="badge text-bg-warning bd-fs-sm">Transferred</span>;
+    case 'removed': return <span className="badge text-bg-danger bd-fs-sm">Removed</span>;
+    default: return <span className="badge text-bg-secondary bd-fs-sm">{status}</span>;
   }
 };
 
@@ -224,206 +216,235 @@ export default function EnrollmentPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="School"
           title="Student Enrollment"
           description="Enroll students in classes, transfer between classes, and view enrollment history."
         />
 
-        <div className="d-flex d-flex flex-column g-3 sm:d-flex flex-row sm:align-items-end">
-          <div className="space-y-2 sm:w-50">
-            <Label>Class</Label>
-            <Select value={classId} onValueChange={setClassId}>
-              <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-              <SelectContent>
-                {availableClasses.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name} ({c.grade_level})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="d-flex flex-wrap align-items-end gap-3">
+          <div className="d-flex flex-column gap-2 w-100">
+            <label className="form-label mb-0">Class</label>
+            <select className="form-select" value={classId} onChange={(e) => setClassId(e.target.value)}>
+              <option value="">Select class</option>
+              {availableClasses.map((c) => (
+                <option key={c.id} value={c.id}>{c.name} ({c.grade_level})</option>
+              ))}
+            </select>
           </div>
-          <div className="space-y-2 sm:w-25">
-            <Label>Academic year</Label>
-            <Input value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} />
+          <div className="d-flex flex-column gap-2 w-100">
+            <label className="form-label mb-0">Academic year</label>
+            <input className="form-control" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} />
           </div>
         </div>
 
         {canManage && classId && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="d-flex align-items-center g-2 fs-18"><UserPlus className="h-5 w-5 text-emerald-600" /> Enroll a student</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="position-relative max-w-sm">
-                <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  className="pl-9"
+          <div className="card">
+            <div className="card-header d-flex align-items-center justify-content-between py-3">
+              <h5 className="mb-0 fw-semibold text-main d-flex align-items-center gap-2">
+                <UserPlus className="text-success" /> Enroll a student
+              </h5>
+            </div>
+            <div className="card-body d-flex flex-column gap-3">
+              <div className="input-group w-100 flex-grow-1">
+                <span className="input-group-text bg-white border-secondary-subtle"><Search className="text-secondary" /></span>
+                <input
+                  type="search"
+                  className="form-control border-secondary-subtle"
                   placeholder="Search by name, student ID or registration number..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
               {availableStudents.length === 0 ? (
-                <p className="fs-13 text-slate-500">No matching students to enroll in this class for {academicYear}.</p>
+                <p className="text-muted bd-fs-sm mb-0">No matching students to enroll in this class for {academicYear}.</p>
               ) : (
-                <div className="row g-2 col-md-6 col-xl-3">
+                <div className="row g-2">
                   {availableStudents.map((s) => (
-                    <div key={s.id} className="d-flex align-items-center justify-content-between rounded-[10px] border border-slate-200 bg-white p-3">
-                      <div className="min-w-0">
-                        <p className="truncate fs-14 fw-medium text-slate-900">{s.first_name} {s.last_name}</p>
-                        <p className="fs-12.5 text-slate-500">{s.student_id}</p>
+                    <div key={s.id} className="col-12 col-sm-6 col-lg-4">
+                      <div className="card h-100 d-flex align-items-center justify-content-between gap-3 p-3">
+                        <div className="min-w-0">
+                          <p className="text-truncate fw-medium text-main mb-0">{s.first_name} {s.last_name}</p>
+                          <p className="text-muted bd-fs-sm mb-0">{s.student_id}</p>
+                        </div>
+                        <button type="button" className="btn btn-success btn-sm d-inline-flex align-items-center gap-1 flex-shrink-0" onClick={() => handleEnroll(s)} disabled={saving}>
+                          <UserPlus /> Enroll
+                        </button>
                       </div>
-                      <Button size="sm" onClick={() => handleEnroll(s)} disabled={saving}>
-                        <UserPlus className="h-4 w-4 mr-1" />Enroll
-                      </Button>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
-        )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="fs-16">
-              Enrollments â€” {classes.find((c) => c.id === classId)?.name || 'Select a class'} Â· {academicYear}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
-            ) : enrollments.length === 0 ? (
-              <div className="empty-state">
-                <CheckCircle className="h-12 w-12 text-slate-400 mb-4" />
-                <h3 className="fs-18 fw-semibold text-slate-900">No enrollments for this class and year yet.</h3>
-                <p className="fs-13 text-slate-500">Enroll students above to get started.</p>
-              </div>
-            ) : (
-              <div class="table-responsive"><Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Student ID</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="d-none sm:table-cell">Enrolled</TableHead>
-                    <TableHead className="text-end">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {enrollments.map((e) => (
-                    <TableRow key={e.id}>
-                      <TableCell className="fw-medium text-slate-900">
-                        {e.student ? `${e.student.first_name} ${e.student.last_name}` : e.student_id}
-                      </TableCell>
-                      <TableCell className="fs-13 text-slate-500">{e.student?.student_id || 'â€”'}</TableCell>
-                      <TableCell>{statusBadge(e.status)}</TableCell>
-                      <TableCell className="d-none fs-13 text-slate-500 sm:table-cell">
-                        {format(new Date(e.created_at), 'MMM d, yyyy')}
-                      </TableCell>
-                      <TableCell className="text-end">
-                        {canManage && (
-                          <div className="d-flex justify-content-end g-1">
-                            <Button size="sm" variant="ghost" onClick={() => openHistory(e)} title="Enrollment history" aria-label="Enrollment history">
-                              <History className="h-4 w-4" />
-                            </Button>
-                            {e.status === 'active' && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => { setTransferFor(e); setTransferClass(''); }}
-                                  title="Transfer to another class"
-                                  aria-label="Transfer to another class"
-                                >
-                                  <ArrowLeftRight className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleRemove(e)}
-                                  title="Remove enrollment"
-                                  aria-label="Remove enrollment"
-                                >
-                                  <UserMinus className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table></div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* History dialog */}
-      <Dialog open={!!historyFor} onOpenChange={(open) => !open && setHistoryFor(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Enrollment History</DialogTitle></DialogHeader>
-          {historyLoading ? (
-            <div className="d-flex justify-content-center py-6"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
-          ) : history.length === 0 ? (
-            <p className="py-6 text-center fs-13 text-slate-500">No history recorded.</p>
-          ) : (
-            <div className="space-y-3 py-2">
-              {history.map((h) => (
-                <div key={h.id} className="d-flex align-items-start justify-content-between g-3 border-bottom border-slate-200 pb-2 last:border-0">
-                  <div>
-                    <p className="fs-14 fw-medium capitalize text-slate-900">{h.action}</p>
-                    <p className="fs-12.5 text-slate-500">{h.details}</p>
-                  </div>
-                  <p className="text-nowrap fs-12.5 text-slate-500">
-                    {format(new Date(h.created_at), 'MMM d, yyyy HH:mm')}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Transfer dialog */}
-      <Dialog open={!!transferFor} onOpenChange={(open) => !open && setTransferFor(null)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader><DialogTitle>Transfer Student</DialogTitle></DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div className="space-y-2">
-              <Label>Move to class</Label>
-              <Select value={transferClass} onValueChange={setTransferClass}>
-                <SelectTrigger><SelectValue placeholder="Select target class" /></SelectTrigger>
-                <SelectContent>
-                  {classes
-                    .filter((c) => c.id !== transferFor?.class_id)
-                    .map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name} ({c.grade_level})</SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <p className="fs-12.5 text-slate-500">
-              The change is recorded in the enrollment history. Confirm before transferring.
-            </p>
-            <div className="d-flex justify-content-end g-3">
-              <Button variant="outline" onClick={() => setTransferFor(null)}>Cancel</Button>
-              <Button onClick={handleTransfer} disabled={saving || !transferClass}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm Transfer'}
-              </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        )}
+
+        <div className="card">
+          <div className="card-header py-3">
+            <h5 className="mb-0 fw-semibold">
+              Enrollments — {classes.find((c) => c.id === classId)?.name || 'Select a class'} · {academicYear}
+            </h5>
+          </div>
+          <div className="card-body p-0">
+            {loading ? (
+              <div className="d-flex align-items-center justify-content-center py-8">
+                <span className="spinner-border spinner-border-lg text-success" role="status" />
+              </div>
+            ) : enrollments.length === 0 ? (
+              <div className="empty-state">
+                <CheckCircle className="empty-state-icon fs-3 text-secondary" />
+                <h3 className="fw-semibold text-main mb-1">No enrollments for this class and year yet.</h3>
+                <p className="text-muted bd-fs-sm mb-0">Enroll students above to get started.</p>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr className="border-bottom border-secondary-subtle">
+                      <th scope="col">Student</th>
+                      <th scope="col">Student ID</th>
+                      <th scope="col">Status</th>
+                      <th scope="col" className="d-none d-sm-table-cell">Enrolled</th>
+                      <th scope="col" className="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {enrollments.map((e) => (
+                      <tr key={e.id} className="border-bottom border-secondary-subtle">
+                        <td className="fw-medium text-main">
+                          {e.student ? `${e.student.first_name} ${e.student.last_name}` : e.student_id}
+                        </td>
+                        <td className="text-muted bd-fs-sm">{e.student?.student_id || '—'}</td>
+                        <td>{statusBadge(e.status)}</td>
+                        <td className="d-none text-muted bd-fs-sm d-sm-table-cell">
+                          {format(new Date(e.created_at), 'MMM d, yyyy')}
+                        </td>
+                        <td className="text-end">
+                          {canManage && (
+                            <div className="d-flex justify-content-end gap-1">
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center"
+                                onClick={() => openHistory(e)}
+                                title="Enrollment history"
+                                aria-label="Enrollment history"
+                              >
+                                <History />
+                              </button>
+                              {e.status === 'active' && (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-primary btn-sm d-inline-flex align-items-center"
+                                    onClick={() => { setTransferFor(e); setTransferClass(''); }}
+                                    title="Transfer to another class"
+                                    aria-label="Transfer to another class"
+                                  >
+                                    <ArrowLeftRight />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-danger btn-sm d-inline-flex align-items-center"
+                                    onClick={() => handleRemove(e)}
+                                    title="Remove enrollment"
+                                    aria-label="Remove enrollment"
+                                  >
+                                    <UserMinus />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Enrollment history modal ── */}
+      {historyFor && (
+        <>
+          <div className="bd-modal-backdrop" />
+          <div className="bd-modal show">
+            <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                  <h5 className="modal-title fw-semibold text-main mb-0">Enrollment History</h5>
+                  <button type="button" className="btn-close" onClick={() => setHistoryFor(null)} aria-label="Close" />
+                </div>
+                <div className="modal-body">
+                  {historyLoading ? (
+                    <div className="d-flex justify-content-center py-6">
+                      <span className="spinner-border spinner-border-lg text-success" role="status" />
+                    </div>
+                  ) : history.length === 0 ? (
+                    <p className="text-muted bd-fs-sm py-6 text-center">No history recorded.</p>
+                  ) : (
+                    <div className="d-flex flex-column gap-3">
+                      {history.map((h) => (
+                        <div key={h.id} className="d-flex align-items-start justify-content-between gap-3 border-bottom border-secondary-subtle pb-2">
+                          <div>
+                            <p className="text-capitalize fw-semibold text-main mb-0">{h.action}</p>
+                            <p className="text-muted bd-fs-sm mb-0">{h.details}</p>
+                          </div>
+                          <p className="text-nowrap text-muted bd-fs-sm mb-0">
+                            {format(new Date(h.created_at), 'MMM d, yyyy HH:mm')}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Transfer student modal ── */}
+      {transferFor && (
+        <>
+          <div className="bd-modal-backdrop" />
+          <div className="bd-modal show">
+            <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                  <h5 className="modal-title fw-semibold text-main mb-0">Transfer Student</h5>
+                  <button type="button" className="btn-close" onClick={() => setTransferFor(null)} aria-label="Close" />
+                </div>
+                <div className="modal-body d-flex flex-column gap-4">
+                  <div className="d-flex flex-column gap-2">
+                    <label className="form-label">Move to class</label>
+                    <select className="form-select" value={transferClass} onChange={(e) => setTransferClass(e.target.value)}>
+                      <option value="">Select target class</option>
+                      {classes
+                        .filter((c) => c.id !== transferFor.class_id)
+                        .map((c) => (
+                          <option key={c.id} value={c.id}>{c.name} ({c.grade_level})</option>
+                        ))}
+                    </select>
+                  </div>
+                  <p className="text-muted bd-fs-sm mb-0">
+                    The change is recorded in the enrollment history. Confirm before transferring.
+                  </p>
+                  <div className="d-flex justify-content-end gap-2 pt-2">
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => setTransferFor(null)}>Cancel</button>
+                    <button type="button" className="btn btn-primary" onClick={handleTransfer} disabled={saving || !transferClass}>
+                      {saving ? <><span className="spinner-border spinner-border-sm" /> Confirming...</> : 'Confirm Transfer'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </DashboardLayout>
   );
 }
-
-
-
-
-
-

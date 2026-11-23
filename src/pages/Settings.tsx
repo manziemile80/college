@@ -1,14 +1,10 @@
 ﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Bell, Shield, Database, MessageSquare, ScrollText, Loader2 } from '@/lib/icons';
 import { supabase } from '@/integrations/supabase/client';
 import { AuditLog } from '@/types/database';
 import { format } from 'date-fns';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Bell, Shield, Database, MessageSquare, ScrollText, Loader2 } from '@/lib/icons';
 
 export default function Settings() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -30,9 +26,52 @@ export default function Settings() {
       });
   }, []);
 
+  const settingCard = (
+    icon: React.ReactNode,
+    iconColor: string,
+    title: string,
+    description: string,
+    id: string,
+    label: string,
+    checked: boolean,
+    onCheckedChange: (v: boolean) => void,
+  ) => (
+    <div className="card">
+      <div className="card-header d-flex align-items-start gap-3 py-3">
+        <span className={`d-inline-flex align-items-center justify-content-center rounded-circle p-2 text-${iconColor}`}>
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <h5 className="fw-semibold text-main mb-0">{title}</h5>
+          <p className="text-muted bd-fs-sm mb-0">{description}</p>
+        </div>
+      </div>
+      <div className="card-body">
+        <div className="d-flex align-items-center justify-content-between gap-4">
+          <div className="min-w-0">
+            <label htmlFor={id} className="fw-semibold text-main bd-fs-md">{label}</label>
+            <p className="text-muted bd-fs-sm mb-0 mt-0">
+              {id === 'sms-notifications' && 'Send SMS to parents when scores are updated'}
+              {id === 'email-notifications' && 'Send email summaries to parents weekly'}
+              {id === 'two-factor' && 'Require 2FA for admin accounts'}
+              {id === 'session-timeout' && 'Auto-logout after 30 minutes of inactivity'}
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            className="form-switch"
+            id={id}
+            checked={checked}
+            onChange={(e) => onCheckedChange(e.target.checked)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="Administration"
           title="Settings"
@@ -40,168 +79,126 @@ export default function Settings() {
         />
 
         {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <div className="d-flex align-items-start g-3">
-              <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50">
-                <Bell className="h-5 w-5 text-emerald-600" />
-              </div>
+        <div className="d-flex flex-column gap-4">
+          <div className="card">
+            <div className="card-header d-flex align-items-start gap-3 py-3">
+              <span className="d-inline-flex align-items-center justify-content-center rounded-circle p-2 text-success"><Bell className="fs-5" /></span>
               <div>
-                <CardTitle>Notifications</CardTitle>
-                <CardDescription>Configure SMS and email notification settings</CardDescription>
+                <h5 className="fw-semibold text-main mb-0">Notifications</h5>
+                <p className="text-muted bd-fs-sm mb-0">Configure SMS and email notification settings</p>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="d-flex align-items-center justify-content-between g-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-              <div className="min-w-0">
-                <Label htmlFor="sms-notifications" className="fs-14 fw-semibold">SMS Notifications</Label>
-                <p className="mt-0.5 fs-13 text-slate-500">Send SMS to parents when scores are updated</p>
-              </div>
-              <Switch id="sms-notifications" checked={smsEnabled} onCheckedChange={setSmsEnabled} />
+            <div className="card-body d-flex flex-column gap-3">
+              {settingCard(<Bell className="fs-5" />, 'success', 'SMS Notifications', 'Send SMS to parents when scores are updated', 'sms-notifications', 'SMS Notifications', smsEnabled, setSmsEnabled)}
+              {settingCard(<MessageSquare className="fs-5" />, 'info', 'Email Notifications', 'Send email summaries to parents weekly', 'email-notifications', 'Email Notifications', emailEnabled, setEmailEnabled)}
             </div>
-            <div className="d-flex align-items-center justify-content-between g-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-              <div className="min-w-0">
-                <Label htmlFor="email-notifications" className="fs-14 fw-semibold">Email Notifications</Label>
-                <p className="mt-0.5 fs-13 text-slate-500">Send email summaries to parents weekly</p>
-              </div>
-              <Switch id="email-notifications" checked={emailEnabled} onCheckedChange={setEmailEnabled} />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* SMS Gateway */}
-        <Card>
-          <CardHeader>
-            <div className="d-flex align-items-start g-3">
-              <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-blue-50">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle>SMS Gateway</CardTitle>
-                <CardDescription>Configure your SMS provider (Twilio / Africa's Talking)</CardDescription>
-              </div>
+        <div className="card">
+          <div className="card-header d-flex align-items-start gap-3 py-3">
+            <span className="d-inline-flex align-items-center justify-content-center rounded-circle p-2 text-info"><MessageSquare className="fs-5" /></span>
+            <div>
+              <h5 className="fw-semibold text-main mb-0">SMS Gateway</h5>
+              <p className="text-muted bd-fs-sm mb-0">Configure your SMS provider (Twilio / Africa's Talking)</p>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-4 fs-13 text-slate-500 space-y-2">
-              <p>SMS gateway integration requires API keys. Please configure your SMS provider credentials to enable parent notifications.</p>
-              <p className="fw-medium text-slate-600">Supported providers: <span className="fw-normal">Twilio</span>, <span className="fw-normal">Africa's Talking</span></p>
+          </div>
+          <div className="card-body">
+            <div className="rounded-3 bg-secondary-subtle p-4 bd-fs-sm text-secondary">
+              <p className="mb-2">SMS gateway integration requires API keys. Please configure your SMS provider credentials to enable parent notifications.</p>
+              <p className="mb-0">Supported providers: <span className="fw-medium">Twilio</span>, <span className="fw-medium">Africa's Talking</span></p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Security */}
-        <Card>
-          <CardHeader>
-            <div className="d-flex align-items-start g-3">
-              <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-red-50">
-                <Shield className="h-5 w-5 text-red-600" />
-              </div>
-              <div>
-                <CardTitle>Security</CardTitle>
-                <CardDescription>Manage security and access settings</CardDescription>
-              </div>
+        <div className="card">
+          <div className="card-header d-flex align-items-start gap-3 py-3">
+            <span className="d-inline-flex align-items-center justify-content-center rounded-circle p-2 text-danger"><Shield className="fs-5" /></span>
+            <div>
+              <h5 className="fw-semibold text-main mb-0">Security</h5>
+              <p className="text-muted bd-fs-sm mb-0">Manage security and access settings</p>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="d-flex align-items-center justify-content-between g-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-              <div className="min-w-0">
-                <Label htmlFor="two-factor" className="fs-14 fw-semibold">Two-Factor Authentication</Label>
-                <p className="mt-0.5 fs-13 text-slate-500">Require 2FA for admin accounts</p>
-              </div>
-              <Switch id="two-factor" checked={twoFactor} onCheckedChange={setTwoFactor} />
-            </div>
-            <div className="d-flex align-items-center justify-content-between g-4 rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-              <div className="min-w-0">
-                <Label htmlFor="session-timeout" className="fs-14 fw-semibold">Session Timeout</Label>
-                <p className="mt-0.5 fs-13 text-slate-500">Auto-logout after 30 minutes of inactivity</p>
-              </div>
-              <Switch id="session-timeout" checked={sessionTimeout} onCheckedChange={setSessionTimeout} />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="card-body d-flex flex-column gap-3">
+            {settingCard(<Shield className="fs-5" />, 'danger', 'Two-Factor Authentication', 'Require 2FA for admin accounts', 'two-factor', 'Two-Factor Authentication', twoFactor, setTwoFactor)}
+            {settingCard(<Shield className="fs-5" />, 'danger', 'Session Timeout', 'Auto-logout after 30 minutes of inactivity', 'session-timeout', 'Session Timeout', sessionTimeout, setSessionTimeout)}
+          </div>
+        </div>
 
         {/* Database */}
-        <Card>
-          <CardHeader>
-            <div className="d-flex align-items-start g-3">
-              <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-cyan-50">
-                <Database className="h-5 w-5 text-cyan-600" />
-              </div>
-              <div>
-                <CardTitle>Database</CardTitle>
-                <CardDescription>Database information and maintenance</CardDescription>
-              </div>
+        <div className="card">
+          <div className="card-header d-flex align-items-start gap-3 py-3">
+            <span className="d-inline-flex align-items-center justify-content-center rounded-circle p-2 text-info"><Database className="fs-5" /></span>
+            <div>
+              <h5 className="fw-semibold text-main mb-0">Database</h5>
+              <p className="text-muted bd-fs-sm mb-0">Database information and maintenance</p>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="d-flex justify-content-between rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-3">
-              <span className="fs-13 text-slate-500">Database Name</span>
-              <span className="fs-13 fw-medium text-slate-900">conduct</span>
+          </div>
+          <div className="card-body">
+            <div className="d-flex justify-content-between rounded-3 bg-secondary-subtle px-4 py-3">
+              <span className="text-muted bd-fs-sm mb-0">Database Name</span>
+              <span className="fw-semibold text-main bd-fs-sm mb-0">conduct</span>
             </div>
-            <div className="d-flex justify-content-between rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-3">
-              <span className="fs-13 text-slate-500">Status</span>
-              <span className="d-inline-flex align-items-center g-1.5 fs-13 fw-medium text-emerald-600">
-                <span className="h-2.5 w-2.5 rounded-circle bg-emerald-600" />Connected
+            <div className="d-flex justify-content-between rounded-3 bg-secondary-subtle px-4 py-3 mt-3">
+              <span className="text-muted bd-fs-sm mb-0">Status</span>
+              <span className="d-inline-flex align-items-center gap-1 bd-fs-sm fw-medium text-success">
+                <span className="rounded-circle bg-success" style={{ width: '8px', height: '8px' }} />
+                Connected
               </span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Audit logs */}
-        <Card>
-          <CardHeader>
-            <div className="d-flex align-items-start g-3">
-              <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-amber-50">
-                <ScrollText className="h-5 w-5 text-amber-600" />
-              </div>
-              <div>
-                <CardTitle>System Activity Logs</CardTitle>
-                <CardDescription>Recent sensitive actions â€” role changes, enrollment changes and discipline reviews</CardDescription>
-              </div>
+        <div className="card">
+          <div className="card-header d-flex align-items-start gap-3 py-3">
+            <span className="d-inline-flex align-items-center justify-content-center rounded-circle p-2 text-warning"><ScrollText className="fs-5" /></span>
+            <div>
+              <h5 className="fw-semibold text-main mb-0">System Activity Logs</h5>
+              <p className="text-muted bd-fs-sm mb-0">Recent sensitive actions — role changes, enrollment changes and discipline reviews</p>
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
+          </div>
+          <div className="card-body p-0">
             {logsLoading ? (
-              <div className="d-flex align-items-center justify-content-center py-10"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+              <div className="d-flex align-items-center justify-content-center py-10">
+                <span className="spinner-border spinner-border-lg text-success" role="status" />
+              </div>
             ) : logs.length === 0 ? (
               <div className="empty-state">
-                <ScrollText className="h-10 w-10 text-slate-400 mb-3" />
-                <p className="fs-14 text-slate-500">No activity recorded yet.</p>
+                <ScrollText className="empty-state-icon text-secondary" />
+                <p className="text-secondary mb-0">No activity recorded yet.</p>
               </div>
             ) : (
-              <div class="table-responsive"><Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>When</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Record</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {logs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="text-nowrap fs-13 text-slate-500">
-                        {format(new Date(log.created_at), 'MMM d, yyyy HH:mm')}
-                      </TableCell>
-                      <TableCell className="fs-13 fw-medium text-slate-900 capitalize">
-                        {log.action.replace(/_/g, ' ')}
-                      </TableCell>
-                      <TableCell className="fs-13 text-slate-500">{log.entity}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table></div>
+              <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr className="border-bottom border-secondary-subtle">
+                      <th scope="col">When</th>
+                      <th scope="col">Action</th>
+                      <th scope="col">Record</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logs.map((log) => (
+                      <tr key={log.id} className="border-bottom border-secondary-subtle">
+                        <td className="text-nowrap text-muted bd-fs-sm">
+                          {format(new Date(log.created_at), 'MMM d, yyyy HH:mm')}
+                        </td>
+                        <td className="fw-medium text-main bd-fs-sm text-capitalize">
+                          {log.action.replace(/_/g, ' ')}
+                        </td>
+                        <td className="text-muted bd-fs-sm">{log.entity}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
 }
-
-
-
-
-

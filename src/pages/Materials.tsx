@@ -7,11 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, FolderOpen, Download, Search, Loader2, Pencil, X } from '@/lib/icons';
+import { Plus, Trash2, FolderOpen, Download, Search, Loader2, Pencil } from '@/lib/icons';
 
 interface Material {
   id: string;
@@ -99,130 +96,153 @@ export default function Materials() {
   const label = (list: { id: string; name: string }[], id: string | null) =>
     list.find((x) => x.id === id)?.name;
 
+  const materialCard = (m: Material) => (
+    <div className="card h-100 d-flex flex-column">
+      <div className="card-body d-flex flex-column gap-3 p-4">
+        <div className="d-flex align-items-center justify-content-between gap-2">
+          <span className="d-inline-flex align-items-center justify-content-center rounded-3 bg-success-subtle text-success p-2"><FolderOpen className="fs-5" /></span>
+          <span className="badge text-bg-secondary bg-secondary-subtle bd-fs-xs">PDF</span>
+        </div>
+        <div>
+          <h3 className="fw-semibold text-main mb-1 text-truncate">{m.title}</h3>
+          <p className="mt-1 text-muted bd-fs-sm mb-0 line-clamp-2">{m.description || 'No description'}</p>
+        </div>
+        <div className="d-flex flex-wrap gap-1.5">
+          {label(subjects, m.subject_id) && (
+            <span className="badge text-bg-secondary bg-secondary-subtle bd-fs-xs">{label(subjects, m.subject_id)}</span>
+          )}
+          {label(classes, m.class_id) && (
+            <span className="badge text-bg-secondary bg-secondary-subtle bd-fs-xs">{label(classes, m.class_id)}</span>
+          )}
+        </div>
+        <div className="d-flex align-items-center gap-2 mt-auto">
+          {m.file_url && (
+            <a href={m.file_url} target="_blank" rel="noreferrer" className="d-inline-flex align-items-center gap-1">
+              <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"><Download /> Open</button>
+            </a>
+          )}
+          {isStaff && (
+            <>
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center"
+                aria-label="Edit material"
+                onClick={() => {
+                  setEditingId(m.id);
+                  setForm({
+                    title: m.title,
+                    description: m.description || '',
+                    file_url: m.file_url || '',
+                    subject_id: m.subject_id || '',
+                    class_id: m.class_id || '',
+                  });
+                  setOpen(true);
+                }}
+              >
+                <Pencil />
+              </button>
+              <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete material" onClick={() => remove(m.id)}><Trash2 /></button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="E-Learning"
           title="Learning Materials"
           description="Notes, PDFs and resources shared with students for each subject and class."
           actions={isStaff ? (
-            <Button className="g-2" onClick={() => { setEditingId(null); setForm(emptyForm); setOpen(true); }}>
-              <Plus className="h-4 w-4" /> Add Material
-            </Button>
+            <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={() => { setEditingId(null); setForm(emptyForm); setOpen(true); }}>
+              <Plus /> Add Material
+            </button>
           ) : undefined}
         />
 
-        <div className="position-relative max-w-md">
-          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input className="pl-9" placeholder="Search materials..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="input-group w-100 w-md-auto flex-grow-1">
+          <span className="input-group-text bg-white border-secondary-subtle"><Search className="text-secondary" /></span>
+          <input
+            type="search"
+            className="form-control border-secondary-subtle"
+            placeholder="Search materials..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search materials"
+          />
         </div>
 
         {loading ? (
-          <div className="d-flex justify-content-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+          <div className="d-flex justify-content-center py-8">
+            <span className="spinner-border spinner-border-lg text-success" role="status" />
+          </div>
         ) : filtered.length === 0 ? (
-          <Card><CardContent className="d-flex d-flex flex-column align-items-center py-14 text-center">
-            <FolderOpen className="mb-3 h-10 w-10 text-slate-400" />
-            <p className="fw-medium text-slate-900">No materials found</p>
-          </CardContent></Card>
+          <div className="card">
+            <div className="card-body d-flex flex-column align-items-center py-12 text-center">
+              <FolderOpen className="fs-3 mb-3 text-secondary" />
+              <p className="fw-semibold text-main mb-2">No materials found</p>
+            </div>
+          </div>
         ) : (
-          <div className="row g-4 col-md-6 col-xl-3">
-            {filtered.map((m) => (
-              <Card key={m.id} className="d-flex d-flex flex-column">
-                <CardContent className="space-y-3 p-5">
-                  <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
-                    <FolderOpen className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="fw-semibold text-slate-900">{m.title}</h3>
-                    <p className="mt-1 line-clamp-2 fs-13 text-slate-500">{m.description || 'No description'}</p>
-                  </div>
-                  <div className="d-flex flex-wrap g-1.5">
-                    {label(subjects, m.subject_id) && (
-                      <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{label(subjects, m.subject_id)}</span>
-                    )}
-                    {label(classes, m.class_id) && (
-                      <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{label(classes, m.class_id)}</span>
-                    )}
-                  </div>
-                  <div className="mt-auto d-flex align-items-center g-2">
-                    {m.file_url && (
-                      <a href={m.file_url} target="_blank" rel="noreferrer">
-                        <Button variant="outline" size="sm" className="g-1.5"><Download className="h-4 w-4" />Open</Button>
-                      </a>
-                    )}
-                    {isStaff && (
-                      <>
-                        <Button variant="edit" size="icon" aria-label="Edit material" onClick={() => {
-                          setEditingId(m.id);
-                          setForm({
-                            title: m.title,
-                            description: m.description || '',
-                            file_url: m.file_url || '',
-                            subject_id: m.subject_id || '',
-                            class_id: m.class_id || '',
-                          });
-                          setOpen(true);
-                        }}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="destructive" size="icon" aria-label="Delete material" onClick={() => remove(m.id)}><Trash2 className="h-4 w-4" /></Button>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="row g-3 row-cols-1 row-cols-md-2 row-cols-lg-3">
+            {filtered.map((m) => <div key={m.id} className="col">{materialCard(m)}</div>)}
           </div>
         )}
 
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>{editingId ? 'Edit Material' : 'Add Material'}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <Label>Title</Label>
-                <Input value={form.title} maxLength={150} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea value={form.description} maxLength={1000} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              </div>
-              <div>
-                <Label>File / resource link</Label>
-                <Input value={form.file_url} maxLength={500} placeholder="https://..." onChange={(e) => setForm({ ...form, file_url: e.target.value })} />
-              </div>
-              <div className="row g-2 col-md-6">
-                <div>
-                  <Label>Subject</Label>
-                  <Select value={form.subject_id} onValueChange={(v) => setForm({ ...form, subject_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
-                    <SelectContent>
-                      {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Class</Label>
-                  <Select value={form.class_id} onValueChange={(v) => setForm({ ...form, class_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                    <SelectContent>
-                      {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+        {/* ── Add / Edit material modal ── */}
+        {open && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">{editingId ? 'Edit Material' : 'Add Material'}</h5>
+                    <button type="button" className="btn-close" onClick={() => setOpen(false)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-3">
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Title</label>
+                      <input className="form-control" value={form.title} maxLength={150} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                    </div>
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Description</label>
+                      <textarea className="form-control" value={form.description} maxLength={1000} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                    </div>
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">File / resource link</label>
+                      <input className="form-control" value={form.file_url} maxLength={500} placeholder="https://..." onChange={(e) => setForm({ ...form, file_url: e.target.value })} />
+                    </div>
+                    <div className="row g-3">
+                      <div className="col-6 col-md-6">
+                        <label className="form-label">Subject</label>
+                        <select className="form-select" value={form.subject_id} onChange={(e) => setForm({ ...form, subject_id: e.target.value })}>
+                          <option value="">Select subject</option>
+                          {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-6 col-md-6">
+                        <label className="form-label">Class</label>
+                        <select className="form-select" value={form.class_id} onChange={(e) => setForm({ ...form, class_id: e.target.value })}>
+                          <option value="">Select class</option>
+                          {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => setOpen(false)}>Cancel</button>
+                    <button type="button" className="btn btn-success" onClick={save}>{editingId ? 'Save Changes' : 'Add Material'}</button>
+                  </div>
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button onClick={save}>{editingId ? 'Save Changes' : 'Add Material'}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
 }
-
-
-
-
-

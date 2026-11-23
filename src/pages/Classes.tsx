@@ -1,17 +1,10 @@
 ﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Class } from '@/types/database';
 import { Plus, Search, BookOpen, Loader2, Users, Trash2, Pencil, ArrowUpRight } from '@/lib/icons';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 export default function Classes() {
@@ -159,180 +152,227 @@ export default function Classes() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="School"
           title="Classes"
           description="Manage class sections, grades, student counts and year assignments."
           actions={canManage ? (
-            <div className="d-flex flex-wrap g-2">
-              <Dialog open={promoteOpen} onOpenChange={setPromoteOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="secondary" className="g-2"><ArrowUpRight className="h-4 w-4" />Promote Students</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md w-[calc(100%-1rem)]">
-                  <DialogHeader><DialogTitle>Promote Students to Next Class</DialogTitle></DialogHeader>
-                  <div className="space-y-4 mt-3">
-                    <div className="space-y-2">
-                      <Label>From Class</Label>
-                      <Select value={fromClass} onValueChange={setFromClass}>
-                        <SelectTrigger><SelectValue placeholder="Select source class (e.g., S1)" /></SelectTrigger>
-                        <SelectContent>
-                          {classes.map(c => (
-                            <SelectItem key={c.id} value={c.id}>{c.name} ({studentCounts[c.id] || 0} students)</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>To Class</Label>
-                      <Select value={toClass} onValueChange={setToClass}>
-                        <SelectTrigger><SelectValue placeholder="Select destination class (e.g., S2)" /></SelectTrigger>
-                        <SelectContent>
-                          {classes.filter(c => c.id !== fromClass).map(c => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-3 fs-13 text-slate-600">
-                      <strong>{eligibleCount}</strong> eligible student(s) will be moved.
-                    </div>
-                    <div className="d-flex justify-content-end g-2">
-                      <Button variant="outline" onClick={() => setPromoteOpen(false)}>Cancel</Button>
-                      <Button onClick={handlePromote} disabled={promoting || !fromClass || !toClass}>
-                        {promoting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpRight className="h-4 w-4" />}Promote
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="g-2"><Plus className="h-4 w-4" />Add Class</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-1rem)]">
-                  <DialogHeader><DialogTitle>Create New Class</DialogTitle></DialogHeader>
-                  <form onSubmit={handleAddClass} className="mt-4 space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Class Name</Label>
-                      <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Class 5A" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="gradeLevel">Grade Level</Label>
-                      <Input id="gradeLevel" value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} placeholder="e.g., Grade 5" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="academicYear">Academic Year</Label>
-                      <Input id="academicYear" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} placeholder="e.g., 2024-2025" required />
-                    </div>
-                    <div className="d-flex justify-content-end g-3 pt-2">
-                      <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                      <Button type="submit" disabled={formLoading}>
-                        {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Creating...</> : 'Create Class'}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
+            <div className="d-flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn btn-secondary d-inline-flex align-items-center gap-1"
+                onClick={() => setPromoteOpen(true)}
+              >
+                <ArrowUpRight /> Promote Students
+              </button>
+              <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={() => setIsAddDialogOpen(true)}>
+                <Plus /> Add Class
+              </button>
             </div>
           ) : undefined}
         />
 
-        <div className="position-relative w-100 sm:max-w-xs">
-          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input placeholder="Search classes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+        <div className="input-group w-100 flex-grow-1">
+          <span className="input-group-text bg-white border-secondary-subtle">
+            <Search className="bd-fs-md text-secondary" />
+          </span>
+          <input
+            type="search"
+            className="form-control border-secondary-subtle"
+            placeholder="Search classes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search classes"
+          />
         </div>
 
         {loading ? (
-          <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+          <div className="d-flex align-items-center justify-content-center py-8">
+            <span className="spinner-border spinner-border-lg text-success" role="status" />
+          </div>
         ) : filteredClasses.length === 0 ? (
-          <Card><CardContent className="d-flex d-flex flex-column align-items-center justify-content-center py-12">
-            <BookOpen className="h-12 w-12 text-slate-400 mb-4" />
-            <h3 className="fs-18 fw-semibold text-slate-900">No classes found</h3>
-            <p className="fs-13 text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Create your first class to get started'}</p>
-          </CardContent></Card>
+          <div className="card">
+            <div className="card-body d-flex flex-column align-items-center justify-content-center py-10 text-center">
+              <BookOpen className="fs-3 mb-4 text-secondary" />
+              <h3 className="fw-semibold text-main mb-2">No classes found</h3>
+              <p className="text-secondary bd-fs-sm mb-0">
+                {searchQuery ? 'Try adjusting your search' : 'Create your first class to get started'}
+              </p>
+            </div>
+          </div>
         ) : (
-          <Card>
-            <div class="table-responsive"><Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Grade Level</TableHead>
-                  <TableHead>Academic Year</TableHead>
-                  <TableHead className="text-end">Students</TableHead>
-                  {canManage && <TableHead className="text-end">Actions</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClasses.map((cls) => (
-                  <TableRow key={cls.id}>
-                    <TableCell>
-                      <div className="d-flex align-items-center g-3">
-                        <div className="d-flex h-9 w-9 align-items-center justify-content-center rounded-lg bg-emerald-50 text-emerald-600">
-                          <BookOpen className="h-5 w-5" />
+          <div className="card">
+            <div className="table-responsive">
+              <table className="table table-hover align-middle mb-0">
+                <thead>
+                  <tr className="border-bottom border-secondary-subtle">
+                    <th scope="col">Class</th>
+                    <th scope="col">Grade Level</th>
+                    <th scope="col">Academic Year</th>
+                    <th scope="col" className="text-end">Students</th>
+                    {canManage && <th scope="col" className="text-end">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredClasses.map((cls) => (
+                    <tr key={cls.id} className="border-bottom border-secondary-subtle">
+                      <td>
+                        <div className="d-flex align-items-center gap-3">
+                          <span className="d-inline-flex align-items-center justify-content-center rounded-3 bg-success-subtle p-2 text-success">
+                            <BookOpen className="fs-5" />
+                          </span>
+                          <div>
+                            <p className="fw-medium text-main mb-0">{cls.name}</p>
+                            <p className="text-muted bd-fs-sm mb-0">{cls.grade_level}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="fw-medium text-slate-900">{cls.name}</p>
-                          <p className="fs-12.5 text-slate-500">{cls.grade_level}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-slate-600">{cls.grade_level}</TableCell>
-                    <TableCell className="text-slate-600">{cls.academic_year}</TableCell>
-                    <TableCell className="text-end">
-                      <span className="d-inline-flex align-items-center g-1.5 fs-13 text-slate-600">
-                        <Users className="h-4 w-4 text-emerald-600" />{studentCounts[cls.id] || 0} students
-                      </span>
-                    </TableCell>
-                    {canManage && (
-                      <TableCell className="text-end">
-                        <div className="d-flex justify-content-end g-1.5">
-                          <Button variant="edit" size="sm" onClick={() => openEdit(cls)} className="g-1.5">
-                            <Pencil className="h-4 w-4" />Edit
-                          </Button>
-                          <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(cls)} className="g-1.5">
-                            <Trash2 className="h-4 w-4" />Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table></div>
-          </Card>
+                      </td>
+                      <td className="text-secondary">{cls.grade_level}</td>
+                      <td className="text-secondary">{cls.academic_year}</td>
+                      <td className="text-end">
+                        <span className="d-inline-flex align-items-center gap-1 bd-fs-sm text-secondary">
+                          <Users className="text-success" />{studentCounts[cls.id] || 0} students
+                        </span>
+                      </td>
+                      {canManage && (
+                        <td className="text-end">
+                          <div className="d-flex justify-content-end gap-1">
+                            <button className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => openEdit(cls)}>
+                              <Pencil /> Edit
+                            </button>
+                            <button className="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1" onClick={() => handleDeleteClass(cls)}>
+                              <Trash2 /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
-        <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-          <DialogContent className="sm:max-w-md w-[calc(100%-1rem)]">
-            <DialogHeader><DialogTitle>Edit Class</DialogTitle></DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div className="space-y-2">
-                <Label>Class Name</Label>
-                <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Grade Level</Label>
-                <Input value={editGrade} onChange={(e) => setEditGrade(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Academic Year</Label>
-                <Input value={editYear} onChange={(e) => setEditYear(e.target.value)} />
-              </div>
-              <div className="d-flex justify-content-end g-2">
-                <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
-                <Button onClick={handleEditSave}>Save</Button>
+        {/* ── Add Class modal ── */}
+        {isAddDialogOpen && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">Create New Class</h5>
+                    <button type="button" className="btn-close" onClick={() => setIsAddDialogOpen(false)} aria-label="Close" />
+                  </div>
+                  <form className="modal-body d-flex flex-column gap-4" onSubmit={handleAddClass}>
+                    <div>
+                      <label htmlFor="name" className="form-label">Class Name</label>
+                      <input id="name" className="form-control" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Class 5A" required />
+                    </div>
+                    <div>
+                      <label htmlFor="gradeLevel" className="form-label">Grade Level</label>
+                      <input id="gradeLevel" className="form-control" value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} placeholder="e.g., Grade 5" required />
+                    </div>
+                    <div>
+                      <label htmlFor="academicYear" className="form-label">Academic Year</label>
+                      <input id="academicYear" className="form-control" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} placeholder="e.g., 2024-2025" required />
+                    </div>
+                    <div className="d-flex justify-content-end gap-2 pt-2">
+                      <button type="button" className="btn btn-outline-secondary" onClick={() => setIsAddDialogOpen(false)}>Cancel</button>
+                      <button type="submit" className="btn btn-success" disabled={formLoading}>
+                        {formLoading ? <><span className="spinner-border spinner-border-sm" /> Creating...</> : 'Create Class'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </>
+        )}
+
+        {/* ── Edit Class modal ── */}
+        {editing && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">Edit Class</h5>
+                    <button type="button" className="btn-close" onClick={() => setEditing(null)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-4">
+                    <div>
+                      <label className="form-label">Class Name</label>
+                      <input className="form-control" value={editName} onChange={(e) => setEditName(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="form-label">Grade Level</label>
+                      <input className="form-control" value={editGrade} onChange={(e) => setEditGrade(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="form-label">Academic Year</label>
+                      <input className="form-control" value={editYear} onChange={(e) => setEditYear(e.target.value)} />
+                    </div>
+                    <div className="d-flex justify-content-end gap-2 pt-2">
+                      <button type="button" className="btn btn-outline-secondary" onClick={() => setEditing(null)}>Cancel</button>
+                      <button type="button" className="btn btn-primary" onClick={handleEditSave}>Save</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── Promote Students modal ── */}
+        {promoteOpen && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">Promote Students to Next Class</h5>
+                    <button type="button" className="btn-close" onClick={() => setPromoteOpen(false)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-4">
+                    <div>
+                      <label htmlFor="fromClass" className="form-label">From Class</label>
+                      <select id="fromClass" className="form-select" value={fromClass} onChange={(e) => setFromClass(e.target.value)}>
+                        <option value="">Select source class</option>
+                        {classes.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name} ({studentCounts[c.id] || 0} students)</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="toClass" className="form-label">To Class</label>
+                      <select id="toClass" className="form-select" value={toClass} onChange={(e) => setToClass(e.target.value)}>
+                        <option value="">Select destination class</option>
+                        {classes.filter((c) => c.id !== fromClass).map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="rounded-3 border border-secondary-subtle bg-secondary-subtle p-3 bd-fs-sm text-secondary">
+                      <strong>{eligibleCount}</strong> eligible student(s) will be moved.
+                    </div>
+                    <div className="d-flex justify-content-end gap-2 pt-2">
+                      <button type="button" className="btn btn-outline-secondary" onClick={() => setPromoteOpen(false)}>Cancel</button>
+                      <button type="button" className="btn btn-primary" onClick={handlePromote} disabled={promoting || !fromClass || !toClass}>
+                        {promoting ? <><span className="spinner-border spinner-border-sm" /> Promoting...</> : <><ArrowUpRight /> Promote</>}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
 }
-
-
-
-
-

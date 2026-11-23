@@ -10,65 +10,22 @@ interface StatCardProps {
 }
 
 export function StatCard({ title, value, subtitle, icon: Icon, variant = 'primary' }: StatCardProps) {
-  const variants = {
-    primary: {
-      icon: 'bg-emerald-600 text-white',
-      title: 'fs-13 fw-medium text-white/75',
-      value: 'fs-30 fw-bold tracking-tight text-white',
-      sub: 'fs-13 text-white/70',
-      bg: 'bg-emerald-600',
-      border: 'border-emerald-600',
-    },
-    secondary: {
-      icon: 'bg-slate-200 text-slate-600',
-      title: 'fs-13 fw-medium text-slate-500',
-      value: 'fs-30 fw-bold tracking-tight text-slate-900',
-      sub: 'fs-13 text-slate-500',
-      bg: 'bg-white',
-      border: 'border-slate-200',
-    },
-    tertiary: {
-      icon: 'bg-slate-100 text-slate-500',
-      title: 'fs-13 fw-medium text-slate-500',
-      value: 'fs-30 fw-bold tracking-tight text-slate-900',
-      sub: 'fs-13 text-slate-500',
-      bg: 'bg-white',
-      border: 'border-slate-200',
-    },
-    warning: {
-      icon: 'bg-amber-100 text-amber-700',
-      title: 'fs-13 fw-medium text-amber-700',
-      value: 'fs-30 fw-bold tracking-tight text-amber-900',
-      sub: 'fs-13 text-amber-700',
-      bg: 'bg-white',
-      border: 'border-slate-200',
-    },
-    danger: {
-      icon: 'bg-red-100 text-red-700',
-      title: 'fs-13 fw-medium text-red-700',
-      value: 'fs-30 fw-bold tracking-tight text-red-900',
-      sub: 'fs-13 text-red-700',
-      bg: 'bg-white',
-      border: 'border-slate-200',
-    },
-  };
-
-  const v = variants[variant];
+  const iconClass = variant === 'primary'
+    ? 'bd-icon-circle-primary'
+    : (variant === 'warning' || variant === 'danger')
+      ? 'bd-icon-circle-danger'
+      : 'bd-icon-circle-muted';
 
   return (
-    <div className={cn('stat-card', v.bg, v.border)}>
-      <div className="d-flex align-items-start justify-content-between">
-        <div className="min-w-0">
-          <p className={v.title}>{title}</p>
-          <p className="mt-2 stat-value">{value}</p>
-          {subtitle && <p className={cn('mt-1', v.sub)}>{subtitle}</p>}
-        </div>
-        <div className={cn('stat-card-icon', v.icon)}>
-          <Icon className="h-5.5 w-5.5" />
-        </div>
+    <div className="bd-stat-card">
+      <div className="min-w-0">
+        <p className="text-muted bd-fs-sm fw-semibold">{title}</p>
+        <p className={cn('bd-stat-value', variant === 'danger' && 'text-danger', variant === 'warning' && 'text-danger')}>{value}</p>
+        {subtitle && <p className="mt-1 bd-fs-sm text-muted">{subtitle}</p>}
+      </div>
+      <div className={cn('bd-icon-circle', iconClass)}>
+        <Icon />
       </div>
     </div>
   );
 }
-
-

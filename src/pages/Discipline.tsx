@@ -4,41 +4,32 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { DisciplineIncident, DisciplineRule, StudentWithClass } from '@/types/database';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { Gavel, Loader2, Plus, ShieldCheck, XCircle, CheckCircle2, Users2 } from '@/lib/icons';
+import { Gavel, Loader2, Plus, ShieldCheck, XCircle, CheckCircle2, Search } from '@/lib/icons';
+import { cn } from '@/lib/utils';
 
 const MAX_SCORE = 40;
 
 const statusBadge = (status: string) => {
   switch (status) {
-    case 'pending': return <Badge className="bg-amber-100 text-amber-800">Pending</Badge>;
-    case 'reviewed': return <Badge className="bg-green-100 text-emerald-700">Reviewed</Badge>;
-    case 'dismissed': return <Badge className="bg-red-100 text-red-800">Dismissed</Badge>;
-    default: return <Badge variant="secondary">{status}</Badge>;
+    case 'pending': return <span className="badge text-bg-warning bd-fs-sm">Pending</span>;
+    case 'reviewed': return <span className="badge text-bg-success bd-fs-sm">Reviewed</span>;
+    case 'dismissed': return <span className="badge text-bg-danger bd-fs-sm">Dismissed</span>;
+    default: return <span className="badge text-bg-secondary bd-fs-sm">{status}</span>;
   }
 };
 
 const severityBadge = (severity: string) => {
   switch (severity) {
-    case 'major': return <Badge variant="destructive">Major</Badge>;
-    case 'grave': return <Badge variant="destructive">Grave</Badge>;
-    default: return <Badge variant="secondary">Minor</Badge>;
+    case 'major': return <span className="badge text-bg-danger bd-fs-sm">Major</span>;
+    case 'grave': return <span className="badge text-bg-danger bd-fs-sm">Grave</span>;
+    default: return <span className="badge text-bg-secondary bd-fs-sm">Minor</span>;
   }
 };
 
 export default function Discipline() {
-  const { role, profile, user } = useAuth();
+  const { role, user } = useAuth();
   const isDOD = role === 'dod';
   const isAdmin = role === 'admin';
   const isStaff = isAdmin || isDOD || role === 'teacher' || role === 'dos';
@@ -51,7 +42,6 @@ export default function Discipline() {
   const [students, setStudents] = useState<StudentWithClass[]>([]);
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Report incident dialog
   const [reportOpen, setReportOpen] = useState(false);
   const [reportSaving, setReportSaving] = useState(false);
   const [reportStudent, setReportStudent] = useState('');
@@ -60,13 +50,11 @@ export default function Discipline() {
   const [reportDesc, setReportDesc] = useState('');
   const [search, setSearch] = useState('');
 
-  // Review dialog
   const [reviewIncident, setReviewIncident] = useState<DisciplineIncident | null>(null);
   const [reviewMarks, setReviewMarks] = useState('1');
   const [reviewFollowUp, setReviewFollowUp] = useState('');
   const [reviewSaving, setReviewSaving] = useState(false);
 
-  // Rule dialog
   const [ruleOpen, setRuleOpen] = useState(false);
   const [ruleSaving, setRuleSaving] = useState(false);
   const [ruleTitle, setRuleTitle] = useState('');
@@ -234,7 +222,7 @@ export default function Discipline() {
         _entity_id: reviewIncident.id,
         _details: { marks_deducted: status === 'reviewed' ? marks : 0 },
       });
-      toast.success(status === 'reviewed' ? `Incident approved â€” ${marks} mark(s) deducted` : 'Incident dismissed');
+      toast.success(status === 'reviewed' ? `Incident approved — ${marks} mark(s) deducted` : 'Incident dismissed');
       setReviewIncident(null);
       fetchAll();
     } catch (e: any) {
@@ -279,340 +267,330 @@ export default function Discipline() {
 
   const pendingCount = incidents.filter((i) => i.status === 'pending').length;
 
+  const reportForm = (
+    <div className="d-flex flex-column gap-4">
+      <div className="d-flex flex-column gap-2">
+        <label className="form-label">Student</label>
+        <div className="input-group">
+          <span className="input-group-text bg-white border-secondary-subtle"><Search className="text-secondary" /></span>
+          <input
+            type="search"
+            className="form-control border-secondary-subtle"
+            placeholder="Search student by name or ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <select className="form-select" value={reportStudent} onChange={(e) => setReportStudent(e.target.value)}>
+          <option value="">Select student</option>
+          {filteredStudents.map((s) => (
+            <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.student_id})</option>
+          ))}
+        </select>
+      </div>
+      <div className="d-flex flex-column gap-2">
+        <label className="form-label">Rule (optional)</label>
+        <select className="form-select" value={reportRule} onChange={(e) => setReportRule(e.target.value)}>
+          <option value="">No specific rule</option>
+          {rules.filter((r) => r.is_active).map((r) => (
+            <option key={r.id} value={r.id}>{r.title} (−{r.marks_deduction})</option>
+          ))}
+        </select>
+      </div>
+      <div className="d-flex flex-column gap-2">
+        <label className="form-label">Date</label>
+        <input type="date" className="form-control" value={reportDate} onChange={(e) => setReportDate(e.target.value)} />
+      </div>
+      <div className="d-flex flex-column gap-2">
+        <label className="form-label">Description</label>
+        <textarea rows={3} className="form-control" placeholder="What happened?" value={reportDesc} onChange={(e) => setReportDesc(e.target.value)} />
+      </div>
+      <div className="d-flex justify-content-end gap-2 pt-2">
+        <button type="button" className="btn btn-outline-secondary" onClick={() => setReportOpen(false)}>Cancel</button>
+        <button type="button" className="btn btn-success" onClick={handleReport} disabled={reportSaving}>
+          {reportSaving ? <><span className="spinner-border spinner-border-sm" /> Submitting...</> : 'Submit'}
+        </button>
+      </div>
+    </div>
+  );
+
+  const ruleForm = (
+    <div className="d-flex flex-column gap-4">
+      <div className="d-flex flex-wrap gap-3">
+        <div className="flex-fill">
+          <label className="form-label">Title</label>
+          <input className="form-control" placeholder="e.g. Late coming without excuse" value={ruleTitle} onChange={(e) => setRuleTitle(e.target.value)} />
+        </div>
+        <div className="flex-fill">
+          <label className="form-label">Category</label>
+          <select className="form-select" value={ruleCategory} onChange={(e) => setRuleCategory(e.target.value)}>
+            <option value="discipline">Discipline</option>
+            <option value="respect">Respect</option>
+            <option value="attendance">Attendance</option>
+            <option value="participation">Participation</option>
+          </select>
+        </div>
+        <div className="flex-fill">
+          <label className="form-label">Severity</label>
+          <select className="form-select" value={ruleSeverity} onChange={(e) => setRuleSeverity(e.target.value)}>
+            <option value="minor">Minor</option>
+            <option value="major">Major</option>
+            <option value="grave">Grave</option>
+          </select>
+        </div>
+        <div className="flex-fill">
+          <label className="form-label">Marks deducted (max {MAX_SCORE})</label>
+          <input type="number" min={1} max={MAX_SCORE} className="form-control" value={ruleMarks} onChange={(e) => setRuleMarks(e.target.value)} />
+        </div>
+      </div>
+      <div className="d-flex flex-column gap-2">
+        <label className="form-label">Description</label>
+        <textarea rows={2} className="form-control" value={ruleDesc} onChange={(e) => setRuleDesc(e.target.value)} />
+      </div>
+      <div className="d-flex justify-content-end gap-2 pt-2">
+        <button type="button" className="btn btn-outline-secondary" onClick={() => setRuleOpen(false)}>Cancel</button>
+        <button type="button" className="btn btn-success" onClick={handleSaveRule} disabled={ruleSaving}>
+          {ruleSaving ? <><span className="spinner-border spinner-border-sm" /> Saving...</> : 'Save Rule'}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="Records"
           title="Discipline"
           description={isStaff ? 'Report, review and follow up on student discipline incidents.' : 'Discipline incidents recorded for your records.'}
           actions={
             isStaff ? (
-              <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-                <DialogTrigger asChild>
-                  <Button className="g-2"><Plus className="h-4 w-4" /> Report Incident</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader><DialogTitle>Report Incident</DialogTitle></DialogHeader>
-                  <div className="space-y-4 mt-2">
-                    <div className="space-y-2">
-                      <Label>Student</Label>
-                      <div className="position-relative">
-                        <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <Input
-                          placeholder="Search student by name or ID..."
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                          className="pl-9"
-                        />
-                      </div>
-                      <Select value={reportStudent} onValueChange={setReportStudent}>
-                        <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
-                        <SelectContent>
-                          {filteredStudents.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {s.first_name} {s.last_name} ({s.student_id})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Rule (optional)</Label>
-                      <Select value={reportRule} onValueChange={setReportRule}>
-                        <SelectTrigger><SelectValue placeholder="No specific rule" /></SelectTrigger>
-                        <SelectContent>
-                          {rules.filter((r) => r.is_active).map((r) => (
-                            <SelectItem key={r.id} value={r.id}>
-                              {r.title} (âˆ’{r.marks_deduction})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Date</Label>
-                      <Input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Description</Label>
-                      <Textarea rows={3} placeholder="What happened?" value={reportDesc} onChange={(e) => setReportDesc(e.target.value)} />
-                    </div>
-                    <div className="d-flex justify-content-end g-3">
-                      <Button variant="outline" onClick={() => setReportOpen(false)}>Cancel</Button>
-                      <Button onClick={handleReport} disabled={reportSaving}>
-                        {reportSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'}
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            ) : undefined}
+              <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={() => setReportOpen(true)}>
+                <Plus /> Report Incident
+              </button>
+            ) : undefined
+          }
         />
 
         {canManageRules && (
-          <Card>
-            <CardHeader className="d-flex d-flex flex-row align-items-center justify-content-between">
-              <CardTitle className="d-flex align-items-center g-2 fs-18">
-                <Gavel className="h-5 w-5 text-emerald-600" /> Discipline Rules
-              </CardTitle>
-              <Button size="sm" onClick={() => setRuleOpen(true)} className="g-1.5">
-                <Plus className="h-4 w-4" /> Add Rule
-              </Button>
-            </CardHeader>
-            <CardContent>
+          <div className="card">
+            <div className="card-header d-flex align-items-center justify-content-between py-3">
+              <h5 className="mb-0 fw-semibold text-main d-flex align-items-center gap-2">
+                <Gavel className="text-success" /> Discipline Rules
+              </h5>
+              <button type="button" className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => setRuleOpen(true)}>
+                <Plus /> Add Rule
+              </button>
+            </div>
+            <div className="card-body">
               {rules.length === 0 ? (
-                <p className="fs-13 text-slate-500 py-4 text-center">
+                <p className="text-muted bd-fs-sm py-3 text-center">
                   No rules yet. Add rules so teachers can report incidents against them.
                 </p>
               ) : (
-                <div className="row g-2 col-md-6 col-xl-3">
+                <div className="row g-3">
                   {rules.map((r) => (
-                    <div key={r.id} className="rounded-[10px] border border-slate-200 bg-slate-50 p-3">
-                      <div className="d-flex align-items-start justify-content-between g-2">
-                        <p className="fs-14 fw-medium text-slate-900">{r.title}</p>
-                        {severityBadge(r.severity)}
+                    <div key={r.id} className="col-12 col-sm-6 col-lg-4">
+                      <div className="card h-100 d-flex flex-column gap-2 p-3">
+                        <div className="d-flex align-items-start justify-content-between gap-2">
+                          <p className="fw-semibold text-main mb-0">{r.title}</p>
+                          {severityBadge(r.severity)}
+                        </div>
+                        <p className="text-muted bd-fs-sm mb-0">{r.description || 'No description'}</p>
+                        <p className="text-danger fw-semibold bd-fs-sm mb-0">
+                          −{r.marks_deduction} mark{r.marks_deduction > 1 ? 's' : ''} · {r.category}
+                        </p>
                       </div>
-                      <p className="mt-1 fs-12.5 text-slate-500 line-clamp-2">{r.description || 'No description'}</p>
-                      <p className="mt-2 fs-12.5 fw-medium text-red-600">
-                        âˆ’{r.marks_deduction} mark{r.marks_deduction > 1 ? 's' : ''} Â· {r.category}
-                      </p>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
-        <Card>
-          <CardHeader className="d-flex d-flex flex-column g-3 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
-            <CardTitle className="d-flex align-items-center g-2 fs-18">
-              <ShieldCheck className="h-5 w-5 text-emerald-600" /> Incidents
+        <div className="card">
+          <div className="card-header d-flex flex-column gap-3 border-bottom border-secondary-subtle py-3">
+            <div className="d-flex align-items-center gap-3">
+              <h5 className="mb-0 fw-semibold text-main d-flex align-items-center gap-2">
+                <ShieldCheck className="text-success" /> Incidents
+              </h5>
               {isStaff && pendingCount > 0 && (
-                <span className="rounded-circle bg-amber-100 px-2.5 py-0.5 fs-12 fw-medium text-amber-800">{pendingCount} pending</span>
+                <span className="badge text-bg-warning">{pendingCount} pending</span>
               )}
-            </CardTitle>
-            <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="pending">Pending</TabsTrigger>
-                <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
-                <TabsTrigger value="dismissed">Dismissed</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </CardHeader>
-          <CardContent className="p-0">
+            </div>
+            <ul className="nav nav-pills flex-wrap justify-content-center" role="tablist" aria-label="Incident status filter">
+              {(['all', 'pending', 'reviewed', 'dismissed'] as const).map((v) => (
+                <li className="nav-item" key={v}>
+                  <button
+                    type="button"
+                    className={cn('nav-link bd-fs-sm', statusFilter === v ? 'active text-white' : 'text-secondary')}
+                    onClick={() => setStatusFilter(v)}
+                    aria-pressed={statusFilter === v}
+                  >
+                    {v === 'all' ? 'All' : v.charAt(0).toUpperCase() + v.slice(1)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="card-body p-0">
             {loading ? (
-              <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+              <div className="d-flex align-items-center justify-content-center py-8">
+                <span className="spinner-border spinner-border-lg text-success" role="status" />
+              </div>
             ) : filteredIncidents.length === 0 ? (
-              <div className="empty-state"><XCircle className="h-10 w-10 text-slate-400 mb-3" /><p className="fs-14 text-slate-500">No incidents found.</p></div>
+              <div className="empty-state">
+                <XCircle className="fs-3 mb-3 text-secondary" />
+                <p className="fw-semibold text-main mb-0">No incidents found.</p>
+              </div>
             ) : (
-              <div class="table-responsive"><Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="d-none md:table-cell">Rule</TableHead>
-                    <TableHead className="d-none lg:table-cell">Description</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-end">Marks</TableHead>
-                    {canReview && <TableHead className="text-end">Actions</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredIncidents.map((i) => (
-                    <TableRow key={i.id}>
-                      <TableCell className="fw-medium text-slate-900">
-                        {i.student ? `${i.student.first_name} ${i.student.last_name}` : 'â€”'}
-                      </TableCell>
-                      <TableCell className="fs-13 text-slate-500">{format(new Date(i.incident_date), 'MMM d, yyyy')}</TableCell>
-                      <TableCell className="d-none max-w-[160px] truncate md:table-cell">{i.rule?.title || 'â€”'}</TableCell>
-                      <TableCell className="d-none max-w-[240px] truncate lg:table-cell">{i.description}</TableCell>
-                      <TableCell>{statusBadge(i.status)}</TableCell>
-                      <TableCell className="text-end fw-medium text-slate-600">
-                        {i.marks_deducted > 0 ? `âˆ’${i.marks_deducted}` : 'â€”'}
-                      </TableCell>
-                      {canReview && (
-                        <TableCell className="text-end">
-                          {i.status === 'pending' ? (
-                            <div className="d-flex justify-content-end g-2">
-                              <Button size="sm" variant="edit" onClick={() => openReview(i)} className="g-1.5">
-                                <CheckCircle2 className="h-4 w-4" /> Review
-                              </Button>
-                              <Button size="icon" variant="destructive" onClick={async () => {
-                                setReviewIncident(i);
-                                setReviewMarks('0');
-                                await applyReview('dismissed');
-                              }} aria-label="Dismiss">
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="fs-12.5 text-slate-500">{i.follow_up || 'â€”'}</span>
-                          )}
-                        </TableCell>
+              <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr className="border-bottom border-secondary-subtle">
+                      <th scope="col">Student</th>
+                      <th scope="col">Date</th>
+                      <th scope="col">Rule</th>
+                      <th scope="col">Description</th>
+                      <th scope="col">Status</th>
+                      <th scope="col" className="text-end">Marks</th>
+                      {canReview && <th scope="col" className="text-end">Actions</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredIncidents.map((i) => (
+                      <tr key={i.id} className="border-bottom border-secondary-subtle">
+                        <td className="fw-medium text-main">
+                          {i.student ? `${i.student.first_name} ${i.student.last_name}` : '—'}
+                        </td>
+                        <td className="text-muted bd-fs-sm">{format(new Date(i.incident_date), 'MMM d, yyyy')}</td>
+                        <td className="text-muted text-truncate">{i.rule?.title || '—'}</td>
+                        <td className="text-truncate">{i.description}</td>
+                        <td>{statusBadge(i.status)}</td>
+                        <td className="text-end fw-semibold text-secondary">
+                          {i.marks_deducted > 0 ? `−${i.marks_deducted}` : '—'}
+                        </td>
+                        {canReview && (
+                          <td className="text-end">
+                            {i.status === 'pending' ? (
+                              <div className="d-flex justify-content-end gap-1">
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+                                  onClick={() => openReview(i)}
+                                >
+                                  <CheckCircle2 /> Review
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-danger btn-sm d-inline-flex align-items-center"
+                                  onClick={async () => {
+                                    setReviewIncident(i);
+                                    setReviewMarks('0');
+                                    await applyReview('dismissed');
+                                  }}
+                                  aria-label="Dismiss"
+                                >
+                                  <XCircle />
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-muted bd-fs-sm">{i.follow_up || '—'}</span>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Report Incident modal ── */}
+        {reportOpen && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">Report Incident</h5>
+                    <button type="button" className="btn-close" onClick={() => setReportOpen(false)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body">{reportForm}</div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── Review Incident modal ── */}
+        {reviewIncident && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">Review Incident</h5>
+                    <button type="button" className="btn-close" onClick={() => setReviewIncident(null)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-4">
+                    <div className="rounded-3 bg-secondary-subtle p-3 bd-fs-sm text-main">
+                      <p className="fw-medium mb-0">
+                        {reviewIncident.student ? `${reviewIncident.student.first_name} ${reviewIncident.student.last_name}` : 'Student'}
+                      </p>
+                      <p className="text-muted mt-1 mb-0">{reviewIncident.description}</p>
+                      {reviewIncident.rule && (
+                        <p className="text-muted bd-fs-sm mt-1 mb-0">
+                          Rule: {reviewIncident.rule.title} (suggested −{reviewIncident.rule.marks_deduction})
+                        </p>
                       )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table></div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Report incident dialog */}
-        <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader><DialogTitle>Report Incident</DialogTitle></DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div className="space-y-2">
-                <Label>Student</Label>
-                <div className="position-relative">
-                  <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    placeholder="Search student by name or ID..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9"
-                  />
+                    </div>
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Marks to deduct (max {MAX_SCORE})</label>
+                      <input type="number" min={0} max={MAX_SCORE} className="form-control" value={reviewMarks} onChange={(e) => setReviewMarks(e.target.value)} />
+                    </div>
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Follow-up action (optional)</label>
+                      <textarea rows={2} className="form-control" placeholder="e.g. Parent contacted, warning issued..." value={reviewFollowUp} onChange={(e) => setReviewFollowUp(e.target.value)} />
+                    </div>
+                    <div className="d-flex justify-content-end gap-2 pt-2">
+                      <button type="button" className="btn btn-outline-secondary" onClick={() => setReviewIncident(null)}>Cancel</button>
+                      <button type="button" className="btn btn-primary" onClick={() => applyReview('reviewed')} disabled={reviewSaving}>
+                        {reviewSaving
+                          ? <><span className="spinner-border spinner-border-sm" /> Applying...</>
+                          : `Approve & Deduct ${Math.max(0, Math.min(MAX_SCORE, parseInt(reviewMarks, 10) || 0))}`}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <Select value={reportStudent} onValueChange={setReportStudent}>
-                  <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
-                  <SelectContent>
-                    {filteredStudents.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.first_name} {s.last_name} ({s.student_id})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Rule (optional)</Label>
-                <Select value={reportRule} onValueChange={setReportRule}>
-                  <SelectTrigger><SelectValue placeholder="No specific rule" /></SelectTrigger>
-                  <SelectContent>
-                    {rules.filter((r) => r.is_active).map((r) => (
-                      <SelectItem key={r.id} value={r.id}>{r.title} (âˆ’{r.marks_deduction})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Date</Label>
-                <Input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea rows={3} placeholder="What happened?" value={reportDesc} onChange={(e) => setReportDesc(e.target.value)} />
-              </div>
-              <div className="d-flex justify-content-end g-3">
-                <Button variant="outline" onClick={() => setReportOpen(false)}>Cancel</Button>
-                <Button onClick={handleReport} disabled={reportSaving}>
-                  {reportSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'}
-                </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </>
+        )}
 
-        {/* Review dialog */}
-        <Dialog open={!!reviewIncident} onOpenChange={(open) => !open && setReviewIncident(null)}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader><DialogTitle>Review Incident</DialogTitle></DialogHeader>
-            {reviewIncident && (
-              <div className="space-y-4 mt-2">
-                <div className="rounded-[10px] bg-slate-50 p-3 fs-13 text-slate-900">
-                  <p className="fw-medium">
-                    {reviewIncident.student
-                      ? `${reviewIncident.student.first_name} ${reviewIncident.student.last_name}`
-                      : 'Student'}
-                  </p>
-                  <p className="mt-1 text-slate-500">{reviewIncident.description}</p>
-                  {reviewIncident.rule && (
-                    <p className="mt-1 fs-12.5 text-slate-500">
-                      Rule: {reviewIncident.rule.title} (suggested âˆ’{reviewIncident.rule.marks_deduction})
-                    </p>
-                  )}
+        {/* ── Add Rule modal ── */}
+        {ruleOpen && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">Add Discipline Rule</h5>
+                    <button type="button" className="btn-close" onClick={() => setRuleOpen(false)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body">{ruleForm}</div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Marks to deduct (max {MAX_SCORE})</Label>
-                  <Input type="number" min={0} max={MAX_SCORE} value={reviewMarks} onChange={(e) => setReviewMarks(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Follow-up action (optional)</Label>
-                  <Textarea rows={2} placeholder="e.g. Parent contacted, warning issued..." value={reviewFollowUp} onChange={(e) => setReviewFollowUp(e.target.value)} />
-                </div>
-                <div className="d-flex justify-content-end g-3">
-                  <Button variant="outline" onClick={() => setReviewIncident(null)}>Cancel</Button>
-                  <Button onClick={() => applyReview('reviewed')} disabled={reviewSaving}>
-                    {reviewSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : `Approve & Deduct ${Math.max(0, Math.min(MAX_SCORE, parseInt(reviewMarks, 10) || 0))}`}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Add rule dialog */}
-        <Dialog open={ruleOpen} onOpenChange={setRuleOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader><DialogTitle>Add Discipline Rule</DialogTitle></DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div className="space-y-2">
-                <Label>Title</Label>
-                <Input placeholder="e.g. Late coming without excuse" value={ruleTitle} onChange={(e) => setRuleTitle(e.target.value)} />
-              </div>
-              <div className="row col-6 g-3">
-                <div className="space-y-2">
-                  <Label>Category</Label>
-                  <Select value={ruleCategory} onValueChange={setRuleCategory}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="discipline">Discipline</SelectItem>
-                      <SelectItem value="respect">Respect</SelectItem>
-                      <SelectItem value="attendance">Attendance</SelectItem>
-                      <SelectItem value="participation">Participation</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Severity</Label>
-                  <Select value={ruleSeverity} onValueChange={setRuleSeverity}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="minor">Minor</SelectItem>
-                      <SelectItem value="major">Major</SelectItem>
-                      <SelectItem value="grave">Grave</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Marks deducted (max {MAX_SCORE})</Label>
-                <Input type="number" min={1} max={MAX_SCORE} value={ruleMarks} onChange={(e) => setRuleMarks(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea rows={2} value={ruleDesc} onChange={(e) => setRuleDesc(e.target.value)} />
-              </div>
-              <div className="d-flex justify-content-end g-3">
-                <Button variant="outline" onClick={() => setRuleOpen(false)}>Cancel</Button>
-                <Button onClick={handleSaveRule} disabled={ruleSaving}>
-                  {ruleSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Rule'}
-                </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
 }
-
-
-
-
-
-

@@ -59,12 +59,12 @@ export const navItems: NavItem[] = [
 ];
 
 export const roleBadges: Record<AppRole, { label: string; className: string }> = {
-  admin: { label: 'Administrator', className: 'bg-accent/20 text-accent' },
-  teacher: { label: 'Teacher', className: 'bg-secondary/20 text-secondary' },
-  parent: { label: 'Parent', className: 'bg-primary/20 text-primary' },
-  student: { label: 'Student', className: 'bg-info/20 text-info' },
-  stock_manager: { label: 'Stock Manager', className: 'bg-warning/20 text-warning' },
-  dos: { label: 'Director of Studies', className: 'bg-success/20 text-success' },
-  dod: { label: 'Director of Discipline', className: 'bg-destructive/20 text-destructive' },
-  viewer: { label: 'Viewer (read-only)', className: 'bg-muted text-muted-foreground' },
+  admin: { label: 'Administrator', className: 'badge text-bg-primary' },
+  teacher: { label: 'Teacher', className: 'badge text-bg-success' },
+  parent: { label: 'Parent', className: 'badge text-bg-info' },
+  student: { label: 'Student', className: 'badge text-bg-warning' },
+  stock_manager: { label: 'Stock Manager', className: 'badge text-bg-warning' },
+  dos: { label: 'Director of Studies', className: 'badge text-bg-success' },
+  dod: { label: 'Director of Discipline', className: 'badge text-bg-danger' },
+  viewer: { label: 'Viewer (read-only)', className: 'badge text-bg-secondary' },
 };

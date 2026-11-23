@@ -7,13 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, BookOpen, PlayCircle, Loader2, FileText, Search, X } from '@/lib/icons';
+import { Plus, Pencil, Trash2, BookOpen, PlayCircle, Loader2, FileText, X } from '@/lib/icons';
 
 interface Course {
   id: string;
@@ -181,186 +176,207 @@ export default function Courses() {
     (className(c.class_id) || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const courseCard = (course: Course) => (
+    <div className="card h-100 d-flex flex-column">
+      <div className="card-body d-flex flex-column gap-3 p-4">
+        <div className="d-flex align-items-start justify-content-between gap-2">
+          <span className="d-inline-flex align-items-center justify-content-center rounded-3 bg-success-subtle text-success p-2"><BookOpen className="fs-5" /></span>
+          <span className={`badge bd-fs-xs ${course.is_published ? 'text-bg-success bg-success-subtle' : 'text-bg-secondary bg-secondary-subtle'}`}>
+            {course.is_published ? 'Published' : 'Draft'}
+          </span>
+        </div>
+        <div>
+          <h3 className="fw-semibold text-main mb-1 text-truncate">{course.title}</h3>
+          <p className="text-muted bd-fs-sm mb-0 mt-1 line-clamp-2">{course.description || 'No description provided.'}</p>
+        </div>
+        <div className="d-flex flex-wrap gap-1.5">
+          {subjectName(course.subject_id) && (
+            <span className="badge text-bg-secondary bg-secondary-subtle bd-fs-xs">{subjectName(course.subject_id)}</span>
+          )}
+          {className(course.class_id) && (
+            <span className="badge text-bg-secondary bg-secondary-subtle bd-fs-xs">{className(course.class_id)}</span>
+          )}
+          <span className="badge text-bg-secondary bg-secondary-subtle bd-fs-xs">
+            {course.term?.replace('term', 'Term ') || '—'} · {course.academic_year}
+          </span>
+        </div>
+        <div className="d-flex align-items-center gap-2 mt-auto">
+          <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => openLessons(course)}>
+            <PlayCircle /> Lessons
+          </button>
+          {isStaff && (
+            <>
+              <button type="button" className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center" aria-label="Edit course" onClick={() => openEdit(course)}><Pencil /></button>
+              <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete course" onClick={() => deleteCourse(course.id)}><Trash2 /></button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="E-Learning"
           title="Courses"
           description="Online courses with lessons, videos and reading content for each subject and class."
           actions={isStaff ? (
-            <Button onClick={openNew} className="g-2"><Plus className="h-4 w-4" />New Course</Button>
+            <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={openNew}>
+              <Plus /> New Course
+            </button>
           ) : undefined}
         />
 
-        <div className="position-relative w-100 sm:max-w-xs">
-          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input placeholder="Search courses..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+        <div className="input-group w-100 flex-grow-1">
+          <span className="input-group-text bg-white border-secondary-subtle"><PlayCircle className="text-success" /></span>
+          <input
+            type="search"
+            className="form-control border-secondary-subtle"
+            placeholder="Search courses..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search courses"
+          />
         </div>
 
         {loading ? (
-          <div className="d-flex justify-content-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+          <div className="d-flex justify-content-center py-8">
+            <span className="spinner-border spinner-border-lg text-success" role="status" />
+          </div>
         ) : filtered.length === 0 ? (
-          <Card><CardContent className="d-flex d-flex flex-column align-items-center py-14 text-center">
-            <BookOpen className="mb-3 h-10 w-10 text-slate-400" />
-            <p className="fw-medium text-slate-900">No courses yet</p>
-            <p className="mt-1 fs-13 text-slate-500">{isStaff ? 'Create your first course to start publishing lessons.' : 'Courses will appear here once published.'}</p>
-          </CardContent></Card>
+          <div className="card">
+            <div className="card-body d-flex flex-column align-items-center py-12 text-center">
+              <BookOpen className="fs-3 mb-3 text-secondary" />
+              <p className="fw-semibold text-main mb-2">No courses yet</p>
+              <p className="text-muted bd-fs-sm mb-0">{isStaff ? 'Create your first course to start publishing lessons.' : 'Courses will appear here once published.'}</p>
+            </div>
+          </div>
         ) : (
-          <div className="row g-4 col-md-6 col-xl-3">
-            {filtered.map((course) => (
-              <Card key={course.id} className="d-flex d-flex flex-column">
-                <CardContent className="d-flex flex-1 d-flex flex-column g-3 p-5">
-                  <div className="d-flex align-items-start justify-content-between g-2">
-                    <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
-                      <BookOpen className="h-5 w-5" />
-                    </div>
-                    <Badge className={course.is_published ? 'bg-green-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}>
-                      {course.is_published ? 'Published' : 'Draft'}
-                    </Badge>
-                  </div>
-                  <div>
-                    <h3 className="fw-semibold text-slate-900">{course.title}</h3>
-                    <p className="mt-1 line-clamp-2 fs-13 text-slate-500">
-                      {course.description || 'No description provided.'}
-                    </p>
-                  </div>
-                  <div className="d-flex flex-wrap g-1.5">
-                    {subjectName(course.subject_id) && (
-                      <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{subjectName(course.subject_id)}</span>
-                    )}
-                    {className(course.class_id) && (
-                      <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{className(course.class_id)}</span>
-                    )}
-                    <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">
-                      {course.term?.replace('term', 'Term ') || 'â€”'} Â· {course.academic_year}
-                    </span>
-                  </div>
-                  <div className="mt-auto d-flex align-items-center g-2 pt-2">
-                    <Button variant="outline" size="sm" className="g-1.5" onClick={() => openLessons(course)}>
-                      <PlayCircle className="h-4 w-4" /> Lessons
-                    </Button>
-                    {isStaff && (
-                      <>
-                        <Button variant="edit" size="icon" onClick={() => openEdit(course)} aria-label="Edit course"><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="destructive" size="icon" onClick={() => deleteCourse(course.id)} aria-label="Delete course"><Trash2 className="h-4 w-4" /></Button>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="row g-3 row-cols-1 row-cols-md-2 row-cols-lg-3">
+            {filtered.map((course) => <div key={course.id} className="col">{courseCard(course)}</div>)}
           </div>
         )}
 
-        {/* Course form */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>{editingId ? 'Edit Course' : 'New Course'}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <Label>Title</Label>
-                <Input value={form.title} maxLength={150} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Introduction to Algebra" />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea value={form.description} maxLength={2000} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What learners will cover in this course" />
-              </div>
-              <div className="row g-2 col-md-6">
-                <div>
-                  <Label>Subject</Label>
-                  <Select value={form.subject_id} onValueChange={(v) => setForm({ ...form, subject_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
-                    <SelectContent>
-                      {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Class</Label>
-                  <Select value={form.class_id} onValueChange={(v) => setForm({ ...form, class_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                    <SelectContent>
-                      {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Term</Label>
-                  <Select value={form.term} onValueChange={(v) => setForm({ ...form, term: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="term1">Term 1</SelectItem>
-                      <SelectItem value="term2">Term 2</SelectItem>
-                      <SelectItem value="term3">Term 3</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Academic Year</Label>
-                  <Input value={form.academic_year} maxLength={9} onChange={(e) => setForm({ ...form, academic_year: e.target.value })} />
-                </div>
-              </div>
-              <div className="d-flex align-items-center justify-content-between rounded-[10px] border border-slate-200 p-3">
-                <div>
-                  <p className="fs-14 fw-medium text-slate-900">Published</p>
-                  <p className="fs-13 text-slate-500">Visible to students and parents</p>
-                </div>
-                <Switch checked={form.is_published} onCheckedChange={(v) => setForm({ ...form, is_published: v })} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={saveCourse}>{editingId ? 'Save Changes' : 'Create Course'}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Lessons dialog */}
-        <Dialog open={!!lessonCourse} onOpenChange={(o) => !o && setLessonCourse(null)}>
-          <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-            <DialogHeader><DialogTitle>{lessonCourse?.title} â€” Lessons</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              {lessons.length === 0 && (
-                <p className="fs-13 text-slate-500">No lessons added yet.</p>
-              )}
-              {lessons.map((lesson, i) => (
-                <div key={lesson.id} className="rounded-[10px] border border-slate-200 p-3">
-                  <div className="d-flex align-items-start justify-content-between g-2">
-                    <div className="min-w-0">
-                      <p className="fs-14 fw-semibold text-slate-900">{i + 1}. {lesson.title}</p>
-                      {lesson.content && <p className="mt-1 text-wrap fs-13 text-slate-500">{lesson.content}</p>}
-                      {lesson.video_url && (
-                        <a href={lesson.video_url} target="_blank" rel="noreferrer" className="mt-2 d-inline-flex align-items-center g-1.5 fs-13 text-emerald-600 underline">
-                          <PlayCircle className="h-4 w-4" />Watch lesson video
-                        </a>
-                      )}
+        {/* ── Course form modal ── */}
+        {dialogOpen && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">{editingId ? 'Edit Course' : 'New Course'}</h5>
+                    <button type="button" className="btn-close" onClick={() => setDialogOpen(false)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-3">
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Title</label>
+                      <input className="form-control" value={form.title} maxLength={150} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Introduction to Algebra" />
                     </div>
-                    {isStaff && (
-                      <Button variant="destructive" size="icon" onClick={() => deleteLesson(lesson.id)} aria-label="Delete lesson"><X className="h-4 w-4" /></Button>
-                    )}
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Description</label>
+                      <textarea className="form-control" value={form.description} maxLength={2000} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What learners will cover in this course" />
+                    </div>
+                    <div className="row g-3">
+                      <div className="col-6 col-md-6">
+                        <label className="form-label">Subject</label>
+                        <select className="form-select" value={form.subject_id} onChange={(e) => setForm({ ...form, subject_id: e.target.value })}>
+                          <option value="">Select subject</option>
+                          {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-6 col-md-6">
+                        <label className="form-label">Class</label>
+                        <select className="form-select" value={form.class_id} onChange={(e) => setForm({ ...form, class_id: e.target.value })}>
+                          <option value="">Select class</option>
+                          {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-12 col-md-4">
+                        <label className="form-label">Term</label>
+                        <select className="form-select" value={form.term} onChange={(e) => setForm({ ...form, term: e.target.value })}>
+                          <option value="term1">Term 1</option>
+                          <option value="term2">Term 2</option>
+                          <option value="term3">Term 3</option>
+                        </select>
+                      </div>
+                      <div className="col-12 col-md-4">
+                        <label className="form-label">Academic Year</label>
+                        <input className="form-control" value={form.academic_year} maxLength={9} onChange={(e) => setForm({ ...form, academic_year: e.target.value })} />
+                      </div>
+                    </div>
+                    <div className="d-flex align-items-center justify-content-between rounded-3 bg-secondary-subtle px-3 py-2">
+                      <div>
+                        <p className="fw-semibold text-main mb-0">Published</p>
+                        <p className="text-muted bd-fs-sm mb-0">Visible to students and parents</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        className="form-switch"
+                        checked={form.is_published}
+                        onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
+                      />
+                    </div>
+                  </div>
+                  <div className="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => setDialogOpen(false)}>Cancel</button>
+                    <button type="button" className="btn btn-success" onClick={saveCourse}>{editingId ? 'Save Changes' : 'Create Course'}</button>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {isStaff && (
-              <div className="space-y-3 rounded-[10px] border border-dashed border-slate-300 bg-slate-50 p-3">
-                <p className="d-flex align-items-center g-2 fs-14 fw-medium text-slate-900"><FileText className="h-4 w-4 text-emerald-600" /> Add a lesson</p>
-                <Input placeholder="Lesson title" maxLength={150} value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} />
-                <Textarea placeholder="Lesson content / notes" maxLength={5000} value={lessonForm.content} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} />
-                <Input placeholder="Video link (optional)" maxLength={500} value={lessonForm.video_url} onChange={(e) => setLessonForm({ ...lessonForm, video_url: e.target.value })} />
-                <Button onClick={addLesson} className="g-2"><Plus className="h-4 w-4" /> Add Lesson</Button>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+            </div>
+          </>
+        )}
+
+        {/* ── Lessons modal ── */}
+        {lessonCourse && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">{lessonCourse.title} — Lessons</h5>
+                    <button type="button" className="btn-close" onClick={() => setLessonCourse(null)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-3">
+                    {lessons.length === 0 && <p className="text-muted bd-fs-sm mb-0">No lessons added yet.</p>}
+                    {lessons.map((lesson, i) => (
+                      <div key={lesson.id} className="rounded-3 border border-secondary-subtle p-3">
+                        <div className="d-flex align-items-start justify-content-between gap-2">
+                          <div className="min-w-0">
+                            <p className="fw-semibold text-main mb-0">{i + 1}. {lesson.title}</p>
+                            {lesson.content && <p className="text-wrap text-muted bd-fs-sm mb-0 mt-1">{lesson.content}</p>}
+                            {lesson.video_url && (
+                              <a href={lesson.video_url} target="_blank" rel="noreferrer" className="d-inline-flex align-items-center gap-1 mt-2 bd-fs-sm text-success text-decoration-none">
+                                <PlayCircle /> Watch lesson video
+                              </a>
+                            )}
+                          </div>
+                          {isStaff && (
+                            <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete lesson" onClick={() => deleteLesson(lesson.id)}><X /></button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {isStaff && (
+                    <div className="d-flex flex-column gap-2 rounded-3 border border-dashed border-secondary-subtle p-3">
+                      <p className="d-flex align-items-center gap-2 fw-semibold text-main mb-0"><FileText className="text-success" /> Add a lesson</p>
+                      <input className="form-control" placeholder="Lesson title" maxLength={150} value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} />
+                      <textarea className="form-control" placeholder="Lesson content / notes" maxLength={5000} value={lessonForm.content} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} />
+                      <input className="form-control" placeholder="Video link (optional)" maxLength={500} value={lessonForm.video_url} onChange={(e) => setLessonForm({ ...lessonForm, video_url: e.target.value })} />
+                      <button type="button" className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" onClick={addLesson}><Plus /> Add Lesson</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
 }
-
-
-
-
-

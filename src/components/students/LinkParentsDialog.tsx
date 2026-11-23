@@ -1,20 +1,4 @@
 ﻿import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { Parent, StudentParent } from '@/types/database';
 import { Loader2, UserPlus, Trash2 } from '@/lib/icons';
@@ -43,7 +27,7 @@ export function LinkParentsDialog({
   const [linkedParents, setLinkedParents] = useState<LinkedParent[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   // New link form
   const [selectedParentId, setSelectedParentId] = useState('');
   const [relationship, setRelationship] = useState('parent');
@@ -86,7 +70,6 @@ export function LinkParentsDialog({
       return;
     }
 
-    // Check if already linked
     if (linkedParents.some((lp) => lp.parent_id === selectedParentId)) {
       toast.error('This parent is already linked to this student');
       return;
@@ -152,164 +135,158 @@ export function LinkParentsDialog({
     (p) => !linkedParents.some((lp) => lp.parent_id === p.id)
   );
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Link Parents to {studentName}</DialogTitle>
-        </DialogHeader>
+  if (!open) return null;
 
-        {loading ? (
-          <div className="d-flex align-items-center justify-content-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Current linked parents */}
-            <div className="space-y-3">
-              <Label className="fs-sm fw-medium">Linked Parents</Label>
-              {linkedParents.length === 0 ? (
-                <p className="fs-sm text-muted-foreground">
-                  No parents linked yet
-                </p>
+  return (
+    <>
+      <div className="bd-modal-backdrop" />
+      <div className="bd-modal show">
+        <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+              <h5 className="modal-title fw-semibold text-main mb-0">Link Parents to {studentName}</h5>
+              <button type="button" className="btn-close" onClick={() => onOpenChange(false)} aria-label="Close" />
+            </div>
+            <div className="modal-body d-flex flex-column gap-4">
+              {loading ? (
+                <div className="d-flex align-items-center justify-content-center py-8">
+                  <span className="spinner-border spinner-border-lg text-success" role="status" />
+                </div>
               ) : (
-                <div className="space-y-2">
-                  {linkedParents.map((link) => (
-                    <div
-                      key={link.id}
-                      className="d-flex align-items-center justify-content-between rounded-lg border p-3"
-                    >
-                      <div className="space-y-1">
-                        <p className="fw-medium">{link.parent?.full_name}</p>
-                        <div className="d-flex align-items-center g-2 fs-sm text-muted-foreground">
-                          <span className="capitalize">{link.relationship}</span>
-                          {link.is_primary_contact && (
-                            <span className="rounded-circle bg-primary/10 px-2 py-0.5 text-xs fw-medium text-primary">
-                              Primary
-                            </span>
-                          )}
-                        </div>
-                        <p className="fs-sm text-muted-foreground">
-                          {link.parent?.phone}
-                        </p>
+                <div className="d-flex flex-column gap-4">
+                  <div>
+                    <p className="fw-medium text-main mb-2">Linked Parents</p>
+                    {linkedParents.length === 0 ? (
+                      <p className="text-muted bd-fs-sm">No parents linked yet</p>
+                    ) : (
+                      <div className="d-flex flex-column gap-2">
+                        {linkedParents.map((link) => (
+                          <div
+                            key={link.id}
+                            className="d-flex align-items-center justify-content-between gap-3 rounded-3 border border-secondary-subtle p-3"
+                          >
+                            <div className="d-flex flex-column gap-1 min-w-0">
+                              <p className="fw-medium text-main mb-0">{link.parent?.full_name}</p>
+                              <div className="d-flex align-items-center gap-2 text-muted bd-fs-sm">
+                                <span className="text-capitalize">{link.relationship}</span>
+                                {link.is_primary_contact && (
+                                  <span className="badge text-bg-primary">Primary</span>
+                                )}
+                              </div>
+                              <p className="text-muted bd-fs-sm mb-0">{link.parent?.phone}</p>
+                            </div>
+                            <div className="d-flex align-items-center gap-2">
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => handleTogglePrimary(link.id, link.is_primary_contact)}
+                              >
+                                {link.is_primary_contact ? 'Remove Primary' : 'Set Primary'}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline-danger btn-sm d-inline-flex align-items-center"
+                                onClick={() => handleUnlinkParent(link.id)}
+                                aria-label="Unlink parent"
+                              >
+                                <Trash2 />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="d-flex align-items-center g-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleTogglePrimary(link.id, link.is_primary_contact)
-                          }
+                    )}
+                  </div>
+
+                  {availableParents.length > 0 && (
+                    <div className="d-flex flex-column gap-3 border-top border-secondary-subtle pt-3">
+                      <p className="fw-medium text-main mb-0">Link New Parent</p>
+                      <div className="row g-3">
+                        <div className="col-12 col-sm-6">
+                          <label htmlFor="link-parent" className="form-label">Parent</label>
+                          <select
+                            id="link-parent"
+                            className="form-select"
+                            value={selectedParentId}
+                            onChange={(e) => setSelectedParentId(e.target.value)}
+                          >
+                            <option value="">Select a parent</option>
+                            {availableParents.map((parent) => (
+                              <option key={parent.id} value={parent.id}>
+                                {parent.full_name} ({parent.phone})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-12 col-sm-6">
+                          <label htmlFor="link-relationship" className="form-label">Relationship</label>
+                          <select
+                            id="link-relationship"
+                            className="form-select"
+                            value={relationship}
+                            onChange={(e) => setRelationship(e.target.value)}
+                          >
+                            <option value="parent">Parent</option>
+                            <option value="guardian">Guardian</option>
+                            <option value="mother">Mother</option>
+                            <option value="father">Father</option>
+                            <option value="grandparent">Grandparent</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="d-flex align-items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="link-primary"
+                          className="form-check-input"
+                          checked={isPrimaryContact}
+                          onChange={(e) => setIsPrimaryContact(e.target.checked)}
+                        />
+                        <label htmlFor="link-primary" className="form-check-label text-muted bd-fs-sm fw-normal">
+                          Set as primary contact for SMS notifications
+                        </label>
+                      </div>
+                      <div>
+                        <button
+                          type="button"
+                          className="btn btn-success d-inline-flex align-items-center gap-1"
+                          disabled={saving || !selectedParentId}
+                          onClick={handleLinkParent}
                         >
-                          {link.is_primary_contact
-                            ? 'Remove Primary'
-                            : 'Set Primary'}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleUnlinkParent(link.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                          {saving ? (
+                            <>
+                              <span className="spinner-border spinner-border-sm" />
+                              Linking...
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus />
+                              Link Parent
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {availableParents.length === 0 && parents.length > 0 && (
+                    <p className="text-muted bd-fs-sm border-top border-secondary-subtle pt-3">
+                      All available parents have been linked to this student.
+                    </p>
+                  )}
+
+                  {parents.length === 0 && (
+                    <p className="text-muted bd-fs-sm border-top border-secondary-subtle pt-3">
+                      No parents available. Please add parents first on the Parents page.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
-
-            {/* Add new link */}
-            {availableParents.length > 0 && (
-              <div className="space-y-4 border-t pt-4">
-                <Label className="fs-sm fw-medium">Link New Parent</Label>
-                <div className="row g-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="parent">Parent</Label>
-                    <Select
-                      value={selectedParentId}
-                      onValueChange={setSelectedParentId}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a parent" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableParents.map((parent) => (
-                          <SelectItem key={parent.id} value={parent.id}>
-                            {parent.full_name} ({parent.phone})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="relationship">Relationship</Label>
-                    <Select value={relationship} onValueChange={setRelationship}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="parent">Parent</SelectItem>
-                        <SelectItem value="guardian">Guardian</SelectItem>
-                        <SelectItem value="mother">Mother</SelectItem>
-                        <SelectItem value="father">Father</SelectItem>
-                        <SelectItem value="grandparent">Grandparent</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="d-flex align-items-center g-2">
-                    <Checkbox
-                      id="primary"
-                      checked={isPrimaryContact}
-                      onCheckedChange={(checked) =>
-                        setIsPrimaryContact(checked === true)
-                      }
-                    />
-                    <Label htmlFor="primary" className="fs-sm fw-normal">
-                      Set as primary contact for SMS notifications
-                    </Label>
-                  </div>
-                  <Button
-                    onClick={handleLinkParent}
-                    disabled={saving || !selectedParentId}
-                    className="w-100"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Linking...
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="h-4 w-4" />
-                        Link Parent
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {availableParents.length === 0 && parents.length > 0 && (
-              <p className="fs-sm text-muted-foreground border-t pt-4">
-                All available parents have been linked to this student.
-              </p>
-            )}
-
-            {parents.length === 0 && (
-              <p className="fs-sm text-muted-foreground border-t pt-4">
-                No parents available. Please add parents first on the Parents page.
-              </p>
-            )}
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </>
   );
 }
-
-
-
-

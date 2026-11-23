@@ -1,11 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClipboardList, Loader2, Save, Search } from '@/lib/icons';
@@ -94,7 +89,7 @@ export default function Marks() {
         Number(m.exam_score) > 60
     );
     if (invalid) {
-      return toast.error('Invalid marks: CAT must be 0â€“40 and Exam must be 0â€“60');
+      return toast.error('Invalid marks: CAT must be 0–40 and Exam must be 0–60');
     }
     setSaving(true);
     const rows = Object.values(marks).map((m) => ({
@@ -122,7 +117,7 @@ export default function Marks() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="Records"
           title="Marks Entry"
@@ -130,118 +125,137 @@ export default function Marks() {
         />
 
         {/* Filters */}
-        <Card>
-          <CardHeader><CardTitle className="d-flex align-items-center g-2 fs-16"><ClipboardList className="h-5 w-5 text-emerald-600" /> Filters</CardTitle></CardHeader>
-          <CardContent>
-            <div className="row g-3 col-md-6 col-xl-3">
-              <div className="space-y-2">
-                <Label>Class</Label>
-                <Select value={classId} onValueChange={setClassId}>
-                  <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                  <SelectContent>{classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                </Select>
+        <div className="card">
+          <div className="card-header d-flex align-items-center justify-content-between py-3 border-bottom border-secondary-subtle">
+            <h5 className="mb-0 fw-semibold text-main d-flex align-items-center gap-2"><ClipboardList className="text-success" /> Filters</h5>
+          </div>
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-12 col-md-6 col-lg-3">
+                <label className="form-label">Class</label>
+                <select className="form-select" value={classId} onChange={(e) => setClassId(e.target.value)}>
+                  <option value="">Select class</option>
+                  {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
               </div>
-              <div className="space-y-2">
-                <Label>Subject</Label>
-                <Select value={subjectId} onValueChange={setSubjectId}>
-                  <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
-                  <SelectContent>{subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} ({s.code})</SelectItem>)}</SelectContent>
-                </Select>
+              <div className="col-12 col-md-6 col-lg-3">
+                <label className="form-label">Subject</label>
+                <select className="form-select" value={subjectId} onChange={(e) => setSubjectId(e.target.value)}>
+                  <option value="">Select subject</option>
+                  {subjects.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+                </select>
               </div>
-              <div className="space-y-2">
-                <Label>Term</Label>
-                <Select value={term} onValueChange={(v) => setTerm(v as any)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="term1">Term 1</SelectItem>
-                    <SelectItem value="term2">Term 2</SelectItem>
-                    <SelectItem value="term3">Term 3</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="col-12 col-md-6 col-lg-3">
+                <label className="form-label">Term</label>
+                <select className="form-select" value={term} onChange={(e) => setTerm(e.target.value as any)}>
+                  <option value="term1">Term 1</option>
+                  <option value="term2">Term 2</option>
+                  <option value="term3">Term 3</option>
+                </select>
               </div>
-              <div className="space-y-2">
-                <Label>Academic Year</Label>
-                <Input value={year} onChange={(e) => setYear(e.target.value)} placeholder="2026" />
+              <div className="col-12 col-md-6 col-lg-3">
+                <label className="form-label">Academic Year</label>
+                <input className="form-control" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2026" />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {classId && subjectId && (
-          <Card>
-            <CardHeader>
-              <div className="d-flex d-flex flex-column g-3 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
-                <CardTitle className="fs-16">Students â€” {TERM_LABELS[term]} {year}</CardTitle>
-                <div className="d-flex g-2">
-                  <div className="position-relative">
-                    <Search className="position-absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
-                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student..." className="w-44 pl-8" />
-                  </div>
-                  {canEdit && <Button onClick={saveAll} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save All</Button>}
+          <div className="card">
+            <div className="card-header d-flex align-items-center justify-content-between py-3 border-bottom border-secondary-subtle">
+              <h5 className="mb-0 fw-semibold text-main">Students — {TERM_LABELS[term]} {year}</h5>
+              <div className="d-flex gap-2 align-items-center">
+                <div className="input-group">
+                  <span className="input-group-text bg-white border-secondary-subtle"><Search className="text-secondary" /></span>
+                  <input type="search" className="form-control border-secondary-subtle" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student..." aria-label="Search student" />
                 </div>
+                {canEdit && (
+                  <button type="button" className="btn btn-success d-inline-flex align-items-center gap-1" onClick={saveAll} disabled={saving}>
+                    {saving ? <><span className="spinner-border spinner-border-sm" /> Saving...</> : <><Save /> Save All</>}
+                  </button>
+                )}
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
+            </div>
+            <div className="card-body p-0">
               {loading ? (
-                <div className="d-flex justify-content-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+                <div className="d-flex justify-content-center py-8">
+                  <span className="spinner-border spinner-border-lg text-success" role="status" />
+                </div>
               ) : filteredStudents.length === 0 ? (
-                <div className="empty-state"><Loader2 className="h-10 w-10 text-slate-400" /><p className="fs-14 text-slate-500">No students in this class</p></div>
+                <div className="empty-state"><Loader2 className="empty-state-icon text-secondary" /><p className="text-secondary mb-0">No students in this class</p></div>
               ) : (
-                <div class="table-responsive"><Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student</TableHead>
-                      <TableHead>ID</TableHead>
-                      <TableHead className="text-center">CAT (/40)</TableHead>
-                      <TableHead className="text-center">Exam (/60)</TableHead>
-                      <TableHead className="text-end">Total</TableHead>
-                      <TableHead>Remarks</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredStudents.map((s) => {
-                      const m = marks[s.id] || { student_id: s.id, cat_score: 0, exam_score: 0, remarks: '' };
-                      const total = Number(m.cat_score || 0) + Number(m.exam_score || 0);
-                      return (
-                        <TableRow key={s.id}>
-                          <TableCell className="fw-medium text-slate-900">{s.first_name} {s.last_name}</TableCell>
-                          <TableCell className="fs-12.5 text-slate-500">{s.student_id}</TableCell>
-                          <TableCell>
-                            <Input type="number" min={0} max={40} step={0.5} value={m.cat_score} disabled={!canEdit}
-                              onChange={(e) => {
-                                const v = Math.max(0, Math.min(40, Number(e.target.value) || 0));
-                                updateMark(s.id, 'cat_score', v);
-                              }} className="h-9 w-24" />
-                          </TableCell>
-                          <TableCell>
-                            <Input type="number" min={0} max={60} step={0.5} value={m.exam_score} disabled={!canEdit}
-                              onChange={(e) => {
-                                const v = Math.max(0, Math.min(60, Number(e.target.value) || 0));
-                                updateMark(s.id, 'exam_score', v);
-                              }} className="h-9 w-24" />
-                          </TableCell>
-                          <TableCell className="text-end fw-bold">
-                            <span className={total >= 50 ? 'text-emerald-700' : total > 0 ? 'text-amber-700' : 'text-slate-500'}>{total.toFixed(1)}</span>
-                          </TableCell>
-                          <TableCell>
-                            <Input value={m.remarks || ''} disabled={!canEdit} onChange={(e) => updateMark(s.id, 'remarks', e.target.value)} placeholder="Optional" className="h-9" />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table></div>
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle mb-0">
+                    <thead>
+                      <tr className="border-bottom border-secondary-subtle">
+                        <th scope="col">Student</th>
+                        <th scope="col">ID</th>
+                        <th scope="col" className="text-center">CAT (/40)</th>
+                        <th scope="col" className="text-center">Exam (/60)</th>
+                        <th scope="col" className="text-end">Total</th>
+                        <th scope="col">Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredStudents.map((s) => {
+                        const m = marks[s.id] || { student_id: s.id, cat_score: 0, exam_score: 0, remarks: '' };
+                        const total = Number(m.cat_score || 0) + Number(m.exam_score || 0);
+                        return (
+                          <tr key={s.id} className="border-bottom border-secondary-subtle">
+                            <td className="fw-medium text-main">{s.first_name} {s.last_name}</td>
+                            <td className="text-muted bd-fs-sm">{s.student_id}</td>
+                            <td className="text-center">
+                              <input
+                                type="number"
+                                className="form-control w-auto mx-auto"
+                                style={{ maxWidth: '6rem' }}
+                                min={0} max={40} step={0.5}
+                                value={m.cat_score}
+                                disabled={!canEdit}
+                                onChange={(e) => {
+                                  const v = Math.max(0, Math.min(40, Number(e.target.value) || 0));
+                                  updateMark(s.id, 'cat_score', v);
+                                }}
+                              />
+                            </td>
+                            <td className="text-center">
+                              <input
+                                type="number"
+                                className="form-control w-auto mx-auto"
+                                style={{ maxWidth: '6rem' }}
+                                min={0} max={60} step={0.5}
+                                value={m.exam_score}
+                                disabled={!canEdit}
+                                onChange={(e) => {
+                                  const v = Math.max(0, Math.min(60, Number(e.target.value) || 0));
+                                  updateMark(s.id, 'exam_score', v);
+                                }}
+                              />
+                            </td>
+                            <td className="text-end fw-semibold">
+                              <span className={total >= 50 ? 'text-success' : total > 0 ? 'text-warning' : 'text-muted'}>{total.toFixed(1)}</span>
+                            </td>
+                            <td>
+                              <input
+                                className="form-control w-100"
+                                value={m.remarks || ''}
+                                disabled={!canEdit}
+                                onChange={(e) => updateMark(s.id, 'remarks', e.target.value)}
+                                placeholder="Optional"
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>
   );
 }
-
-
-
-
-
-

@@ -1,13 +1,9 @@
 ﻿import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Loader2, ShieldCheck, GraduationCap } from '@/lib/icons';
 import schoolLogo from '@/assets/college-rebero-logo.png';
 import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Signup() {
   const { user, loading: authLoading, signUp } = useAuth();
@@ -21,8 +17,8 @@ export default function Signup() {
 
   if (authLoading) {
     return (
-      <div className="d-flex min-h-screen align-items-center justify-content-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      <div className="d-flex min-vh-100 align-items-center justify-content-center bg-body">
+        <span className="spinner-border spinner-border-lg text-success" role="status" />
       </div>
     );
   }
@@ -63,168 +59,142 @@ export default function Signup() {
   };
 
   return (
-    <div className="d-flex min-h-screen d-flex flex-column lg:d-flex flex-row overflow-hidden">
-      {/* Left section â€” form (form first on mobile) */}
-      <div className="order-2 d-flex flex-1 d-flex flex-column justify-content-center px-6 py-12 sm:px-10 lg:order-1 lg:px-16">
+    <div className="min-vh-100 bg-body d-flex flex-column d-lg-flex flex-row overflow-hidden">
+      {/* Left section — form (first on mobile) */}
+      <div className="order-2 d-flex flex-1 flex-column justify-content-center px-6 px-sm-5 py-12">
         <div className="mx-auto w-100 max-w-md">
-          <div className="mb-8 d-flex align-items-center g-3">
-            <img src={schoolLogo} alt="College De Rebero" className="h-14 w-14 object-contain" />
+          <div className="mb-5 d-flex align-items-center gap-3">
+            <img src={schoolLogo} alt="College De Rebero" className="bd-h-16 bd-w-16 object-contain" />
             <div>
-              <h1 className="fs-32 fw-bold text-slate-900">College De Rebero</h1>
-              <p className="fs-13 text-slate-500">Behavior Management System</p>
+              <h1 className="fw-bold text-main mb-0">College De Rebero</h1>
+              <p className="bd-fs-sm text-muted mb-0">Behavior Management System</p>
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="d-flex flex-column gap-5">
             <div>
-              <h2 className="fs-32 fw-bold tracking-tight text-slate-900">Create an account</h2>
-              <p className="mt-2 fs-13.5 text-slate-500">
-                Get started with College De Rebero today
-              </p>
+              <h2 className="fw-bold text-main mb-1">Create an account</h2>
+              <p className="mt-2 bd-fs-md text-muted">Get started with College De Rebero today</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
+            <form onSubmit={handleSubmit} className="d-flex flex-column gap-4">
+              <div className="d-flex flex-column gap-2">
+                <label className="form-label">Full Name</label>
+                <input
+                  className="form-control bd-h-11"
                   type="text"
                   placeholder="Eric Kamana"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  className="h-11"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="accountType">I am a</Label>
-                <Select value={accountType} onValueChange={(v) => setAccountType(v as typeof accountType)}>
-                  <SelectTrigger id="accountType" className="h-11"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student">Student</SelectItem>
-                    <SelectItem value="parent">Parent</SelectItem>
-                    <SelectItem value="viewer">Staff / other (view only)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="fs-12.5 text-slate-500">
+              <div className="d-flex flex-column gap-2">
+                <label className="form-label">I am a</label>
+                <select
+                  className="form-select bd-h-11"
+                  value={accountType}
+                  onChange={(e) => setAccountType(e.target.value as typeof accountType)}
+                >
+                  <option value="student">Student</option>
+                  <option value="parent">Parent</option>
+                  <option value="viewer">Staff / other (view only)</option>
+                </select>
+                <p className="text-muted bd-fs-sm mb-0 mt-1">
                   Students get access to quizzes and assignments after signing in.
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
+              <div className="d-flex flex-column gap-2">
+                <label className="form-label">Email</label>
+                <input
+                  className="form-control bd-h-11"
                   type="email"
                   placeholder="you@school.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-11"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="position-relative">
-                  <Input
+              <div className="d-flex flex-column gap-2">
+                <label className="form-label">Password</label>
+                <div className="input-group">
+                  <input
                     id="password"
+                    className="form-control bd-h-11"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Create a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-11 pr-10"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="position-absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  <button type="button" className="input-group-text btn bd-h-11" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility">
+                    {showPassword ? <EyeOff className="text-secondary" /> : <Eye className="text-secondary" />}
                   </button>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
+              <div className="d-flex flex-column gap-2">
+                <label className="form-label">Confirm Password</label>
+                <input
+                  className="form-control bd-h-11"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Confirm your password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="h-11"
                 />
               </div>
 
-              <Button
+              <button
                 type="submit"
+                className="btn btn-success btn-lg w-100 d-inline-flex align-items-center justify-content-center gap-2"
                 disabled={loading}
-                className="h-12 w-100 g-2 bg-gradient-to-br from-emerald-600 to-green-600 text-white shadow-md hover:from-emerald-700 hover:to-green-500"
               >
                 {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
+                  <><span className="spinner-border spinner-border-sm" /> Creating account...</>
                 ) : (
-                  <>
-                    <ShieldCheck className="h-5 w-5" />
-                    Create Account
-                  </>
+                  <><ShieldCheck /> Create Account</>
                 )}
-              </Button>
+              </button>
             </form>
 
-            <p className="text-center fs-13 text-slate-500">
+            <p className="text-center mb-0 bd-fs-md text-muted">
               Already have an account?{' '}
-              <Link to="/login" className="fw-medium text-emerald-600 hover:underline">
-                Sign in
-              </Link>
+              <Link to="/login" className="fw-medium text-success text-decoration-none">Sign in</Link>
             </p>
-            <p className="text-center fs-12.5 text-slate-400">
-              College De Rebero Â· Excellence Â· Discipline Â· Integrity
+            <p className="text-center mt-1 bd-fs-sm text-secondary">
+              College De Rebero · Excellence · Discipline · Integrity
             </p>
           </div>
         </div>
       </div>
 
-      {/* Right section â€” promotional (simplified on mobile) */}
-      <div className="position-relative order-1 d-none flex-1 bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-500 lg:d-flex align-items-center justify-content-center overflow-hidden p-10">
-        <div className="position-absolute -left-20 top-20 h-64 w-64 rounded-circle bg-white/10" />
-        <div className="position-absolute -right-20 bottom-10 h-72 w-72 rounded-circle bg-white/5" />
-
+      {/* Right section — promotional */}
+      <div className="position-relative order-1 d-none d-lg-flex flex-1 align-items-center justify-content-center overflow-hidden bd-dark-panel p-10">
         <div className="position-relative max-w-lg text-white text-center">
-          <div className="mx-auto mb-6 d-flex h-16 w-16 align-items-center justify-content-center rounded-circle bg-white/20">
-            <GraduationCap className="h-8 w-8 text-white" />
-          </div>
-          <h2 className="fs-34 fw-bold tracking-tight drop-shadow-sm sm:fs-36">
-            Join the Future of Student Management
-          </h2>
-          <p className="mt-6 fs-18 opacity-90 drop-shadow-sm">
+          <div className="mx-auto mb-5 d-flex align-items-center justify-content-center rounded-circle bg-white-20 bd-h-14 bd-w-14"><GraduationCap className="fs-5 text-white" /></div>
+          <h2 className="fw-bold text-white mb-0">Join the Future of Student Management</h2>
+          <p className="mt-5 bd-fs-md opacity-90">
             Create an account and work with your school administrator to get set up with the appropriate access level.
           </p>
-          <div className="mt-10 row col-4 g-4 text-center">
+          <div className="d-flex flex-column gap-3 align-items-center mt-8">
             {[
-              { label: 'Real-time behavior tracking', icon: 'âœ“' },
-              { label: 'Instant parent notifications', icon: 'âœ“' },
-              { label: 'Comprehensive reports', icon: 'âœ“' },
-            ].map((item) => (
-              <div key={item.label} className="d-flex align-items-center justify-content-center g-2">
-                <span className="d-flex h-8 w-8 align-items-center justify-content-center rounded-circle bg-white/20 fw-bold">{item.icon}</span>
-                <span className="fs-14 opacity-95">{item.label}</span>
+              'Real-time behavior tracking',
+              'Instant parent notifications',
+              'Comprehensive reports',
+            ].map((label) => (
+              <div key={label} className="d-flex align-items-center gap-3">
+                <span className="d-inline-flex align-items-center justify-content-center rounded-circle bg-white-20 bd-h-10 bd-w-10 text-golden"><GraduationCap className="fs-6 text-white" /></span>
+                <span className="bd-fs-md text-white opacity-95">{label}</span>
               </div>
             ))}
           </div>
           <div className="mt-8 text-center">
-            <Link to="/login">
-              <Button className="h-11 g-2 bg-white text-emerald-700 hover:bg-emerald-50">
-                Sign in instead
-              </Button>
+            <Link to="/login" className="d-inline-flex align-items-center">
+              <button type="button" className="btn btn-light">Sign in instead</button>
             </Link>
           </div>
         </div>
@@ -232,7 +202,3 @@ export default function Signup() {
     </div>
   );
 }
-
-
-
-

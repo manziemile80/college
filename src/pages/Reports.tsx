@@ -1,13 +1,9 @@
 ﻿import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { BehaviorCategory } from '@/types/database';
-import { BarChart3, Loader2, TrendingUp, TrendingDown, Calendar } from '@/lib/icons';
+import { BarChart3, Loader2, TrendingUp, TrendingDown, Calendar, ShieldCheck } from '@/lib/icons';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, ComposedChart, Area } from 'recharts';
 
 const categoryLabels: Record<BehaviorCategory, string> = {
@@ -17,10 +13,10 @@ const categoryLabels: Record<BehaviorCategory, string> = {
   participation: 'Participation',
 };
 
-const COLORS = ['#059669', '#2563EB', '#D97706', '#DC2626'];
+const COLORS = ['#16A34A', '#0EA5E9', '#F59E0B', '#DC2626'];
+const GREEN = '#16A34A';
 
 export default function Reports() {
-  const { role } = useAuth();
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('month');
   const [categoryData, setCategoryData] = useState<{ name: string; average: number; count: number }[]>([]);
@@ -123,163 +119,160 @@ export default function Reports() {
     }
   };
 
+  const emptyState = (msg: string) => (
+    <div className="d-flex align-items-center justify-content-center h-50 text-muted bd-fs-sm">{msg}</div>
+  );
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="Records"
           title="Reports"
           description="Analyze behavior trends, category averages and the score distribution over time."
           actions={
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-100 sm:w-44"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">Last 7 days</SelectItem>
-                <SelectItem value="month">Last 30 days</SelectItem>
-                <SelectItem value="year">Last year</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              className="form-select form-select-sm w-auto"
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              aria-label="Select time range"
+            >
+              <option value="week">Last 7 days</option>
+              <option value="month">Last 30 days</option>
+              <option value="year">Last year</option>
+            </select>
           }
         />
 
         {loading ? (
-          <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+          <div className="d-flex align-items-center justify-content-center py-8">
+            <span className="spinner-border spinner-border-lg text-success" role="status" />
+          </div>
         ) : (
           <>
             {/* Stats cards */}
-            <div className="row g-4 col-md-6 col-xl-3">
-              <Card>
-                <CardContent className="stat-card p-6">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div>
-                      <p className="fs-13 text-slate-500">Total Scores</p>
-                      <p className="stat-value">{stats.totalScores}</p>
-                    </div>
-                    <BarChart3 className="h-8 w-8 text-slate-400" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="stat-card p-6">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div>
-                      <p className="fs-13 text-slate-500">Average Score</p>
-                      <p className={`fs-32 fw-bold tracking-tight ${stats.avgScore >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{stats.avgScore}</p>
-                    </div>
-                    {stats.avgScore >= 0 ? <TrendingUp className="h-8 w-8 text-emerald-600" /> : <TrendingDown className="h-8 w-8 text-red-600" />}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="stat-card p-6">
+            <div className="row g-3 row-cols-1 row-cols-md-2 row-cols-xl-4">
+              <div className="col">
+                <div className="card h-100 d-flex align-items-center gap-4 p-4">
                   <div>
-                    <p className="fs-13 text-slate-500">Best Category</p>
-                    <p className="fs-30 fw-bold text-emerald-600">{stats.highestCategory}</p>
+                    <p className="text-muted bd-fs-sm mb-0">Total Scores</p>
+                    <p className="fw-bold text-main bd-fs-lg mb-0">{stats.totalScores}</p>
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="stat-card p-6">
+                  <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle p-3 text-success"><BarChart3 className="fs-5" /></div>
+                </div>
+              </div>
+              <div className="col">
+                <div className="card h-100 d-flex align-items-center gap-4 p-4">
                   <div>
-                    <p className="fs-13 text-slate-500">Needs Attention</p>
-                    <p className="fs-30 fw-bold text-amber-600">{stats.lowestCategory}</p>
-                    <p className="mt-1 fs-12.5 text-slate-500">Active days: {stats.daysWithActivity}</p>
+                    <p className="text-muted bd-fs-sm mb-0">Average Score</p>
+                    <p className="fw-bold bd-fs-lg mb-0">{stats.avgScore}</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle p-3 text-success">{stats.avgScore >= 0 ? <TrendingUp className="fs-5" /> : <TrendingDown className="fs-5" />}</div>
+                </div>
+              </div>
+              <div className="col">
+                <div className="card h-100 d-flex align-items-center gap-4 p-4">
+                  <div className="min-w-0 flex-grow-1">
+                    <p className="text-muted bd-fs-sm mb-0">Best Category</p>
+                    <p className="fw-bold text-success bd-fs-lg mb-0 text-truncate">{stats.highestCategory}</p>
+                  </div>
+                  <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle p-3 text-success"><ShieldCheck className="fs-5" /></div>
+                </div>
+              </div>
+              <div className="col">
+                <div className="card h-100 d-flex flex-column justify-content-center p-4">
+                  <p className="text-muted bd-fs-sm mb-0">Needs Attention</p>
+                  <p className="fw-bold text-warning bd-fs-lg mb-0 text-truncate">{stats.lowestCategory}</p>
+                  <p className="mt-1 text-muted bd-fs-sm mb-0">Active days: {stats.daysWithActivity}</p>
+                </div>
+              </div>
             </div>
 
             {/* Charts */}
-            <div className="row g-4 col-lg-6 col-xl-3">
-              <Card>
-                <CardHeader><CardTitle>Average Scores by Category</CardTitle></CardHeader>
-                <CardContent>
-                  {categoryData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={categoryData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis type="number" stroke="#64748b" fontSize={12} />
-                        <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={12} width={100} />
-                        <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
-                        <Bar dataKey="average" fill="#059669" radius={[0, 4, 4, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="d-flex align-items-center justify-content-center h-[300px] fs-13 text-slate-500">No data available</div>
-                  )}
-                </CardContent>
-              </Card>
+            <div className="row g-3 row-cols-1 row-cols-lg-2 row-cols-xl-3">
+              <div className="col">
+                <div className="card h-100">
+                  <div className="card-header py-3"><h5 className="mb-0 fw-semibold">Average Scores by Category</h5></div>
+                  <div className="card-body">
+                    {categoryData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={categoryData} layout="vertical">
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                          <XAxis type="number" stroke="#475569" fontSize={12} />
+                          <YAxis dataKey="name" type="category" stroke="#475569" fontSize={12} width={100} />
+                          <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+                          <Bar dataKey="average" fill={GREEN} radius={[0, 4, 4, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : emptyState('No data available')}
+                  </div>
+                </div>
+              </div>
 
-              <Card>
-                <CardHeader><CardTitle>Score Distribution</CardTitle></CardHeader>
-                <CardContent>
-                  {distributionData.some((d) => d.value > 0) ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={distributionData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={70}
-                          outerRadius={115}
-                          paddingAngle={3}
-                          dataKey="value"
-                        >
-                          {distributionData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
-                          formatter={(v) => [v, '']}
-                        />
-                        <Legend wrapperStyle={{ fontSize: 12, color: '#64748b' }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="d-flex align-items-center justify-content-center h-[300px] fs-13 text-slate-500">No data available</div>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="col">
+                <div className="card h-100">
+                  <div className="card-header py-3"><h5 className="mb-0 fw-semibold">Score Distribution</h5></div>
+                  <div className="card-body">
+                    {distributionData.some((d) => d.value > 0) ? (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={distributionData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={70}
+                            outerRadius={115}
+                            paddingAngle={3}
+                            dataKey="value"
+                          >
+                            {distributionData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                            formatter={(v) => [v, '']}
+                          />
+                          <Legend wrapperStyle={{ fontSize: 12, color: '#64748B' }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : emptyState('No data available')}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Trend chart */}
-            <Card>
-              <CardHeader>
-                <div className="d-flex align-items-center g-2">
-                  <Calendar className="h-5 w-5 text-emerald-600" />
-                  <CardTitle>Score Trend Over Time</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
+            <div className="card">
+              <div className="card-header d-flex align-items-center gap-2 py-3">
+                <Calendar className="text-success" />
+                <h5 className="mb-0 fw-semibold">Score Trend Over Time</h5>
+              </div>
+              <div className="card-body">
                 {trendData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={320}>
                     <ComposedChart data={trendData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
-                      <YAxis stroke="#64748b" fontSize={12} domain={[0, 100]} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                      <XAxis dataKey="date" stroke="#475569" fontSize={12} />
+                      <YAxis stroke="#475569" fontSize={12} domain={[0, 100]} />
                       <Tooltip
                         contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
-                        labelStyle={{ color: '#0f172a' }}
+                        labelStyle={{ color: '#0F172A' }}
                       />
-                      <Area type="monotone" dataKey="score" stroke="#059669" strokeWidth={2} fill="#059669" fillOpacity={0.1} />
-                      <Bar dataKey="score" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                      <Area type="monotone" dataKey="score" stroke={GREEN} strokeWidth={2} fill={GREEN} fillOpacity={0.1} />
+                      <Bar dataKey="score" fill="#0EA5E9" radius={[4, 4, 0, 0]} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="d-flex align-items-center justify-content-center h-[320px] fs-13 text-slate-500">
+                  <div className="d-flex align-items-center justify-content-center h-75 text-muted bd-fs-sm">
                     No data available for this time range
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </>
         )}
       </div>
     </DashboardLayout>
   );
 }
-
-
-
-

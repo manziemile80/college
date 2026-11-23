@@ -11,14 +11,12 @@ import {
   CheckCircle, BookOpen, Gavel, Boxes, Pencil, UserPlus,
 } from '@/lib/icons';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/layout/PageHeader';
 import {
   PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
-const PIE_COLORS = ['#059669', '#DC2626', '#D97706', '#2563EB'];
+const PIE_COLORS = ['#16A34A', '#DC2626', '#F59E0B', '#0EA5E9'];
 
 export default function Dashboard() {
   const { role, profile, user } = useAuth();
@@ -165,7 +163,7 @@ export default function Dashboard() {
       case 'teacher':
       case 'viewer':
         return (
-          <div className="stats-grid">
+          <div className="bd-grid-2">
             <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="secondary" />
             <StatCard title="Total Classes" value={stats.totalClasses || 0} icon={Users} variant="tertiary" />
             {role !== 'viewer' && (
@@ -184,7 +182,7 @@ export default function Dashboard() {
         );
       case 'dos':
         return (
-          <div className="stats-grid">
+          <div className="bd-grid-2">
             <StatCard title="Total Students" value={stats.totalStudents || 0} icon={GraduationCap} variant="secondary" />
             <StatCard title="Classes" value={stats.totalClasses || 0} icon={Users} variant="tertiary" />
             <StatCard title="Subjects" value={stats.totalSubjects || 0} icon={BookOpen} variant="secondary" />
@@ -193,7 +191,7 @@ export default function Dashboard() {
         );
       case 'dod':
         return (
-          <div className="stats-grid">
+          <div className="bd-grid-2">
             <StatCard title="Pending Reviews" value={stats.pendingIncidents || 0} icon={AlertTriangle} variant="warning" />
             <StatCard title="Reviewed Incidents" value={stats.reviewedIncidents || 0} icon={CheckCircle} variant="secondary" />
             <StatCard title="Total Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} variant="tertiary" />
@@ -202,19 +200,19 @@ export default function Dashboard() {
         );
       case 'stock_manager':
         return (
-          <div className="stats-grid">
+          <div className="bd-grid-2">
             <StatCard title="Stock Items" value={stats.stockItems || 0} icon={Boxes} />
           </div>
         );
       case 'parent':
         return (
-          <div className="stats-grid">
+          <div className="bd-grid-2">
             <StatCard title="Linked Child" value={stats.myChildren || 0} icon={GraduationCap} />
           </div>
         );
       case 'student':
         return (
-          <div className="stats-grid">
+          <div className="bd-grid-2">
             <StatCard title="Behavior Records" value={stats.totalScores || 0} icon={ClipboardList} />
           </div>
         );
@@ -263,60 +261,73 @@ export default function Dashboard() {
     }
     if (actions.length === 0) return null;
     return (
-      <div className="stats-grid">
-        {actions.map((a) => (
-          <Link key={a.to} to={a.to} className="w-100">
-            <div className="start-card" style={a.tone === 'golden' ? { borderColor: '#E4D31B', boxShadow: '0 4px 12px rgba(5,150,105,.12)' } : a.tone === 'slate' ? { borderColor: '#E2E8F0' } : { borderColor: '#6EE7B7' }}>
-              <div className="start-icon" style={a.tone === 'slate' ? { backgroundColor: '#F1F5F9' } : a.tone === 'golden' ? { backgroundColor: '#FEF3C7' } : { backgroundColor: '#059669' }}>
-                <a.icon style={a.tone === 'golden' ? { color: '#92400E' } : undefined} />
+      <div className="bd-grid-2">
+        {actions.map((a) => {
+          const circleClass = a.tone === 'slate'
+            ? 'bd-icon-circle-muted'
+            : a.tone === 'golden'
+              ? 'bd-icon-circle-warning'
+              : 'bd-icon-circle-primary';
+          const countColor = a.tone === 'slate' ? 'text-muted' : a.tone === 'golden' ? 'text-warning' : 'text-success';
+          return (
+            <Link key={a.to} to={a.to} className="h-100">
+              <div className="bd-card h-100 d-flex flex-column gap-3 p-4">
+                <div className={cn('bd-icon-circle', circleClass)}>
+                  <a.icon />
+                </div>
+                <div>
+                  <h3 className="fw-semibold text-main mb-0">{a.title}</h3>
+                  {a.desc && <p className="text-muted mt-1 bd-fs-sm mb-0">{a.desc}</p>}
+                  {a.count !== undefined && (
+                    <p className="mt-2 d-flex align-items-center gap-2">
+                      <span className={cn('fw-bold bd-fs-lg', countColor)}>{a.count}</span>
+                      <span className="text-muted bd-fs-sm">{a.countUnit}</span>
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="start-info">
-                <h3 className="start-title">{a.title}</h3>
-                {a.desc && <p className="start-desc">{a.desc}</p>}
-                {a.count !== undefined && (
-                  <p className="start-count">{a.count}<span className="start-count-label">{a.countUnit}</span></p>
-                )}
-              </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     );
   };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         {/* Header */}
-        <div className="space-y-2">
-          <p className="fs-11 fw-semibold text-uppercase tracking-[0.16em] text-muted-foreground">Dashboard</p>
-          <h1 className="page-h1">
+        <div>
+          <p className="bd-eyebrow mb-0">Dashboard</p>
+          <h1 className="bd-page-title mb-0">
             {getGreeting()}, {profile?.full_name?.split(' ')[0] || 'there'}
           </h1>
-          <p className="max-w-2xl fs-12.5 text-muted-foreground">
-            {roleCopy[role || ''] ? `${roleCopy[role || '']} dashboard â€” ` : ''}
-            Your school at a glance â€” students, conduct records, academics and e-learning activity.
+          <p className="mt-2 text-muted bd-fs-md max-w-3xl">
+            {roleCopy[role || ''] ? `${roleCopy[role || '']} dashboard — ` : ''}
+            Your school at a glance — students, conduct records, academics and e-learning activity.
           </p>
         </div>
 
         {renderStats()}
 
         {/* Attendance statistics (real data) */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Attendance Statistics {totalAttendance > 0 ? `Â· ${totalAttendance} days this year` : ''}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="stats-grid">
+        <div className="card">
+          <div className="card-header d-flex align-items-center justify-content-between py-3">
+            <h5 className="mb-0 fw-semibold">
+              Attendance Statistics {totalAttendance > 0 ? `· ${totalAttendance} days this year` : ''}
+            </h5>
+          </div>
+          <div className="card-body d-flex flex-column gap-4">
+            <div className="bd-grid-2">
               {[
-                { label: 'Present', value: attendanceStats.present, cls: 'text-emerald-600' },
-                { label: 'Absent', value: attendanceStats.absent, cls: 'text-red-600' },
-                { label: 'Late', value: attendanceStats.late, cls: 'text-amber-600' },
-                { label: 'Excused', value: attendanceStats.excused, cls: 'text-blue-600' },
+                { label: 'Present', value: attendanceStats.present, cls: 'text-success' },
+                { label: 'Absent', value: attendanceStats.absent, cls: 'text-danger' },
+                { label: 'Late', value: attendanceStats.late, cls: 'text-warning' },
+                { label: 'Excused', value: attendanceStats.excused, cls: 'text-info' },
               ].map((s) => (
-                <div key={s.label} className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                  <p className="fs-13 fw-medium text-slate-500">{s.label}</p>
-                  <p className={cn('stat-value', s.cls)}>{s.value}</p>
+                <div key={s.label} className="d-flex flex-column gap-1 rounded-3 border border-secondary-subtle p-4">
+                  <p className="fw-medium text-muted bd-fs-sm">{s.label}</p>
+                  <p className={cn('bd-stat-value', s.cls, 'mb-0')}>{s.value}</p>
                 </div>
               ))}
             </div>
@@ -331,105 +342,104 @@ export default function Dashboard() {
                 <Legend wrapperStyle={{ fontSize: 12, color: '#64748b' }} />
               </PieChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Discipline statistics (real data) */}
         {role === 'dod' || role === 'admin' ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Discipline Statistics</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="stats-grid">
-                <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                  <p className="fs-13 fw-medium text-slate-500">Pending reviews</p>
-                  <p className="stat-value text-amber-600">{stats.pendingIncidents || 0}</p>
+          <div className="card">
+            <div className="card-header py-3"><h5 className="mb-0 fw-semibold">Discipline Statistics</h5></div>
+            <div className="card-body d-flex flex-column gap-4">
+              <div className="d-flex flex-wrap gap-3">
+                <div className="d-flex flex-column gap-1 rounded-3 border border-secondary-subtle p-4 flex-grow-1">
+                  <p className="text-muted fw-medium bd-fs-sm">Pending reviews</p>
+                  <p className="fw-bold text-warning bd-stat-value mb-0">{stats.pendingIncidents || 0}</p>
                 </div>
-                <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                  <p className="fs-13 fw-medium text-slate-500">Reviewed incidents</p>
-                  <p className="stat-value text-emerald-600">{stats.reviewedIncidents || 0}</p>
+                <div className="d-flex flex-column gap-1 rounded-3 border border-secondary-subtle p-4 flex-grow-1">
+                  <p className="text-muted fw-medium bd-fs-sm">Reviewed incidents</p>
+                  <p className="fw-bold text-success bd-stat-value mb-0">{stats.reviewedIncidents || 0}</p>
                 </div>
               </div>
               {recentIncidents.length > 0 && (
-                <div className="space-y-2">
+                <div className="d-flex flex-column gap-2">
                   {recentIncidents.map((i) => (
-                    <div key={i.id} className="d-flex align-items-center justify-content-between g-3 rounded-[10px] border border-slate-200 p-3">
-                      <p className="truncate fs-13 fw-medium text-slate-900">
+                    <div key={i.id} className="d-flex align-items-center justify-content-between gap-3 rounded-3 border border-secondary-subtle p-3">
+                      <p className="text-truncate fw-medium text-main mb-0">
                         {i.student ? `${i.student.first_name} ${i.student.last_name}` : 'Student'}
-                        {i.rule?.title ? ` Â· ${i.rule.title}` : ''}
+                        {i.rule?.title ? ` · ${i.rule.title}` : ''}
                       </p>
-                      <Badge className={i.status === 'pending' ? 'badge-pending' : i.status === 'reviewed' ? 'badge-completed' : 'badge-rejected'}>
+                      <span className={cn('badge', i.status === 'pending' ? 'text-bg-warning' : i.status === 'reviewed' ? 'text-bg-success' : 'text-bg-danger')}>
                         {i.status}
-                      </Badge>
+                      </span>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ) : null}
 
         {/* Academic performance (real data: avg marks + pass rate) */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Academic Performance â€” {new Date().getFullYear()}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="row g-3 col-md-6">
-              <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                <p className="fs-13 fw-medium text-slate-500">Average Marks (/100)</p>
-                <p className="stat-value text-emerald-600">{stats.avgMarks ?? 0}</p>
-                <p className="mt-1 fs-12.5 text-slate-500">Average CAT + Exam total this year</p>
+        <div className="card">
+          <div className="card-header d-flex align-items-center justify-content-between py-3">
+            <h5 className="mb-0 fw-semibold">Academic Performance — {new Date().getFullYear()}</h5>
+          </div>
+          <div className="card-body d-flex flex-column gap-4">
+            <div className="row g-3">
+              <div className="col-sm-6 col-md-3">
+                <p className="text-muted fw-medium bd-fs-sm">Average Marks (/100)</p>
+                <p className="fw-bold text-success bd-stat-value mb-0">{stats.avgMarks ?? 0}</p>
+                <p className="mt-1 text-muted bd-fs-sm mb-0">Average CAT + Exam total this year</p>
               </div>
-              <div className="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                <p className="fs-13 fw-medium text-slate-500">Pass Rate</p>
-                <p className="stat-value text-emerald-600">{stats.passRate ?? 0}%</p>
-                <p className="mt-1 fs-12.5 text-slate-500">Students with total â‰¥ 50 this year</p>
+              <div className="col-sm-6 col-md-3">
+                <p className="text-muted fw-medium bd-fs-sm">Pass Rate</p>
+                <p className="fw-bold text-success bd-stat-value mb-0">{stats.passRate ?? 0}%</p>
+                <p className="mt-1 text-muted bd-fs-sm mb-0">Students with total ≥ 50 this year</p>
               </div>
             </div>
-            <div className="h-[220px]">
-              <BarChart data={[
-                { label: 'CAT (40)', pct: Math.round(stats.avgMarks ? (stats.avgMarks / 100) * 40 : 0) },
-                { label: 'Exam (60)', pct: Math.round(stats.avgMarks ? (stats.avgMarks / 100) * 60 : 0) },
-              ]}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" stroke="#64748b" fontSize={12} />
-                <YAxis stroke="#64748b" fontSize={12} domain={[0, 40]} />
-                <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
-                <Bar dataKey="pct" fill="#059669" radius={[4, 4, 0, 0]} />
-              </BarChart>
+            <div className="rounded-3 border border-secondary-subtle p-2">
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={[
+                  { label: 'CAT (40)', pct: Math.round(stats.avgMarks ? (stats.avgMarks / 100) * 40 : 0) },
+                  { label: 'Exam (60)', pct: Math.round(stats.avgMarks ? (stats.avgMarks / 100) * 60 : 0) },
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <XAxis dataKey="label" stroke="#475569" fontSize={12} />
+                  <YAxis stroke="#475569" fontSize={12} domain={[0, 40]} />
+                  <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+                  <Bar dataKey="pct" fill="#16A34A" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Announcements */}
         {announcements.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Announcements</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <div className="card">
+            <div className="card-header py-3"><h5 className="mb-0 fw-semibold">Announcements</h5></div>
+            <div className="card-body d-flex flex-column gap-3">
               {announcements.map((a) => (
-                <div key={a.id} className="rounded-[10px] border border-slate-200 bg-slate-50 p-3">
-                  <p className="fs-14 fw-medium text-slate-900">{a.title}</p>
-                  <p className="mt-1 fs-13 text-slate-500">{a.body}</p>
+                <div key={a.id} className="rounded-3 border border-secondary-subtle p-3">
+                  <p className="fw-semibold text-main mb-0">{a.title}</p>
+                  <p className="text-muted mt-1 bd-fs-sm mb-0">{a.body}</p>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Recent behavior scores */}
         {role !== 'dod' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Behavior Scores</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="card">
+            <div className="card-header d-flex align-items-center justify-content-between py-3">
+              <h5 className="mb-0 fw-semibold">Recent Behavior Scores</h5>
+              <Link to="/scores" className="btn btn-outline-primary btn-sm">View all</Link>
+            </div>
+            <div className="card-body">
               <RecentScoresTable scores={recentScores} loading={loading} />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Quick actions */}
@@ -438,8 +448,3 @@ export default function Dashboard() {
     </DashboardLayout>
   );
 }
-
-
-
-
-

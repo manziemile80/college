@@ -1,7 +1,6 @@
 ﻿import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { SearchX, ArrowLeft } from '@/lib/icons';
-import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
   const location = useLocation();
@@ -11,19 +10,19 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="d-flex min-h-screen d-flex flex-column align-items-center justify-content-center bg-background px-4">
+    <div className="min-vh-100 bg-body d-flex flex-column align-items-center justify-content-center px-4">
       <div className="text-center">
-        <div className="mb-6 d-inline-flex h-20 w-20 align-items-center justify-content-center rounded-circle bg-emerald-100">
-          <SearchX className="h-10 w-10 text-emerald-600" />
+        <div className="mb-5 d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle p-4">
+          <SearchX className="fs-5 text-success" />
         </div>
-        <h1 className="mb-4 fs-64 fw-bold tracking-tight text-slate-900 sm:fs-80">404</h1>
-        <h2 className="mb-2 fs-22 fw-semibold text-slate-900">Page not found</h2>
-        <p className="mb-8 max-w-md fs-14 text-slate-500">
+        <h1 className="mb-4 fs-5 fw-bold tracking-tight text-main">404</h1>
+        <h2 className="mb-2 fw-semibold text-main">Page not found</h2>
+        <p className="mb-8 max-w-md text-muted bd-fs-md mb-0">
           The page you are looking for doesn't exist or has been moved. Let's get you back on track.
         </p>
-        <div className="d-flex d-flex flex-column g-2 sm:d-flex flex-row sm:justify-content-center">
+        <div className="d-flex flex-wrap align-items-center justify-content-center gap-2">
           <Link to="/dashboard">
-            <Button className="g-2"><ArrowLeft className="h-4 w-4" />Back to Dashboard</Button>
+            <button type="button" className="btn btn-success d-inline-flex align-items-center gap-1"><ArrowLeft /> Back to Dashboard</button>
           </Link>
         </div>
       </div>
@@ -32,7 +31,3 @@ const NotFound = () => {
 };
 
 export default NotFound;
-
-
-
-

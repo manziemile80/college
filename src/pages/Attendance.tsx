@@ -1,18 +1,12 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { CalendarCheck, Loader2, Save, Search } from '@/lib/icons';
+import { CalendarCheck, Save, Search } from '@/lib/icons';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface Student { id: string; first_name: string; last_name: string; student_id: string; }
 interface ClassRow { id: string; name: string; }
@@ -20,11 +14,11 @@ type Status = 'present' | 'absent' | 'late' | 'excused';
 
 const statusBadge = (status: Status) => {
   switch (status) {
-    case 'present': return <Badge className="bg-green-100 text-emerald-700">Present</Badge>;
-    case 'absent': return <Badge variant="destructive">Absent</Badge>;
-    case 'late': return <Badge className="bg-amber-100 text-amber-800">Late</Badge>;
-    case 'excused': return <Badge className="bg-blue-100 text-blue-900">Excused</Badge>;
-    default: return <Badge variant="secondary">{status}</Badge>;
+    case 'present': return <span className="badge text-bg-success">Present</span>;
+    case 'absent': return <span className="badge text-bg-danger">Absent</span>;
+    case 'late': return <span className="badge text-bg-warning">Late</span>;
+    case 'excused': return <span className="badge text-bg-info">Excused</span>;
+    default: return <span className="badge text-bg-secondary">{status}</span>;
   }
 };
 
@@ -99,7 +93,7 @@ export default function Attendance() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="Records"
           title="Attendance"
@@ -108,97 +102,110 @@ export default function Attendance() {
 
         {/* Filters */}
         <div className="row g-3 col-md-6 col-xl-3">
-          <div className="space-y-2">
-            <Label>Class</Label>
-            <Select value={classId} onValueChange={setClassId}>
-              <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-              <SelectContent>{classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-            </Select>
+          <div className="d-flex flex-column gap-2">
+            <label className="form-label">Class</label>
+            <select className="form-select" value={classId} onChange={(e) => setClassId(e.target.value)}>
+              <option value="">Select class</option>
+              {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
           </div>
-          <div className="space-y-2">
-            <Label>Date</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <div className="d-flex flex-column gap-2">
+            <label className="form-label">Date</label>
+            <input className="form-control" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
         </div>
 
         {classId && (
-          <Card>
-            <CardHeader>
-              <div className="d-flex d-flex flex-column g-3 sm:d-flex flex-row sm:align-items-center sm:justify-content-between">
-                <div>
-                  <CardTitle className="fs-16">Roll Call</CardTitle>
-                  <p className="mt-1 fs-13 text-slate-500">
-                    Attendance taken on <span className="fw-semibold text-slate-900">{format(new Date(date), 'EEEE, MMMM d, yyyy')}</span>
-                  </p>
-                </div>
-                <div className="d-flex flex-wrap align-items-center g-3">
-                  <div className="d-flex g-3 rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-2 fs-13 text-slate-600">
-                    <span>Present: {summary.present}</span>
-                    <span>Absent: {summary.absent}</span>
-                    <span>Late: {summary.late}</span>
-                    <span>Excused: {summary.excused}</span>
-                    <span>Total: {total}</span>
-                  </div>
-                  <div className="position-relative">
-                    <Search className="position-absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
-                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student..." className="w-48 pl-8" />
-                  </div>
-                  {canEdit && (
-                    <Button onClick={saveAll} disabled={saving}>
-                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
-                    </Button>
-                  )}
-                </div>
+          <div className="card">
+            <div className="card-header d-flex flex-column gap-3 border-bottom border-secondary-subtle py-3">
+              <div className="d-flex flex-column gap-2">
+                <h5 className="mb-0 fw-semibold text-main d-flex align-items-center gap-2">
+                  <CalendarCheck className="text-success" /> Roll Call
+                </h5>
+                <p className="text-muted bd-fs-sm mb-0">
+                  Attendance taken on <span className="fw-semibold text-main">{format(new Date(date), 'EEEE, MMMM d, yyyy')}</span>
+                </p>
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
+              <div className="d-flex flex-wrap align-items-center gap-3">
+                <div className="d-flex flex-wrap gap-2 bd-fs-sm text-secondary">
+                  <span>Present: <strong className="text-success">{summary.present}</strong></span>
+                  <span>Absent: <strong className="text-danger">{summary.absent}</strong></span>
+                  <span>Late: <strong className="text-warning">{summary.late}</strong></span>
+                  <span>Excused: <strong className="text-info">{summary.excused}</strong></span>
+                  <span>Total: <strong className="text-main">{total}</strong></span>
+                </div>
+                <div className="input-group w-100 flex-grow-1">
+                  <span className="input-group-text bg-white border-secondary-subtle"><Search className="text-secondary" /></span>
+                  <input
+                    type="search"
+                    className="form-control border-secondary-subtle"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search student..."
+                    aria-label="Search student"
+                  />
+                </div>
+                {canEdit && (
+                  <button type="button" className="btn btn-success d-inline-flex align-items-center gap-1" onClick={saveAll} disabled={saving}>
+                    {saving ? <><span className="spinner-border spinner-border-sm" /> Saving...</> : <><Save /> Save</>}
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="card-body p-0">
               {loading ? (
-                <div className="d-flex justify-content-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+                <div className="d-flex justify-content-center py-8"><span className="spinner-border spinner-border-lg text-success" role="status" /></div>
               ) : filtered.length === 0 ? (
-                <div className="empty-state"><CalendarCheck className="h-10 w-10 text-slate-400 mb-3" /><p className="fs-14 text-slate-500">No students in this class</p></div>
+                <div className="empty-state">
+                  <CalendarCheck className="empty-state-icon text-secondary" />
+                  <p className="text-secondary mb-0">No students in this class</p>
+                </div>
               ) : (
-                <div class="table-responsive"><Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student</TableHead>
-                      <TableHead>ID</TableHead>
-                      <TableHead className="text-end">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell className="fw-medium text-slate-900">{s.first_name} {s.last_name}</TableCell>
-                        <TableCell className="fs-13 text-slate-500">{s.student_id}</TableCell>
-                        <TableCell className="text-end">
-                          {canEdit ? (
-                            <Select value={statuses[s.id] || 'present'} onValueChange={(v) => setStatus(s.id, v as Status)}>
-                              <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="present">Present</SelectItem>
-                                <SelectItem value="absent">Absent</SelectItem>
-                                <SelectItem value="late">Late</SelectItem>
-                                <SelectItem value="excused">Excused</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            statusBadge(statuses[s.id] || 'present')
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table></div>
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle mb-0">
+                    <thead>
+                      <tr className="border-bottom border-secondary-subtle">
+                        <th scope="col">Student</th>
+                        <th scope="col">ID</th>
+                        <th scope="col" className="text-end">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((s) => (
+                        <tr key={s.id} className="border-bottom border-secondary-subtle">
+                          <td className="fw-medium text-main">{s.first_name} {s.last_name}</td>
+                          <td className="text-muted bd-fs-sm">{s.student_id}</td>
+                          <td className="text-end">
+                            {canEdit ? (
+                              <select
+                                className="form-select form-select-sm w-auto"
+                                value={statuses[s.id] || 'present'}
+                                onChange={(e) => setStatus(s.id, e.target.value as Status)}
+                              >
+                                <option value="present">Present</option>
+                                <option value="absent">Absent</option>
+                                <option value="late">Late</option>
+                                <option value="excused">Excused</option>
+                              </select>
+                            ) : (
+                              statusBadge(statuses[s.id] || 'present')
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Status legend */}
-        <div className="d-flex flex-wrap align-items-center g-3">
+        <div className="d-flex flex-wrap align-items-center gap-3 bd-fs-sm text-secondary">
           {(['present', 'absent', 'late', 'excused'] as const).map((s) => (
-            <span key={s} className="d-inline-flex align-items-center g-1.5 fs-13 text-slate-600">
-              <span className="h-2.5 w-2.5 rounded-circle bg-slate-100" />{statusLabel(s)}
+            <span key={s} className="d-inline-flex align-items-center gap-1.5">
+              <span className={cn(statusDot(s))} /> {statusLabel(s)}
             </span>
           ))}
         </div>
@@ -207,8 +214,11 @@ export default function Attendance() {
   );
 }
 
-
-
-
-
-
+const statusDot = (s: Status) =>
+  cn('h-2.5 w-2.5 rounded-circle', {
+    'bg-success': s === 'present',
+    'bg-danger': s === 'absent',
+    'bg-warning': s === 'late',
+    'bg-info': s === 'excused',
+    'bg-secondary': true,
+  });

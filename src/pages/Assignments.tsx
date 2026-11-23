@@ -4,16 +4,8 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, ClipboardList, Loader2, Send, GraduationCap, CalendarDays, UserCheck, Paperclip } from '@/lib/icons';
+import { Plus, Trash2, ClipboardList, Send, GraduationCap, CalendarDays, UserCheck, Paperclip } from '@/lib/icons';
 import { ClaimStudentRecordDialog } from '@/components/students/ClaimStudentRecordDialog';
 
 interface Assignment {
@@ -189,196 +181,233 @@ export default function Assignments() {
 
   const label = (list: { id: string; name: string }[], id: string | null) => list.find((x) => x.id === id)?.name;
 
+  const assignmentCard = (a: Assignment) => {
+    const mine = mySubmissions.find((s) => s.assignment_id === a.id);
+    const overdue = a.due_date && new Date(a.due_date) < new Date() && !mine;
+    return (
+      <div className="card h-100 d-flex flex-column">
+        <div className="card-body d-flex flex-column gap-3 p-4">
+          <div className="d-flex align-items-start justify-content-between gap-2">
+            <span className="d-inline-flex align-items-center justify-content-center rounded-3 bg-success-subtle text-success p-2"><ClipboardList className="fs-5" /></span>
+            {mine ? (
+              <span className={`badge bd-fs-xs ${mine.points_awarded != null ? 'text-bg-success bg-success-subtle' : 'text-bg-secondary bg-secondary-subtle'}`}>
+                {mine.points_awarded != null ? `${mine.points_awarded}/${a.max_points}` : 'Submitted'}
+              </span>
+            ) : overdue ? (
+              <span className="badge text-bg-danger bd-fs-xs">Overdue</span>
+            ) : (
+              <span className="badge text-bg-secondary bd-fs-xs">{a.max_points} pts</span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <h3 className="fw-semibold text-main mb-1 text-truncate">{a.title}</h3>
+            <p className="text-muted bd-fs-sm mb-0 mt-1 line-clamp-2">{a.instructions || 'No instructions provided.'}</p>
+          </div>
+          <div className="d-flex flex-wrap gap-2">
+            {a.due_date && (
+              <span className="d-inline-flex align-items-center gap-1 bd-fs-sm text-muted"><CalendarDays className="fs-6 text-success" /> Due {new Date(a.due_date).toLocaleDateString()}</span>
+            )}
+            {label(subjects, a.subject_id) && (
+              <span className="badge text-bg-secondary bg-secondary-subtle bd-fs-xs">{label(subjects, a.subject_id)}</span>
+            )}
+            {label(classes, a.class_id) && (
+              <span className="badge text-bg-secondary bg-secondary-subtle bd-fs-xs">{label(classes, a.class_id)}</span>
+            )}
+          </div>
+          {mine?.feedback && (
+            <div className="rounded-3 bg-secondary-subtle p-3 bd-fs-sm text-secondary">Feedback: {mine.feedback}</div>
+          )}
+          <div className="d-flex align-items-center gap-2 mt-auto">
+            {isStaff ? (
+              <>
+                <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => openGrading(a)}><GraduationCap />Submissions</button>
+                <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete assignment" onClick={() => remove(a.id)}><Trash2 /></button>
+              </>
+            ) : role === 'student' ? (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1"
+                onClick={() => {
+                  setSubmitFor(a);
+                  setAnswer({ answer_text: mine?.answer_text || '', file_url: mine?.file_url || '' });
+                }}
+              >
+                <Send /> {mine ? 'Update Work' : 'Submit Work'}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="E-Learning"
           title="Assignments"
           description={isStaff ? 'Post assignments with due dates, then review and grade student submissions.' : 'View assignments, submit your work and see your marks and feedback.'}
           actions={isStaff ? (
-            <Button className="g-2" onClick={() => setOpen(true)}><Plus className="h-4 w-4" />New Assignment</Button>
+            <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={() => setOpen(true)}><Plus /> New Assignment</button>
           ) : undefined}
         />
 
         {role === 'student' && !studentId && (
-          <Card className="border-dashed border-2 border-slate-300 bg-slate-50">
-            <CardContent className="d-flex align-items-center justify-content-between g-4 p-4 sm:d-flex flex-row">
+          <div className="card border-dashed border-3">
+            <div className="card-body d-flex align-items-center justify-content-between gap-4 p-4">
               <div>
-                <p className="fs-14 fw-medium text-slate-900">Connect your student profile</p>
-                <p className="fs-13 text-slate-500">Pick your name once so your work is saved.</p>
+                <p className="fw-semibold text-main mb-0">Connect your student profile</p>
+                <p className="text-muted bd-fs-sm mb-0">Pick your name once so your work is saved.</p>
               </div>
-              <Button size="sm" className="g-1.5" onClick={() => setClaimOpen(true)}><UserCheck className="h-4 w-4" />Find my profile</Button>
-            </CardContent>
-          </Card>
-        )}
-
-        <ClaimStudentRecordDialog
-          open={claimOpen}
-          onOpenChange={setClaimOpen}
-          onLinked={() => { refreshStudent(); }}
-        />
-
-        {loading ? (
-          <div className="d-flex justify-content-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
-        ) : assignments.length === 0 ? (
-          <Card><CardContent className="d-flex d-flex flex-column align-items-center py-14 text-center">
-            <ClipboardList className="mb-3 h-10 w-10 text-slate-400" />
-            <p className="fw-medium text-slate-900">No assignments yet</p>
-            {isStaff && <p className="mt-1 fs-13 text-slate-500">Post the first assignment for your class.</p>}
-          </CardContent></Card>
-        ) : (
-          <div className="row g-4 col-md-6 col-xl-3">
-            {assignments.map((a) => {
-              const mine = mySubmissions.find((s) => s.assignment_id === a.id);
-              const overdue = a.due_date && new Date(a.due_date) < new Date() && !mine;
-              return (
-                <Card key={a.id} className="d-flex d-flex flex-column">
-                  <CardContent className="d-flex flex-1 d-flex flex-column g-3 p-5">
-                    <div className="d-flex align-items-start justify-content-between g-2">
-                      <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
-                        <ClipboardList className="h-5 w-5" />
-                      </div>
-                      {mine ? (
-                        <Badge className={mine.points_awarded != null ? 'bg-green-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}>
-                          {mine.points_awarded != null ? `${mine.points_awarded}/${a.max_points}` : 'Submitted'}
-                        </Badge>
-                      ) : overdue ? (
-                        <Badge variant="destructive">Overdue</Badge>
-                      ) : (
-                        <Badge variant="secondary">{a.max_points} pts</Badge>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="fw-semibold text-slate-900">{a.title}</h3>
-                      <p className="mt-1 line-clamp-2 fs-13 text-slate-500">
-                        {a.instructions || 'No instructions provided.'}
-                      </p>
-                    </div>
-                    <div className="d-flex flex-wrap gap-x-3 gap-y-1.5">
-                      {a.due_date && (
-                        <span className="d-inline-flex align-items-center g-1 fs-11.5 text-slate-500">
-                          <CalendarDays className="h-3.5 w-3.5 text-emerald-600" /> Due {new Date(a.due_date).toLocaleDateString()}
-                        </span>
-                      )}
-                      {label(subjects, a.subject_id) && (
-                        <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{label(subjects, a.subject_id)}</span>
-                      )}
-                      {label(classes, a.class_id) && (
-                        <span className="rounded-circle bg-slate-100 px-2.5 py-0.5 fs-11.5 text-slate-600">{label(classes, a.class_id)}</span>
-                      )}
-                    </div>
-                    {mine?.feedback && (
-                      <div className="rounded-[10px] bg-slate-50 p-2.5 fs-12.5 text-slate-500">
-                        Feedback: {mine.feedback}
-                      </div>
-                    )}
-                    <div className="mt-auto d-flex align-items-center g-2 pt-2">
-                      {isStaff ? (
-                        <>
-                          <Button variant="outline" size="sm" className="g-1.5" onClick={() => openGrading(a)}><GraduationCap className="h-4 w-4" />Submissions</Button>
-                          <Button variant="destructive" size="icon" aria-label="Delete assignment" onClick={() => remove(a.id)}><Trash2 className="h-4 w-4" /></Button>
-                        </>
-                      ) : role === 'student' ? (
-                        <Button size="sm" className="g-1.5" onClick={() => {
-                          setSubmitFor(a);
-                          setAnswer({ answer_text: mine?.answer_text || '', file_url: mine?.file_url || '' });
-                        }}>
-                          <Send className="h-4 w-4" />{mine ? 'Update Work' : 'Submit Work'}
-                        </Button>
-                      ) : null}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+              <button type="button" className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => setClaimOpen(true)}><UserCheck /> Find my profile</button>
+            </div>
           </div>
         )}
 
-        {/* Create assignment */}
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>New Assignment</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <Label>Title</Label>
-                <Input value={form.title} maxLength={150} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-              </div>
-              <div>
-                <Label>Instructions</Label>
-                <Textarea value={form.instructions} maxLength={3000} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
-              </div>
-              <div className="row g-2 col-md-6">
-                <div>
-                  <Label>Due date</Label>
-                  <Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Max points</Label>
-                  <Input type="number" min={1} max={100} value={form.max_points} onChange={(e) => setForm({ ...form, max_points: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Subject</Label>
-                  <Select value={form.subject_id} onValueChange={(v) => setForm({ ...form, subject_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
-                    <SelectContent>{subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Class</Label>
-                  <Select value={form.class_id} onValueChange={(v) => setForm({ ...form, class_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                    <SelectContent>{classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                  </Select>
+        <ClaimStudentRecordDialog open={claimOpen} onOpenChange={setClaimOpen} onLinked={() => { refreshStudent(); }} />
+
+        {loading ? (
+          <div className="d-flex justify-content-center py-8">
+            <span className="spinner-border spinner-border-lg text-success" role="status" />
+          </div>
+        ) : assignments.length === 0 ? (
+          <div className="card">
+            <div className="card-body d-flex flex-column align-items-center py-12 text-center">
+              <ClipboardList className="fs-3 mb-3 text-secondary" />
+              <p className="fw-semibold text-main mb-2">No assignments yet</p>
+              {isStaff && <p className="mt-1 text-muted bd-fs-sm">Post the first assignment for your class.</p>}
+            </div>
+          </div>
+        ) : (
+          <div className="row g-3 row-cols-1 row-cols-md-2 row-cols-lg-3">
+            {assignments.map((a) => <div key={a.id} className="col">{assignmentCard(a)}</div>)}
+          </div>
+        )}
+
+        {/* ── New Assignment modal ── */}
+        {open && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">New Assignment</h5>
+                    <button type="button" className="btn-close" onClick={() => setOpen(false)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-3">
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Title</label>
+                      <input className="form-control" value={form.title} maxLength={150} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                    </div>
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Instructions</label>
+                      <textarea className="form-control" value={form.instructions} maxLength={3000} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
+                    </div>
+                    <div className="row g-3">
+                      <div className="col-6 col-md-3">
+                        <label className="form-label">Due date</label>
+                        <input className="form-control" type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
+                      </div>
+                      <div className="col-6 col-md-3">
+                        <label className="form-label">Max points</label>
+                        <input className="form-control" type="number" min={1} max={100} value={form.max_points} onChange={(e) => setForm({ ...form, max_points: e.target.value })} />
+                      </div>
+                      <div className="col-6 col-md-3">
+                        <label className="form-label">Subject</label>
+                        <select className="form-select" value={form.subject_id} onChange={(e) => setForm({ ...form, subject_id: e.target.value })}>
+                          <option value="">Select subject</option>
+                          {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-6 col-md-3">
+                        <label className="form-label">Class</label>
+                        <select className="form-select" value={form.class_id} onChange={(e) => setForm({ ...form, class_id: e.target.value })}>
+                          <option value="">Select class</option>
+                          {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => setOpen(false)}>Cancel</button>
+                    <button type="button" className="btn btn-success" onClick={save}>Create</button>
+                  </div>
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button onClick={save}>Create</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </>
+        )}
 
-        {/* Student submit */}
-        <Dialog open={!!submitFor} onOpenChange={(o) => !o && setSubmitFor(null)}>
-          <DialogContent>
-            <DialogHeader><DialogTitle>{submitFor?.title}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <Label>Your answer</Label>
-                <Textarea value={answer.answer_text} maxLength={5000} onChange={(e) => setAnswer({ ...answer, answer_text: e.target.value })} placeholder="Type your work here" />
-              </div>
-              <div>
-                <Label>File link (optional)</Label>
-                <div className="d-flex g-2">
-                  <Input value={answer.file_url} maxLength={500} placeholder="https://..." onChange={(e) => setAnswer({ ...answer, file_url: e.target.value })} />
-                  <Button type="button" variant="outline" size="icon" className="shrink-0"><Paperclip className="h-4 w-4" /></Button>
+        {/* ── Student submit modal ── */}
+        {submitFor && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">{submitFor.title}</h5>
+                    <button type="button" className="btn-close" onClick={() => setSubmitFor(null)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-3">
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Your answer</label>
+                      <textarea className="form-control" value={answer.answer_text} maxLength={5000} onChange={(e) => setAnswer({ ...answer, answer_text: e.target.value })} placeholder="Type your work here" />
+                    </div>
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">File link (optional)</label>
+                      <div className="input-group">
+                        <input
+                          type="url"
+                          className="form-control"
+                          value={answer.file_url}
+                          maxLength={500}
+                          placeholder="https://..."
+                          onChange={(e) => setAnswer({ ...answer, file_url: e.target.value })}
+                        />
+                        <span className="input-group-text"><Paperclip className="text-secondary" /></span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => setSubmitFor(null)}>Cancel</button>
+                    <button type="button" className="btn btn-success d-inline-flex align-items-center gap-1" onClick={submitWork}><Send /> Submit</button>
+                  </div>
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setSubmitFor(null)}>Cancel</Button>
-              <Button onClick={submitWork}><Send className="h-4 w-4" />Submit</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </>
+        )}
 
-        {/* Grading */}
-        <Dialog open={!!gradeFor} onOpenChange={(o) => !o && setGradeFor(null)}>
-          <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-            <DialogHeader><DialogTitle>{gradeFor?.title} â€” Submissions</DialogTitle></DialogHeader>
-            {submissions.length === 0 ? (
-              <p className="fs-13 text-slate-500">No submissions yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {submissions.map((s) => (
-                  <GradeRow key={s.id} submission={s} maxPoints={gradeFor?.max_points || 20} onGrade={grade} />
-                ))}
+        {/* ── Grading modal ── */}
+        {gradeFor && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">{gradeFor.title} — Submissions</h5>
+                    <button type="button" className="btn-close" onClick={() => setGradeFor(null)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-3">
+                    {submissions.length === 0 ? (
+                      <p className="text-muted bd-fs-sm mb-0">No submissions yet.</p>
+                    ) : (
+                      <div className="d-flex flex-column gap-3">
+                        {submissions.map((s) => (
+                          <GradeRow key={s.id} submission={s} maxPoints={gradeFor.max_points || 20} onGrade={grade} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
@@ -404,48 +433,45 @@ function GradeRow({
   };
 
   return (
-    <div className="space-y-2 rounded-[10px] border border-slate-200 p-3">
-      <p className="fs-14 fw-semibold text-slate-900">
+    <div className="card d-flex flex-column gap-2 p-3">
+      <p className="fw-semibold text-main mb-0">
         {submission.student ? `${submission.student.first_name} ${submission.student.last_name}` : 'Student'}
-        <span className="ml-2 fs-12.5 fw-normal text-slate-500">
-          {submission.student?.student_id} Â· {new Date(submission.submitted_at).toLocaleString()}
+        <span className="ms-2 bd-fs-sm fw-normal text-secondary">
+          {submission.student?.student_id} · {new Date(submission.submitted_at).toLocaleString()}
         </span>
       </p>
       {submission.answer_text && (
-        <p className="text-wrap rounded-[8px] bg-slate-50 p-2.5 fs-13 text-slate-600">
+        <p className="text-wrap rounded-3 bg-secondary-subtle p-3 bd-fs-sm text-secondary mb-0">
           {submission.answer_text}
         </p>
       )}
       {submission.file_url && (
-        <a href={submission.file_url} target="_blank" rel="noreferrer" className="d-inline-flex align-items-center g-1.5 fs-13 text-emerald-600 underline">
-          <Paperclip className="h-3.5 w-3.5" />Open submitted file
+        <a href={submission.file_url} target="_blank" rel="noreferrer" className="d-inline-flex align-items-center gap-1 bd-fs-sm text-success text-decoration-none">
+          <Paperclip className="fs-6" />Open submitted file
         </a>
       )}
-      <div className="d-flex d-flex flex-column g-2 sm:d-flex flex-row sm:align-items-center">
-        <Input
+      <div className="d-flex flex-wrap align-items-center gap-2">
+        <input
           type="number"
+          className="form-control w-auto"
+          style={{ maxWidth: '6rem' }}
           min={0}
           max={maxPoints}
-          className="sm:w-28"
           placeholder={`0-${maxPoints}`}
           value={points}
           onChange={(e) => setPoints(e.target.value)}
         />
-        <Input
+        <input
           placeholder="Feedback"
           maxLength={1000}
-          className="sm:flex-1"
+          className="form-control"
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
         />
-        <Button size="sm" onClick={handleSave} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Grade'}</Button>
+        <button type="button" className="btn btn-success btn-sm d-inline-flex align-items-center gap-1" onClick={handleSave} disabled={saving}>
+          {saving ? <><span className="spinner-border spinner-border-sm" /> Saving...</> : 'Save Grade'}
+        </button>
       </div>
     </div>
   );
 }
-
-
-
-
-
-

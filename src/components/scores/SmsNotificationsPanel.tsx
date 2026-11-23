@@ -1,7 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { SmsStatusBadge } from './SmsStatusBadge';
-import { Button } from '@/components/ui/button';
 import { Loader2, MessageSquare, RefreshCw } from '@/lib/icons';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -96,63 +95,53 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
   if (loading) {
     return (
       <div className="d-flex align-items-center justify-content-center py-4">
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        <span className="spinner-border spinner-border-sm text-secondary" />
       </div>
     );
   }
 
   if (notifications.length === 0) {
-    return (
-      <p className="fs-sm text-muted-foreground py-2">
-        No SMS notifications sent yet
-      </p>
-    );
+    return <p className="text-muted bd-fs-sm py-2 mb-0">No SMS notifications sent yet</p>;
   }
 
   return (
-    <div className="space-y-2">
+    <div className="d-flex flex-column gap-2">
       {notifications.map((notification) => (
         <div
           key={notification.id}
-          className="d-flex align-items-center justify-content-between rounded-lg border border-border bg-muted/30 p-3"
+          className="card d-flex align-items-center justify-content-between gap-3 p-3"
         >
-        <div className="d-flex-1 space-y-1">
-            <div className="d-flex align-items-center g-2">
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              <span className="fw-medium fs-sm">
+          <div className="d-flex flex-grow-1 align-items-center gap-2 min-w-0">
+            <MessageSquare className="text-secondary" />
+            <div className="min-w-0">
+              <span className="fw-medium text-main bd-fs-sm">
                 {notification.parent?.full_name || 'Unknown Parent'}
               </span>
+              <p className="text-secondary bd-fs-sm mb-0">{notification.phone_number}</p>
+              {notification.sent_at && (
+                <p className="text-secondary bd-fs-sm mb-0">
+                  Sent: {format(new Date(notification.sent_at), 'MMM d, yyyy h:mm a')}
+                </p>
+              )}
+              {notification.error_message && (
+                <p className="text-danger bd-fs-sm mb-0">Error: {notification.error_message}</p>
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {notification.phone_number}
-            </p>
-            {notification.sent_at && (
-              <p className="text-xs text-muted-foreground">
-                Sent: {format(new Date(notification.sent_at), 'MMM d, yyyy h:mm a')}
-              </p>
-            )}
-            {notification.error_message && (
-              <p className="text-xs text-destructive">
-                Error: {notification.error_message}
-              </p>
-            )}
           </div>
-          <div className="d-flex align-items-center g-2">
+          <div className="d-flex align-items-center gap-2 flex-shrink-0">
             {notification.status === 'failed' && (
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                type="button"
+                className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
                 onClick={() => handleResend(notification)}
                 disabled={resendingId === notification.id}
-                className="text-xs"
               >
                 {resendingId === notification.id ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <><span className="spinner-border spinner-border-sm" /> Resending...</>
                 ) : (
-                  <RefreshCw className="h-3 w-3" />
+                  <><RefreshCw /> Resend</>
                 )}
-                Resend
-              </Button>
+              </button>
             )}
             <SmsStatusBadge status={notification.status} />
           </div>
@@ -161,6 +150,3 @@ export function SmsNotificationsPanel({ behaviorScoreId }: SmsNotificationsPanel
     </div>
   );
 }
-
-
-

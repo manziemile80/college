@@ -3,16 +3,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Pencil, Search, Loader2, Package, ArrowDownCircle, ArrowUpCircle, History, X } from '@/lib/icons';
+import { Plus, Trash2, Pencil, Search, Package, ArrowDownCircle, ArrowUpCircle, History } from '@/lib/icons';
 
 interface StockItem {
   id: string;
@@ -202,199 +194,255 @@ export default function Stock() {
       i.category.toLowerCase().includes(search.toLowerCase()),
   );
   const lowStock = items.filter((i) => Number(i.quantity) <= Number(i.min_quantity));
-
   const totalValue = items.reduce((s, i) => s + Number(i.unit_price || 0) * Number(i.quantity || 0), 0);
+
+  const stockCard = (item: StockItem) => {
+    const low = Number(item.quantity) <= Number(item.min_quantity);
+    return (
+      <div className="card h-100 d-flex flex-column">
+        <div className="card-body d-flex flex-column gap-3 p-4">
+          <div className="d-flex align-items-start justify-content-between gap-2">
+            <span className="d-inline-flex align-items-center justify-content-center rounded-3 bg-success-subtle text-success p-2"><Package className="fs-5" /></span>
+            <span className={`badge bd-fs-xs ${low ? 'text-bg-danger bg-danger-subtle' : 'text-bg-secondary bg-secondary-subtle'}`}>
+              {item.quantity} {item.unit}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <h3 className="fw-semibold text-main mb-1 text-truncate">{item.name}</h3>
+            <p className="text-muted bd-fs-sm mb-0 text-truncate">{item.category}{item.location ? ` · ${item.location}` : ''}</p>
+            <p className="text-muted bd-fs-sm mt-2 mb-0">
+              Unit price: {Number(item.unit_price || 0).toLocaleString()} RWF · Total:{' '}
+              <span className="fw-semibold text-main">{(Number(item.unit_price || 0) * Number(item.quantity)).toLocaleString()} RWF</span>
+            </p>
+            {low && (
+              <p className="mt-2 bd-fs-sm fw-medium text-danger mb-0">
+                At or below minimum level ({item.min_quantity} {item.unit})
+              </p>
+            )}
+          </div>
+          <div className="d-flex flex-wrap align-items-center gap-2 mt-auto">
+            {canManage && (
+              <>
+                <button type="button" className="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1" onClick={() => openMove(item, 'in')}>
+                  <ArrowDownCircle /> Stock In
+                </button>
+                <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1" onClick={() => openMove(item, 'out')}>
+                  <ArrowUpCircle /> Stock Out
+                </button>
+              </>
+            )}
+            <button type="button" className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" onClick={() => setHistoryItem(item)}><History /> History</button>
+            {canManage && (
+              <>
+                <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center" aria-label="Edit item" onClick={() => openEdit(item)}><Pencil /></button>
+                <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete item" onClick={() => removeItem(item.id)}><Trash2 /></button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="Operations"
           title="Stock Management"
           description={canManage ? 'Track school supplies, record what comes in and what is issued out.' : 'View the school stock list and current quantities.'}
           actions={canManage ? (
-            <Button className="g-2" onClick={openNew}><Plus className="h-4 w-4" />New Item</Button>
+            <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={openNew}><Plus /> New Item</button>
           ) : undefined}
         />
 
-        <div className="row g-2 col-md-6 col-lg-3">
-          <Card>
-            <CardContent className="p-4">
-              <p className="fs-12.5 text-slate-500">Items tracked</p>
-              <p className="fs-30 fw-bold text-slate-900">{items.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="fs-12.5 text-slate-500">Low or out of stock</p>
-              <p className="fs-30 fw-bold text-red-600">{lowStock.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="fs-12.5 text-slate-500">Total value (RWF)</p>
-              <p className="fs-30 fw-bold text-slate-900">{totalValue.toLocaleString()}</p>
-            </CardContent>
-          </Card>
+        <div className="row g-3">
+          <div className="col-6 col-md-6 col-xl-4">
+            <div className="card h-100 d-flex align-items-center gap-3 p-4">
+              <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle p-3 text-success"><Package className="fs-5" /></div>
+              <div>
+                <p className="text-muted bd-fs-sm mb-0">Items tracked</p>
+                <p className="fw-bold text-main bd-fs-lg mb-0">{items.length}</p>
+              </div>
+            </div>
+          </div>
+          <div className="col-6 col-md-6 col-xl-4">
+            <div className={`card h-100 d-flex align-items-center gap-3 p-4 ${lowStock.length > 0 ? 'text-danger' : ''}`}>
+              <div className={`d-inline-flex align-items-center justify-content-center rounded-circle p-3 ${lowStock.length > 0 ? 'bg-danger-subtle text-danger' : 'bg-secondary-subtle text-secondary'}`}><Package className="fs-5" /></div>
+              <div>
+                <p className="text-muted bd-fs-sm mb-0">Low or out of stock</p>
+                <p className={`fw-bold bd-fs-lg mb-0 ${lowStock.length > 0 ? 'text-danger' : 'text-main'}`}>{lowStock.length}</p>
+              </div>
+            </div>
+          </div>
+          <div className="col-12 col-xl-4">
+            <div className="card h-100 d-flex align-items-center gap-3 p-4">
+              <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle p-3 text-success"><Package className="fs-5" /></div>
+              <div>
+                <p className="text-muted bd-fs-sm mb-0">Total value (RWF)</p>
+                <p className="fw-bold text-main bd-fs-lg mb-0">{totalValue.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="position-relative max-w-md">
-          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input className="pl-9" placeholder="Search item or category" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="input-group w-100 w-md-auto flex-grow-1">
+          <span className="input-group-text bg-white border-secondary-subtle"><Search className="text-secondary" /></span>
+          <input type="search" className="form-control border-secondary-subtle" placeholder="Search item or category" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search stock" />
         </div>
 
         {loading ? (
-          <div className="d-flex justify-content-center py-16"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
+          <div className="d-flex justify-content-center py-8">
+            <span className="spinner-border spinner-border-lg text-success" role="status" />
+          </div>
         ) : filtered.length === 0 ? (
-          <Card><CardContent className="d-flex d-flex flex-column align-items-center py-14 text-center">
-            <Package className="mb-3 h-10 w-10 text-slate-400" />
-            <p className="fw-medium text-slate-900">No stock items yet</p>
-          </CardContent></Card>
+          <div className="card">
+            <div className="card-body d-flex flex-column align-items-center py-12 text-center">
+              <Package className="fs-3 mb-3 text-secondary" />
+              <p className="fw-semibold text-main mb-2">No stock items yet</p>
+            </div>
+          </div>
         ) : (
-          <div className="row g-4 col-md-6 col-xl-3">
-            {filtered.map((item) => {
-              const low = Number(item.quantity) <= Number(item.min_quantity);
-              return (
-                <Card key={item.id} className="d-flex d-flex flex-column">
-                  <CardContent className="d-flex flex-1 d-flex flex-column g-3 p-5">
-                    <div className="d-flex align-items-start justify-content-between g-2">
-                      <div className="d-flex h-10 w-10 align-items-center justify-content-center rounded-[10px] bg-emerald-50 text-emerald-600">
-                        <Package className="h-5 w-5" />
-                      </div>
-                      <Badge variant={low ? 'destructive' : 'secondary'}>{item.quantity} {item.unit}</Badge>
-                    </div>
-                    <div>
-                      <h3 className="fw-semibold text-slate-900">{item.name}</h3>
-                      <p className="mt-1 fs-13 text-slate-500 capitalize">{item.category}{item.location ? ` Â· ${item.location}` : ''}</p>
-                      <p className="mt-1 fs-12.5 text-slate-500">
-                        Unit price: {Number(item.unit_price || 0).toLocaleString()} RWF Â· Total value:{' '}
-                        <span className="fw-semibold text-slate-900">{(Number(item.unit_price || 0) * Number(item.quantity)).toLocaleString()} RWF</span>
-                      </p>
-                      {low && (
-                        <p className="mt-1 fs-12.5 fw-medium text-red-600">
-                          At or below minimum level ({item.min_quantity} {item.unit})
-                        </p>
-                      )}
-                    </div>
-                    <div className="mt-auto d-flex flex-wrap align-items-center g-2 pt-2">
-                      {canManage && (
-                        <>
-                          <Button variant="outline" size="sm" className="g-1.5" onClick={() => openMove(item, 'in')}>
-                            <ArrowDownCircle className="h-4 w-4" />Stock In
-                          </Button>
-                          <Button variant="outline" size="sm" className="g-1.5" onClick={() => openMove(item, 'out')}>
-                            <ArrowUpCircle className="h-4 w-4" />Stock Out
-                          </Button>
-                        </>
-                      )}
-                      <Button variant="outline" size="sm" className="g-1.5" onClick={() => setHistoryItem(item)}><History className="h-4 w-4" />History</Button>
-                      {canManage && (
-                        <>
-                          <Button variant="edit" size="icon" aria-label="Edit item" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>
-                          <Button variant="destructive" size="icon" aria-label="Delete item" onClick={() => removeItem(item.id)}><Trash2 className="h-4 w-4" /></Button>
-                        </>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <div className="row g-3 row-cols-1 row-cols-md-2 row-cols-lg-3">
+            {filtered.map((item) => <div key={item.id} className="col">{stockCard(item)}</div>)}
           </div>
         )}
 
-        {/* Add / edit item */}
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>{editingId ? 'Edit Item' : 'New Item'}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div><Label>Item name</Label><Input value={form.name} maxLength={150} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="row g-2 col-md-6">
-                <div><Label>Category</Label>
-                  <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {categories.map((c) => (
-                        <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div><Label>Unit (pcs, box, kg...)</Label><Input value={form.unit} maxLength={30} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
-                <div><Label>Quantity in stock</Label><Input type="number" min={0} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /></div>
-                <div><Label>Minimum level</Label><Input type="number" min={0} value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} /></div>
-              </div>
-              <div>
-                <Label>Unit price (RWF per {form.unit || 'unit'})</Label>
-                <Input type="number" min={0} value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
-                {!editingId && items.some((i) => i.name.trim().toLowerCase() === form.name.trim().toLowerCase()) && (
-                  <p className="mt-1 fs-12.5 text-emerald-600">This item already exists â€” the quantity will be added to the current total.</p>
-                )}
-              </div>
-              <div><Label>Storage location</Label><Input value={form.location} maxLength={150} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
-              <div><Label>Notes</Label><Textarea value={form.notes} maxLength={500} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button onClick={saveItem}>{editingId ? 'Save Changes' : 'Add Item'}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Receive / issue */}
-        <Dialog open={!!moveItem} onOpenChange={(o) => !o && setMoveItem(null)}>
-          <DialogContent>
-            <DialogHeader><DialogTitle>{moveType === 'in' ? 'Stock in' : 'Stock out'} â€” {moveItem?.name}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <p className="fs-13 text-slate-500">Currently in stock: {moveItem?.quantity} {moveItem?.unit}</p>
-              <div><Label>Amount</Label><Input type="number" min={1} value={moveQty} onChange={(e) => setMoveQty(e.target.value)} /></div>
-              <div>
-                <Label>Reason / reference</Label>
-                <Input value={moveReason} maxLength={300} placeholder={moveType === 'in' ? 'Purchase, donation...' : 'Given to class, repair...'} onChange={(e) => setMoveReason(e.target.value)} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setMoveItem(null)}>Cancel</Button>
-              <Button onClick={saveMovement}>Record</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* History */}
-        <Dialog open={!!historyItem} onOpenChange={(o) => !o && setHistoryItem(null)}>
-          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
-            <DialogHeader><DialogTitle>{historyItem?.name} â€” Movements</DialogTitle></DialogHeader>
-            {(() => {
-              const rows = movements.filter((m) => m.item_id === historyItem?.id);
-              if (rows.length === 0) return <p className="fs-13 text-slate-500">No movements recorded yet.</p>;
-              return (
-                <div className="space-y-2">
-                  {rows.map((m) => (
-                    <div key={m.id} className="d-flex align-items-center justify-content-between rounded-[10px] border border-slate-200 p-3">
-                      <div>
-                        <p className="fs-14 fw-medium text-slate-900">
-                          {m.movement_type === 'in' ? 'Received' : 'Issued'} {m.quantity} {historyItem?.unit}
-                        </p>
-                        <p className="fs-12.5 text-slate-500">
-                          {new Date(m.movement_date).toLocaleDateString()}
-                          {m.reason ? ` Â· ${m.reason}` : ''}
-                        </p>
-                      </div>
-                      <Badge className={m.movement_type === 'in' ? 'bg-green-100 text-emerald-700' : 'bg-red-100 text-red-800'}>
-                        {m.movement_type === 'in' ? '+' : 'âˆ’'}{m.quantity}
-                      </Badge>
+        {/* ── Add / edit item modal ── */}
+        {open && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">{editingId ? 'Edit Item' : 'New Item'}</h5>
+                    <button type="button" className="btn-close" onClick={() => setOpen(false)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-3">
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Item name</label>
+                      <input className="form-control" value={form.name} maxLength={150} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                     </div>
-                  ))}
+                    <div className="row g-3">
+                      <div className="col-6 col-md-4">
+                        <label className="form-label">Category</label>
+                        <select className="form-select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                          {categories.map((c) => <option key={c} value={c} className="text-capitalize">{c}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label">Unit</label>
+                        <input className="form-control" value={form.unit} maxLength={30} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
+                      </div>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label">Unit price (RWF)</label>
+                        <input type="number" min={0} className="form-control" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
+                      </div>
+                    </div>
+                    <div className="row g-3">
+                      <div className="col-6 col-md-4">
+                        <label className="form-label">Quantity in stock</label>
+                        <input type="number" min={0} className="form-control" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
+                      </div>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label">Minimum level</label>
+                        <input type="number" min={0} className="form-control" value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} />
+                      </div>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label">Storage location</label>
+                        <input className="form-control" value={form.location} maxLength={150} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Room, shelf..." />
+                      </div>
+                    </div>
+                    {!editingId && items.some((i) => i.name.trim().toLowerCase() === form.name.trim().toLowerCase()) && (
+                      <p className="text-success bd-fs-sm">This item already exists — the quantity will be added to the current total.</p>
+                    )}
+                    <div className="d-flex justify-content-end gap-2 pt-2">
+                      <button type="button" className="btn btn-outline-secondary" onClick={() => setOpen(false)}>Cancel</button>
+                      <button type="button" className="btn btn-success" onClick={saveItem}>{editingId ? 'Save Changes' : 'Add Item'}</button>
+                    </div>
+                  </div>
                 </div>
-              );
-            })()}
-          </DialogContent>
-        </Dialog>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── Receive / issue modal ── */}
+        {moveItem && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">{moveType === 'in' ? 'Stock in' : 'Stock out'} — {moveItem.name}</h5>
+                    <button type="button" className="btn-close" onClick={() => setMoveItem(null)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body d-flex flex-column gap-3">
+                    <p className="text-muted bd-fs-sm mb-0">Currently in stock: {moveItem.quantity} {moveItem.unit}</p>
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Amount</label>
+                      <input type="number" className="form-control" min={1} value={moveQty} onChange={(e) => setMoveQty(e.target.value)} />
+                    </div>
+                    <div className="d-flex flex-column gap-2">
+                      <label className="form-label">Reason / reference</label>
+                      <input className="form-control" value={moveReason} maxLength={300} placeholder={moveType === 'in' ? 'Purchase, donation...' : 'Given to class, repair...'} onChange={(e) => setMoveReason(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => setMoveItem(null)}>Cancel</button>
+                    <button type="button" className="btn btn-success" onClick={saveMovement}>Record</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── History modal ── */}
+        {historyItem && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">{historyItem.name} — Movements</h5>
+                    <button type="button" className="btn-close" onClick={() => setHistoryItem(null)} aria-label="Close" />
+                  </div>
+                  <div className="modal-body">
+                    {(() => {
+                      const rows = movements.filter((m) => m.item_id === historyItem?.id);
+                      if (rows.length === 0) return <p className="text-muted bd-fs-sm mb-0">No movements recorded yet.</p>;
+                      return (
+                        <div className="d-flex flex-column gap-2">
+                          {rows.map((m) => (
+                            <div key={m.id} className="d-flex align-items-center justify-content-between gap-3 rounded-3 border border-secondary-subtle p-3">
+                              <div>
+                                <p className="fw-semibold text-main mb-0">
+                                  {m.movement_type === 'in' ? 'Received' : 'Issued'} {m.quantity} {historyItem?.unit}
+                                </p>
+                                <p className="text-muted bd-fs-sm mb-0 mt-1">
+                                  {new Date(m.movement_date).toLocaleDateString()}
+                                  {m.reason ? ` · ${m.reason}` : ''}
+                                </p>
+                              </div>
+                              <span className={`badge bd-fs-sm ${m.movement_type === 'in' ? 'text-bg-success' : 'text-bg-danger'}`}>
+                                {m.movement_type === 'in' ? '+' : '−'}{m.quantity}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
 }
-
-
-
-
-

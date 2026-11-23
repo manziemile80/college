@@ -1,17 +1,9 @@
-﻿import { cn } from '@/lib/utils';
-import { SidebarNav } from './SidebarNav';
+﻿import { SidebarNav } from './SidebarNav';
 
-export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
+export function Sidebar({ collapsed = false, onCollapseToggle }: { collapsed?: boolean; onCollapseToggle?: () => void }) {
   return (
-    <aside
-      className={cn(
-        'position-fixed inset-y-0 left-0 z-40 d-none d-md-block flex-column bg-sidebar',
-        collapsed ? 'w-14' : 'w-[260px]',
-      )}
-    >
-      <SidebarNav collapsed={collapsed} />
+    <aside className="bd-sidebar d-none d-lg-block" aria-label="Primary navigation">
+      <SidebarNav collapsed={collapsed} onCollapseToggle={onCollapseToggle} />
     </aside>
   );
 }
-
-

@@ -2,32 +2,14 @@
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
-} from '@/components/ui/command';
-import { cn } from '@/lib/utils';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Student, Class, BehaviorCategory, BehaviorScoreWithDetails } from '@/types/database';
-import { Plus, Search, ClipboardList, Loader2, Send, Eye, Check, ChevronsUpDown, RotateCcw, Bell } from '@/lib/icons';
+import { Plus, Search, ClipboardList, Loader2, Send, Eye, RotateCcw, Bell } from '@/lib/icons';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ScoreBadge } from '@/components/dashboard/ScoreBadge';
-import { ScoreDetailsDialog } from '@/components/scores/ScoreDetailsDialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 interface StudentWithClass extends Student {
   class?: Class | null;
@@ -68,9 +50,9 @@ export default function Scores() {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   const [selectedStudent, setSelectedStudent] = useState('');
-  const [studentPickerOpen, setStudentPickerOpen] = useState(false);
+  const [studentPickerQuery, setStudentPickerQuery] = useState('');
   const [category, setCategory] = useState<BehaviorCategory>('discipline');
-  const [score, setScore] = useState([1]);
+  const [score, setScore] = useState(1);
   const MAX_SCORE = 40;
   const [notes, setNotes] = useState('');
   const [scoreDate, setScoreDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -121,8 +103,8 @@ export default function Scores() {
     setFormLoading(true);
 
     try {
-      const absScore = Math.min(Math.abs(score[0]), MAX_SCORE);
-      if (Math.abs(score[0]) > MAX_SCORE) {
+      const absScore = Math.min(Math.abs(score), MAX_SCORE);
+      if (Math.abs(score) > MAX_SCORE) {
         toast.error(`Score cannot exceed ${MAX_SCORE}/${MAX_SCORE}`);
         setFormLoading(false);
         return;
@@ -179,7 +161,7 @@ export default function Scores() {
       }
 
       toast.success(existing ? 'Deduction updated for this date' : 'Marks deducted', {
-        description: `${combinedDeduction}/${MAX_SCORE} deducted Â· Parents notified via SMS`,
+        description: `${combinedDeduction}/${MAX_SCORE} deducted · Parents notified via SMS`,
       });
       setIsAddDialogOpen(false);
       resetForm();
@@ -204,7 +186,7 @@ export default function Scores() {
   const resetForm = () => {
     setSelectedStudent('');
     setCategory('discipline');
-    setScore([1]);
+    setScore(1);
     setNotes('');
     setScoreDate(format(new Date(), 'yyyy-MM-dd'));
   };
@@ -262,243 +244,243 @@ export default function Scores() {
   const selectedStudentObj = students.find((s) => s.id === selectedStudent);
   const previewRemaining =
     selectedStudent
-      ? (remainingMap[selectedStudent] ?? 100) - Math.abs(score[0])
+      ? (remainingMap[selectedStudent] ?? 100) - Math.abs(score)
       : null;
+
+  const pickerFiltered = students
+    .filter((s) => {
+      const q = studentPickerQuery.toLowerCase();
+      return `${s.first_name} ${s.last_name} ${s.student_id} ${s.class?.name ?? ''}`.toLowerCase().includes(q);
+    })
+    .slice(0, 40);
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="Records"
           title="Behavior Scores"
           description="Record and manage student behavior assessments."
           actions={canManage ? (
-            <div className="d-flex flex-wrap g-2">
-              <Button variant="outline" size="sm" onClick={handleResetAllScores} disabled={resetLoading}>
-                {resetLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
-                Reset Marks (New Term)
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleTestSms} disabled={testSmsLoading}>
-                {testSmsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                Test SMS
-              </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm"><Plus className="h-4 w-4" />Record Score</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[calc(100%-1rem)]">
-                  <DialogHeader><DialogTitle>Record Behavior Score</DialogTitle></DialogHeader>
-                  <form onSubmit={handleAddScore} className="space-y-3 mt-2">
-                    <div className="row col-12 col-md-6 g-3">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="student" className="fs-14">Student</Label>
-                        <Popover open={studentPickerOpen} onOpenChange={setStudentPickerOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={studentPickerOpen}
-                              className="w-100 justify-content-between fw-normal"
-                            >
-                              {selectedStudentObj
-                                ? `${selectedStudentObj.first_name} ${selectedStudentObj.last_name}${selectedStudentObj.class?.name ? ' Â· ' + selectedStudentObj.class.name : ''}`
-                                : 'Search and select a student...'}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                            <Command>
-                              <CommandInput placeholder="Search by name, ID or class..." />
-                              <CommandList>
-                                <CommandEmpty>No student found.</CommandEmpty>
-                                <CommandGroup>
-                                  {students.map((student) => {
-                                    const label = `${student.first_name} ${student.last_name} ${student.student_id} ${student.class?.name ?? ''}`;
-                                    const remaining = remainingMap[student.id] ?? 100;
-                                    return (
-                                      <CommandItem
-                                        key={student.id}
-                                        value={label}
-                                        onSelect={() => {
-                                          setSelectedStudent(student.id);
-                                          setStudentPickerOpen(false);
-                                        }}
-                                      >
-                                        <Check
-                                          className={cn(
-                                            'mr-2 h-4 w-4',
-                                            selectedStudent === student.id ? 'opacity-100' : 'opacity-0'
-                                          )}
-                                        />
-                                        <div className="d-flex flex-1 align-items-center justify-content-between g-2">
-                                          <span>
-                                            {student.first_name} {student.last_name}
-                                            <span className="ml-1 fs-12.5 text-slate-500">
-                                              {student.class?.name || 'No class'}
-                                            </span>
-                                          </span>
-                                          <span className="fs-13 fw-medium text-emerald-600">
-                                            {remaining} pts
-                                          </span>
-                                        </div>
-                                      </CommandItem>
-                                    );
-                                  })}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="category" className="fs-14">Category</Label>
-                        <Select value={category} onValueChange={(v) => setCategory(v as BehaviorCategory)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {categories.map((cat) => (
-                              <SelectItem key={cat} value={cat}>{categoryLabels[cat]}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="rounded-[10px] border border-slate-200 bg-slate-50 p-3 fs-13 text-slate-500">
-                      Every student starts the term with <span className="fw-semibold text-slate-900">40/40</span> in each category. You can only <span className="fw-semibold text-red-600">deduct</span> marks for misconduct.
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="d-flex align-items-center justify-content-between">
-                        <Label className="fs-14">Points to deduct</Label>
-                        <span className="fs-30 fw-bold text-red-600">-{Math.abs(score[0])}</span>
-                      </div>
-                      <div className="d-flex align-items-center g-3">
-                        <Slider value={score} onValueChange={setScore} min={1} max={MAX_SCORE} step={1} className="flex-1" />
-                        <Input
-                          type="number"
-                          min={1}
-                          max={MAX_SCORE}
-                          value={score[0]}
-                          onChange={(e) => {
-                            const raw = parseInt(e.target.value, 10);
-                            if (Number.isNaN(raw)) { setScore([1]); return; }
-                            const clamped = Math.max(1, Math.min(MAX_SCORE, raw));
-                            setScore([clamped]);
-                          }}
-                          className="w-20 text-center"
-                          aria-label="Marks"
-                        />
-                      </div>
-                      <p className="fs-11.5 text-slate-500">
-                        Drag the slider or type marks (1â€“{MAX_SCORE}). Max is {MAX_SCORE}/{MAX_SCORE}.
-                      </p>
-                      {selectedStudent && (
-                        <div className="d-flex align-items-center justify-content-between rounded-[10px] bg-slate-50 px-3 py-2 fs-12.5 text-slate-500">
-                          <span>Current: <span className="fw-semibold text-slate-900">{remainingMap[selectedStudent] ?? 100}</span> pts</span>
-                          <span>After: <span className={`fw-semibold ${(previewRemaining ?? 0) >= 50 ? 'text-emerald-600' : (previewRemaining ?? 0) >= 25 ? 'text-amber-600' : 'text-red-600'}`}>{previewRemaining}</span> pts</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="row col-12 col-md-6 g-3">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="date" className="fs-14">Date</Label>
-                        <Input id="date" type="date" value={scoreDate} onChange={(e) => setScoreDate(e.target.value)} required />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="notes" className="fs-14">Notes (Optional)</Label>
-                        <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add notes..." rows={2} />
-                      </div>
-                    </div>
-
-                    <div className="d-flex align-items-center g-2 rounded-[10px] bg-blue-50 p-2 fs-12.5 text-blue-700">
-                      <Bell className="h-3.5 w-3.5" />
-                      <span>Parents will be notified via SMS</span>
-                    </div>
-
-                    <div className="d-flex d-flex flex-col-reverse sm:d-flex flex-row sm:justify-content-end g-2 pt-1">
-                      <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} className="w-100 sm:w-auto">Cancel</Button>
-                      <Button type="submit" disabled={formLoading || !selectedStudent} className="w-100 sm:w-auto">
-                        {formLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Recording...</> : 'Record Score'}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
+            <div className="d-flex flex-wrap gap-2">
+              <button type="button" className="btn btn-outline-danger d-inline-flex align-items-center gap-1" onClick={handleResetAllScores} disabled={resetLoading}>
+                {resetLoading ? <><span className="spinner-border spinner-border-sm" /> Resetting...</> : <><RotateCcw /> Reset Marks (New Term)</>}
+              </button>
+              <button type="button" className="btn btn-outline-primary d-inline-flex align-items-center gap-1" onClick={handleTestSms} disabled={testSmsLoading}>
+                {testSmsLoading ? <><span className="spinner-border spinner-border-sm" /> Sending...</> : <><Send /> Test SMS</>}
+              </button>
+              <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={() => setIsAddDialogOpen(true)}>
+                <Plus /> Record Score
+              </button>
             </div>
           ) : undefined}
         />
 
         {/* Search */}
-        <div className="position-relative w-100 sm:max-w-xs">
-          <Search className="position-absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input
+        <div className="input-group w-100 w-md-auto flex-grow-1">
+          <span className="input-group-text bg-white border-secondary-subtle"><Search className="text-secondary" /></span>
+          <input
+            type="search"
+            className="form-control border-secondary-subtle"
             placeholder="Search by student name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            aria-label="Search scores by student name"
           />
         </div>
 
         {/* Scores list */}
         {loading ? (
-          <div className="d-flex align-items-center justify-content-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
+          <div className="d-flex align-items-center justify-content-center py-8">
+            <span className="spinner-border spinner-border-lg text-success" role="status" />
+          </div>
         ) : filteredScores.length === 0 ? (
-          <Card><CardContent className="d-flex d-flex flex-column align-items-center justify-content-center py-12">
-            <ClipboardList className="h-12 w-12 text-slate-400 mb-4" />
-            <h3 className="fs-18 fw-semibold text-slate-900">No scores found</h3>
-            <p className="fs-13 text-slate-500">{searchQuery ? 'Try adjusting your search' : 'Record your first behavior score to get started'}</p>
-          </CardContent></Card>
+          <div className="card">
+            <div className="card-body d-flex flex-column align-items-center justify-content-center py-10 text-center">
+              <ClipboardList className="fs-3 mb-4 text-secondary" />
+              <h3 className="fw-semibold text-main mb-2">No scores found</h3>
+              <p className="text-secondary bd-fs-sm mb-0">
+                {searchQuery ? 'Try adjusting your search' : 'Record your first behavior score to get started'}
+              </p>
+            </div>
+          </div>
         ) : (
-          <Card>
-            <div class="table-responsive"><Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Teacher</TableHead>
-                  <TableHead className="text-center">Details</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredScores.map((score) => (
-                  <TableRow key={score.id}>
-                    <TableCell>
-                      <div>
-                        <p className="fw-medium text-slate-900">
-                          {score.student?.first_name} {score.student?.last_name}
-                        </p>
-                        <p className="fs-12.5 text-slate-500">{score.student?.class?.name || 'No class'}</p>
+          <div className="card">
+            <div className="table-responsive">
+              <table className="table table-hover align-middle mb-0">
+                <thead>
+                  <tr className="border-bottom border-secondary-subtle">
+                    <th scope="col">Student</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Score</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Teacher</th>
+                    <th scope="col" className="text-center">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredScores.map((score) => (
+                    <tr key={score.id} className="border-bottom border-secondary-subtle">
+                      <td>
+                        <div>
+                          <p className="fw-medium text-main mb-0">
+                            {score.student?.first_name} {score.student?.last_name}
+                          </p>
+                          <p className="text-muted bd-fs-sm mb-0">{score.student?.class?.name || 'No class'}</p>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="badge text-bg-secondary">{categoryLabels[score.category]}</span>
+                      </td>
+                      <td><ScoreBadge score={score.score} /></td>
+                      <td className="text-muted bd-fs-sm">{format(new Date(score.score_date), 'MMM d, yyyy')}</td>
+                      <td className="text-muted bd-fs-sm">{score.teacher?.full_name || 'Unknown'}</td>
+                      <td className="text-center">
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
+                          onClick={() => {
+                            setSelectedScore(score);
+                            setDetailsDialogOpen(true);
+                          }}
+                        >
+                          <Eye /> View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── Record Behavior Score modal ── */}
+        {isAddDialogOpen && (
+          <>
+            <div className="bd-modal-backdrop" />
+            <div className="bd-modal show">
+              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
+                    <h5 className="modal-title fw-semibold text-main mb-0">Record Behavior Score</h5>
+                    <button type="button" className="btn-close" onClick={() => setIsAddDialogOpen(false)} aria-label="Close" />
+                  </div>
+                  <form className="modal-body d-flex flex-column gap-4" onSubmit={handleAddScore}>
+                    <div className="row g-3">
+                      <div className="col-12 col-md-6">
+                        <label className="form-label">Student</label>
+                        <input
+                          type="search"
+                          className="form-control bd-search-input mb-2"
+                          placeholder="Search by name, ID or class..."
+                          value={studentPickerQuery}
+                          onChange={(e) => setStudentPickerQuery(e.target.value)}
+                          aria-label="Search student"
+                        />
+                        <select
+                          className="form-select"
+                          value={selectedStudent}
+                          onChange={(e) => setSelectedStudent(e.target.value)}
+                        >
+                          <option value="">Search and select a student...</option>
+                          {pickerFiltered.map((student) => {
+                            const remaining = remainingMap[student.id] ?? 100;
+                            return (
+                              <option key={student.id} value={student.id}>
+                                {student.first_name} {student.last_name} — {student.class?.name || 'No class'} ({remaining} pts)
+                              </option>
+                            );
+                          })}
+                        </select>
+                        {selectedStudentObj && (
+                          <div className="d-flex align-items-center gap-2 mt-2">
+                            <span className="badge text-bg-success bg-success-subtle">{remainingMap[selectedStudent] ?? 100} pts remaining</span>
+                          </div>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-slate-100 text-slate-700">{categoryLabels[score.category]}</Badge>
-                    </TableCell>
-                    <TableCell><ScoreBadge score={score.score} /></TableCell>
-                    <TableCell className="fs-13 text-slate-500">{format(new Date(score.score_date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell className="fs-13 text-slate-500">{score.teacher?.full_name || 'Unknown'}</TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="g-1 text-slate-500 hover:text-slate-900"
-                        onClick={() => {
-                          setSelectedScore(score);
-                          setDetailsDialogOpen(true);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table></div>
-          </Card>
+                      <div className="col-12 col-md-6">
+                        <label className="form-label">Category</label>
+                        <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value as BehaviorCategory)}>
+                          {categories.map((cat) => (
+                            <option key={cat} value={cat}>{categoryLabels[cat]}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="rounded-3 bg-secondary-subtle p-3 bd-fs-sm text-secondary">
+                      Every student starts the term with <span className="fw-semibold text-main">40/40</span> in each category. You can only <span className="fw-semibold text-danger">deduct</span> marks for misconduct.
+                    </div>
+
+                    <div className="d-flex flex-column gap-2">
+                      <div className="d-flex align-items-center justify-content-between">
+                        <label className="form-label mb-0">Points to deduct</label>
+                        <span className="fw-bold text-danger bd-fs-lg">-{Math.abs(score)}</span>
+                      </div>
+                      <div className="d-flex align-items-center gap-3">
+                        <input
+                          type="range"
+                          className="form-range flex-grow-1"
+                          min={1}
+                          max={MAX_SCORE}
+                          step={1}
+                          value={score}
+                          onChange={(e) => setScore(Number(e.target.value))}
+                          aria-label="Marks"
+                        />
+                        <input
+                          type="number"
+                          min={1}
+                          max={MAX_SCORE}
+                          value={score}
+                          onChange={(e) => {
+                            const raw = parseInt(e.target.value, 10);
+                            if (Number.isNaN(raw)) { setScore(1); return; }
+                            setScore(Math.max(1, Math.min(MAX_SCORE, raw)));
+                          }}
+                          className="form-control w-16 text-center"
+                          aria-label="Marks"
+                        />
+                      </div>
+                      <p className="text-muted bd-fs-sm">
+                        Drag the slider or type marks (1–{MAX_SCORE}). Max is {MAX_SCORE}/{MAX_SCORE}.
+                      </p>
+                      {selectedStudent && (
+                        <div className="d-flex align-items-center justify-content-between rounded-3 bg-secondary-subtle px-3 py-2 bd-fs-sm text-secondary">
+                          <span>Current: <span className="fw-semibold text-main">{remainingMap[selectedStudent] ?? 100}</span> pts</span>
+                          <span>After: <span className={cn('fw-semibold', (previewRemaining ?? 0) >= 50 ? 'text-success' : (previewRemaining ?? 0) >= 25 ? 'text-warning' : 'text-danger')}>{previewRemaining}</span> pts</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="row g-3">
+                      <div className="col-12 col-md-6">
+                        <label htmlFor="scoreDate" className="form-label">Date</label>
+                        <input id="scoreDate" className="form-control" type="date" value={scoreDate} onChange={(e) => setScoreDate(e.target.value)} required />
+                      </div>
+                      <div className="col-12 col-md-6">
+                        <label htmlFor="notes" className="form-label">Notes (Optional)</label>
+                        <textarea id="notes" className="form-control" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add notes..." rows={2} />
+                      </div>
+                    </div>
+
+                    <div className="d-flex align-items-center gap-2 rounded-3 bg-info-subtle px-3 py-2 bd-fs-sm text-info">
+                      <Bell className="bd-fs-xs" />
+                      <span>Parents will be notified via SMS</span>
+                    </div>
+
+                    <div className="d-flex justify-content-end gap-2 pt-1">
+                      <button type="button" className="btn btn-outline-secondary" onClick={() => setIsAddDialogOpen(false)}>Cancel</button>
+                      <button type="submit" className="btn btn-success" disabled={formLoading || !selectedStudent}>
+                        {formLoading ? <><span className="spinner-border spinner-border-sm" /> Recording...</> : 'Record Score'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </>
         )}
 
         {/* Score details dialog */}
@@ -511,10 +493,3 @@ export default function Scores() {
     </DashboardLayout>
   );
 }
-
-
-
-
-
-
-

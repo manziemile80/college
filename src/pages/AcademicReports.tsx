@@ -1,15 +1,8 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Loader2, Download, Search, Users } from '@/lib/icons';
+import { FileText, Download, Search, Users, Loader2 } from '@/lib/icons';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -33,7 +26,6 @@ interface StudentAggregate {
 }
 
 export default function AcademicReports() {
-  const { role } = useAuth();
   const currentYear = `${new Date().getFullYear()}`;
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -127,7 +119,7 @@ export default function AcademicReports() {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
     doc.text('COLLEGE DE REBERO', pageW / 2, 10, { align: 'center' });
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.text('Excellence in Education â€¢ Rwanda', pageW / 2, 15, { align: 'center' });
+    doc.text('Excellence in Education • Rwanda', pageW / 2, 15, { align: 'center' });
 
     doc.setDrawColor(0); doc.setLineWidth(0.5);
     doc.rect(pageW / 2 - 60, 19, 120, 8);
@@ -140,7 +132,7 @@ export default function AcademicReports() {
       styles: { fontSize: 9, cellPadding: 1.5, textColor: 0, lineColor: 0, lineWidth: 0.2 },
       body: [
         [{ content: 'School Name: COLLEGE DE REBERO', colSpan: 2, styles: { fontStyle: 'bold' } }],
-        [`Class: ${cls ? cls.name : 'â€”'}`, `Grade Level: ${cls?.grade_level || 'â€”'}`],
+        [`Class: ${cls ? cls.name : '—'}`, `Grade Level: ${cls?.grade_level || '—'}`],
         [`Academic Year: ${year}`, `Class Size: ${totalStudents}`],
         [{ content: `Student Name: ${agg.student.first_name} ${agg.student.last_name}    |    Reg. No: ${agg.student.student_id}`, colSpan: 2, styles: { fontStyle: 'bold' } }],
       ],
@@ -161,7 +153,7 @@ export default function AcademicReports() {
       const annual = counted > 0 ? (totals.reduce((s, v) => s + v, 0) / counted).toFixed(1) : '';
       subjectRows.push([
         idx + 1,
-        `${subj?.code || ''} | ${subj?.name || 'â€”'}`,
+        `${subj?.code || ''} | ${subj?.name || '—'}`,
         ...t1, ...t2, ...t3,
         annual,
         annual ? `${annual}%` : '',
@@ -257,8 +249,8 @@ export default function AcademicReports() {
     doc.setDrawColor(150); doc.setLineWidth(0.2);
     doc.line(10, pageH - 14, pageW - 10, pageH - 14);
     doc.setFontSize(8); doc.setTextColor(100);
-    doc.text('College De Rebero â€¢ P.O. Box 000 Kigali, Rwanda â€¢ Tel: +250 000 000 000 â€¢ info@collegederebero.rw', pageW / 2, pageH - 9, { align: 'center' });
-    doc.text(`College Report Manager â€¢ Generated on ${new Date().toLocaleString()} â€¢ This is a computer-generated document.`, pageW / 2, pageH - 5, { align: 'center' });
+    doc.text('College De Rebero • P.O. Box 000 Kigali, Rwanda • Tel: +250 000 000 000 • info@collegederebero.rw', pageW / 2, pageH - 9, { align: 'center' });
+    doc.text(`College Report Manager • Generated on ${new Date().toLocaleString()} • This is a computer-generated document.`, pageW / 2, pageH - 5, { align: 'center' });
     doc.setTextColor(0);
   };
 
@@ -297,134 +289,166 @@ export default function AcademicReports() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="Records"
           title="Academic Reports"
           description="Ranked class performance with downloadable termly reports."
         />
 
-        <Card>
-          <CardContent className="space-y-4">
-            <div className="row g-3 col-md-6 col-xl-3">
-              <div className="space-y-2">
-                <Label>Class</Label>
-                <Select value={classId} onValueChange={setClassId}>
-                  <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                  <SelectContent>
-                    {classes.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name} â€” {c.grade_level} ({c.academic_year})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <div className="card">
+          <div className="card-body d-flex flex-column gap-4">
+            <div className="row g-3">
+              <div className="col-12 col-sm-6 col-lg-4">
+                <label className="form-label">Class</label>
+                <select className="form-select" value={classId} onChange={(e) => setClassId(e.target.value)}>
+                  <option value="">Select class</option>
+                  {classes.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name} — {c.grade_level} ({c.academic_year})</option>
+                  ))}
+                </select>
               </div>
-              <div className="space-y-2">
-                <Label>Academic Year</Label>
-                <Input value={year} onChange={(e) => setYear(e.target.value)} placeholder="2026" />
+              <div className="col-12 col-sm-6 col-lg-2">
+                <label className="form-label">Academic Year</label>
+                <input className="form-control" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2026" />
               </div>
-              <div className="space-y-2">
-                <Label>Search Student</Label>
-                <div className="position-relative">
-                  <Search className="position-absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
-                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name or ID..." className="pl-8" />
+              <div className="col-12 col-sm-6 col-lg-4">
+                <label className="form-label">Search Student</label>
+                <div className="input-group">
+                  <span className="input-group-text bg-white border-secondary-subtle"><Search className="text-secondary" /></span>
+                  <input
+                    type="search"
+                    className="form-control border-secondary-subtle"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Name or ID..."
+                  />
                 </div>
               </div>
-              <div className="d-flex align-items-end">
-                <Button onClick={generateClassBatch} disabled={aggregates.length === 0} className="g-2 w-100 sm:w-auto">
-                  <Download className="h-4 w-4" /> Download All Reports
-                </Button>
+              <div className="col-12 d-flex align-items-end">
+                <button
+                  type="button"
+                  className="btn btn-primary d-inline-flex align-items-center gap-1 w-100"
+                  onClick={generateClassBatch}
+                  disabled={aggregates.length === 0}
+                >
+                  <Download /> Download All Reports
+                </button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Class ranking summary */}
         {classId && (
-          <div className="row g-3 col-md-6 col-xl-3">
-            <Card>
-              <CardContent className="p-5">
-                <div className="d-flex align-items-center justify-content-between">
-                  <div>
-                    <p className="fs-13 text-slate-500">Class Average</p>
-                    <p className={`fs-32 fw-bold tracking-tight ${avg >= 50 ? 'text-emerald-700' : 'text-red-700'}`}>{avg.toFixed(1)}%</p>
+          <div className="row g-3">
+            <div className="col-12 col-sm-6 col-lg-4">
+              <div className="card h-100 d-flex flex-column justify-between">
+                <div className="card-body">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div>
+                      <p className="text-muted bd-fs-sm mb-0">Class Average</p>
+                      <p className={`fs-3 fw-bold tracking-tight mb-0 ${avg >= 50 ? 'text-success' : 'text-danger'}`}>{avg.toFixed(1)}%</p>
+                    </div>
+                    <FileText className="fs-5 text-success" />
                   </div>
-                  <FileText className="h-9 w-9 text-emerald-600" />
                 </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-5">
-                <div className="d-flex align-items-center justify-content-between">
-                  <div>
-                    <p className="fs-13 text-slate-500">Top Performer</p>
-                    <p className="fs-32 fw-bold text-slate-900 truncate">{top?.student.first_name} {top?.student.last_name}</p>
-                    <p className="fs-13 text-emerald-600">{top ? top.annualPct.toFixed(1) + '%' : 'â€”'}</p>
+              </div>
+            </div>
+            <div className="col-12 col-sm-6 col-lg-4">
+              <div className="card h-100">
+                <div className="card-body">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div>
+                      <p className="text-muted bd-fs-sm mb-0">Top Performer</p>
+                      <p className="fs-3 fw-bold text-main text-truncate mb-0">{top?.student.first_name} {top?.student.last_name}</p>
+                      <p className="text-success bd-fs-sm mb-0">{top ? top.annualPct.toFixed(1) + '%' : '—'}</p>
+                    </div>
+                    <Users className="fs-5 text-success" />
                   </div>
-                  <Users className="h-9 w-9 text-emerald-600" />
                 </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-5">
-                <div className="d-flex align-items-center justify-content-between">
-                  <div>
-                    <p className="fs-13 text-slate-500">Needs Attention</p>
-                    <p className="fs-32 fw-bold text-slate-900 truncate">{bottom?.student.first_name} {bottom?.student.last_name}</p>
-                    <p className="fs-13 text-amber-700">{bottom ? bottom.annualPct.toFixed(1) + '%' : 'â€”'}</p>
+              </div>
+            </div>
+            <div className="col-12 col-sm-6 col-lg-4">
+              <div className="card h-100">
+                <div className="card-body">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div>
+                      <p className="text-muted bd-fs-sm mb-0">Needs Attention</p>
+                      <p className="fs-3 fw-bold text-main text-truncate mb-0">{bottom?.student.first_name} {bottom?.student.last_name}</p>
+                      <p className="text-warning bd-fs-sm mb-0">{bottom ? bottom.annualPct.toFixed(1) + '%' : '—'}</p>
+                    </div>
+                    <FileText className="fs-5 text-warning" />
                   </div>
-                  <FileText className="h-9 w-9 text-amber-600" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         )}
 
         {classId && (
-          <Card>
-            <CardContent className="p-0 overflow-x-auto">
-              <div class="table-responsive"><Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">Pos</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>ID</TableHead>
-                    <TableHead className="text-center">Term 1 %</TableHead>
-                    <TableHead className="text-center">Term 2 %</TableHead>
-                    <TableHead className="text-center">Term 3 %</TableHead>
-                    <TableHead className="text-center fw-semibold">Annual %</TableHead>
-                    <TableHead className="w-32 text-end">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((a) => (
-                    <TableRow key={a.student.id}>
-                      <TableCell className="fw-bold text-slate-900">{a.position}</TableCell>
-                      <TableCell className="fw-medium text-slate-900">{a.student.first_name} {a.student.last_name}</TableCell>
-                      <TableCell className="fs-12.5 text-slate-500">{a.student.student_id}</TableCell>
-                      <TableCell className="text-center">{a.termPct.term1 > 0 ? a.termPct.term1.toFixed(1) : '-'}</TableCell>
-                      <TableCell className="text-center">{a.termPct.term2 > 0 ? a.termPct.term2.toFixed(1) : '-'}</TableCell>
-                      <TableCell className="text-center">{a.termPct.term3 > 0 ? a.termPct.term3.toFixed(1) : '-'}</TableCell>
-                      <TableCell className={`text-center fw-bold ${a.annualPct >= 50 ? 'text-emerald-700' : 'text-red-700'}`}>
-                        {a.annualPct.toFixed(2)}%
-                      </TableCell>
-                      <TableCell className="text-end">
-                        <Button size="sm" variant="outline" onClick={() => generateOne(a)} disabled={generating === a.student.id} className="g-2">
-                          {generating === a.student.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} PDF
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table></div>
-            </CardContent>
-          </Card>
+          <div className="card">
+            <div className="card-header py-3 border-bottom border-secondary-subtle">
+              <h5 className="mb-0 fw-semibold">Class Ranking — {classes.find((c) => c.id === classId)?.name || '—'} ({year})</h5>
+            </div>
+            <div className="card-body p-0">
+              {loading ? (
+                <div className="d-flex align-items-center justify-content-center py-8">
+                  <span className="spinner-border spinner-border-lg text-success" role="status" />
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle mb-0">
+                    <thead>
+                      <tr className="border-bottom border-secondary-subtle">
+                        <th scope="col" className="w-12 text-center">Pos</th>
+                        <th scope="col">Student</th>
+                        <th scope="col">ID</th>
+                        <th scope="col" className="text-center">Term 1 %</th>
+                        <th scope="col" className="text-center">Term 2 %</th>
+                        <th scope="col" className="text-center">Term 3 %</th>
+                        <th scope="col" className="text-center fw-semibold">Annual %</th>
+                        <th scope="col" className="text-end">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((a) => (
+                        <tr key={a.student.id} className="border-bottom border-secondary-subtle">
+                          <td className="text-center fw-bold text-main">{a.position}</td>
+                          <td className="fw-medium text-main">{a.student.first_name} {a.student.last_name}</td>
+                          <td className="text-muted bd-fs-sm">{a.student.student_id}</td>
+                          <td className="text-center">{a.termPct.term1 > 0 ? a.termPct.term1.toFixed(1) : '-'}</td>
+                          <td className="text-center">{a.termPct.term2 > 0 ? a.termPct.term2.toFixed(1) : '-'}</td>
+                          <td className="text-center">{a.termPct.term3 > 0 ? a.termPct.term3.toFixed(1) : '-'}</td>
+                          <td className={`text-center fw-bold ${a.annualPct >= 50 ? 'text-success' : 'text-danger'}`}>
+                            {a.annualPct.toFixed(2)}%
+                          </td>
+                          <td className="text-end">
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+                              onClick={() => generateOne(a)}
+                              disabled={generating === a.student.id}
+                            >
+                              {generating === a.student.id ? (
+                                <><span className="spinner-border spinner-border-sm" /> Generating...</>
+                              ) : (
+                                <><Download /> PDF</>
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>
   );
 }
-
-
-
 
 
