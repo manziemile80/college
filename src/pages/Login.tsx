@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Loader2, GraduationCap, Mail, Lock, CheckCircle2, ArrowRight, BookOpen, CalendarCheck } from '@/lib/icons';
+import { Eye, EyeOff, Loader2, GraduationCap, Mail, Lock, CheckCircle2, ArrowRight, ArrowUpRight, BookOpen, CalendarCheck } from '@/lib/icons';
 import { toast } from 'sonner';
 import schoolLogo from '@/assets/college-rebero-logo.png';
 import schoolImage from '@/assets/landing-school.jpg';
@@ -177,9 +177,18 @@ export default function Login() {
             </div>
           </div>
 
-          <p className="mt-6 text-center fs-12.5 text-slate-400">
+          <div className="mt-6 d-flex flex-wrap justify-center align-items-center g-2 fs-12.5 text-slate-400">
             College De Rebero Â· Excellence Â· Discipline Â· Integrity
-          </p>
+            <a
+              href="https://college-mis-beta.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="d-inline-flex align-items-center g-1 fs-12.5 fw-medium text-emerald-600 hover:underline"
+            >
+              Live site
+              <ArrowUpRight className="h-3 w-3" />
+            </a>
+          </div>
 
           {/* Mobile/tablet promo — simplified, no unverified statistics */}
           <div className="mt-6 d-block d-md-none p-4 rounded-[16px] border border-emerald-200 bg-emerald-50 text-center">
