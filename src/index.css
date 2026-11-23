@@ -871,6 +871,17 @@ html.dark .bd-search-input {
   justify-content: center;
 }
 
+/* ── Typography: responsive page titles ── */
+.bd-page-title { font-size: clamp(1.5rem, 3vw + 1.5rem, 2rem); }
+
+/* ── Hero sections (min height so the absolutely positioned image has room) ── */
+.bd-hero { min-height: clamp(18rem, 40vh, 22rem); }
+
+/* ── Responsive touch targets (≥44px on mobile) ── */
+@media (max-width: 767.98px) {
+  .bd-icon-btn { width: 44px; height: 44px; }
+}
+
 /* ── Empty states ── */
 .empty-state {
   display: flex;

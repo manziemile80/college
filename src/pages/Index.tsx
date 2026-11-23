@@ -147,7 +147,7 @@ export default function Index() {
         {/* Main workspace */}
         <main className="flex-grow-1 min-w-0 d-flex flex-column gap-5 p-3 p-sm-5 p-lg-5">
           {/* Hero */}
-          <section className="card position-relative overflow-hidden p-6 p-sm-5">
+          <section className="card bd-hero position-relative overflow-hidden p-6 p-sm-5">
             <img
               src={landingStudents}
               alt="Students at College De Rebero"
