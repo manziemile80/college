@@ -6,6 +6,7 @@ import { RecentScoresTable } from '@/components/dashboard/RecentScoresTable';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Announcement, BehaviorScoreWithDetails, DisciplineIncident } from '@/types/database';
+import { toast } from 'sonner';
 import {
   GraduationCap, Users, ClipboardList, TrendingUp, AlertTriangle,
   CheckCircle, BookOpen, Gavel, Boxes, Pencil, UserPlus,
@@ -125,6 +126,7 @@ export default function Dashboard() {
       setStats(next);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }

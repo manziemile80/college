@@ -73,9 +73,9 @@ export default function Login() {
 
   return (
     <div className="min-vh-100 bg-body overflow-hidden">
-      <div className="row g-0 h-100">
+      <div className="row g-0">
         {/* Left section — login form (first on mobile) */}
-        <div className="col-12 col-lg flex-1 d-flex align-items-center justify-content-center px-4 py-10">
+        <div className="col-12 col-lg-6 d-flex align-items-center justify-content-center px-4 py-10">
           <div className="w-100 max-w-lg">
             {/* Institution header */}
             <div className="mb-5 d-flex align-items-center gap-3">
@@ -188,7 +188,7 @@ export default function Login() {
         </div>
 
         {/* Right section — promo (large school image + dark green overlay) */}
-        <div className="col-12 col-lg d-none d-lg-flex align-items-center justify-content-center overflow-hidden position-relative bd-dark-panel">
+        <div className="col-12 col-lg-6 d-none d-lg-flex align-items-center justify-content-center overflow-hidden position-relative bd-dark-panel">
           <img src={schoolImage} alt="School building at College De Rebero" className="h-100 w-100 object-cover opacity-30" />
           <div className="position-absolute inset-0 bg-dark opacity-25" />
 

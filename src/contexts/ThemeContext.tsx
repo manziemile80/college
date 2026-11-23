@@ -13,10 +13,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const STORAGE_KEY = 'cdr-theme';
 
 function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') return 'light';
   const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
   if (stored === 'light' || stored === 'dark') return stored;
-  return 'dark';
+  // Default to the light theme; dark remains available via the toggle.
+  return 'light';
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

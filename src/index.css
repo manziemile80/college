@@ -747,9 +747,11 @@ h2, .h2 { color: var(--bd-text); }
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   13. DARK MODE (kept for parity with existing behavior)
-   ───────────────────────────────────────────────────────────────────────── */
+/* ── Dark mode (default is light; dark remains user-selectable) ── */
+html.dark {
+  --bd-text: #F1F5F9;
+  --bd-text-muted: #94A3B8;
+}
 html.dark body {
   background-color: #0F172A;
   color: #E2E8F0;
