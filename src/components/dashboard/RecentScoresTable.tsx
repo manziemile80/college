@@ -3,6 +3,7 @@ import { ScoreBadge } from './ScoreBadge';
 import { BehaviorScoreWithDetails, BehaviorCategory } from '@/types/database';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 interface RecentScoresTableProps {
   scores: BehaviorScoreWithDetails[];
