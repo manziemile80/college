@@ -43,6 +43,17 @@ export default function Login() {
     return () => { cancelled = true; };
   }, []);
 
+  // The application never restores credentials. Whenever there is no signed-in
+  // user (initial load or after sign-out), keep the form clean.
+  useEffect(() => {
+    if (!user && !authLoading) {
+      setEmail('');
+      setPassword('');
+      setShowPassword(false);
+      setLoading(false);
+    }
+  }, [user, authLoading]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -62,6 +73,9 @@ export default function Login() {
     if (error) {
       toast.error('Login failed', { description: error.message });
     } else {
+      setPassword('');
+      setEmail('');
+      setShowPassword(false);
       toast.success('Welcome back!');
     }
     setLoading(false);
@@ -93,6 +107,7 @@ export default function Login() {
                   <input
                     id="email"
                     type="email"
+                    autoComplete="username"
                     className="w-full border-0 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none bg-transparent"
                     placeholder="you@school.edu"
                     value={email}
@@ -106,6 +121,7 @@ export default function Login() {
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
                     className="w-full border-0 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none bg-transparent"
                     placeholder="Enter your password"
                     value={password}
@@ -160,33 +176,30 @@ export default function Login() {
               </a>
             </div>
 
-            <div className="lg:hidden mt-6">
-              <div className="bg-white rounded-xl shadow p-4 text-center">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white"><GraduationCap className="w-5 h-5" /></div>
-                <p className="mt-2 font-semibold text-emerald-600">Track behavior • Attendance • Reports</p>
-                <p className="mt-1 text-xs text-emerald-600">Better Learning. Brighter Future.</p>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Right section — promo */}
-        <div className="hidden lg:flex items-center justify-center overflow-hidden relative bg-emerald-900">
-          <img src={schoolImage} alt="School building at College De Rebero" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+        {/* Right section — school image + promo (stacks below the form on mobile) */}
+        <div className="relative flex items-center justify-center overflow-hidden mx-4 mb-6 lg:mx-0 lg:mb-0 lg:min-h-screen rounded-[20px] bg-emerald-900 min-h-[280px] sm:min-h-[360px]">
+          <img
+            src={schoolImage}
+            alt="School building at College De Rebero"
+            className="absolute inset-0 w-full h-full object-cover object-center opacity-30"
+          />
           <div className="absolute inset-0 bg-black/25" />
-          <div className="relative max-w-xl px-8 text-white text-center">
-            <h2 className="text-3xl font-bold text-white">Empowering Schools to Build Better Students</h2>
-            <p className="mt-5 text-sm opacity-90">
+          <div className="relative w-full max-w-xl px-6 py-10 sm:px-8 lg:py-8 text-white text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white">Empowering Schools to Build Better Students</h2>
+            <p className="mt-4 text-sm opacity-90">
               Track student behavior, engage parents with instant notifications, and foster a positive learning environment with our comprehensive management system.
             </p>
             {promoStats && (
-              <div className="grid grid-cols-3 gap-3 mt-8">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 sm:mt-8">
                 {[
                   { icon: GraduationCap, label: 'Students', value: promoStats.students },
                   { icon: BookOpen, label: 'Classes', value: promoStats.classes },
                   { icon: CalendarCheck, label: 'Attendance Rate', value: `${promoStats.attendanceRate}%` },
                 ].map((s) => (
-                  <div key={s.label} className="flex flex-col items-center gap-2 rounded-lg border border-white/20 bg-white/10 p-4">
+                  <div key={s.label} className="flex flex-col items-center gap-2 rounded-xl border border-white/20 bg-white/10 p-4">
                     <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/20"><s.icon className="w-5 h-5 text-amber-300" /></div>
                     <p className="font-bold text-white text-lg">{s.value}</p>
                     <p className="text-xs text-white/80">{s.label}</p>
@@ -194,7 +207,7 @@ export default function Login() {
                 ))}
               </div>
             )}
-            <Link to="/signup" className="inline-flex items-center justify-center gap-2 mt-6 rounded-lg bg-white text-emerald-800 font-semibold px-4 py-2 hover:bg-slate-100">
+            <Link to="/signup" className="inline-flex items-center justify-center gap-2 mt-6 rounded-[10px] bg-white text-emerald-800 font-semibold px-4 py-2 hover:bg-slate-100">
               <GraduationCap className="w-5 h-5" /> Create Account
             </Link>
           </div>

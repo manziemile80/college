@@ -206,7 +206,7 @@ export default function UsersPage() {
                     <tr key={user.id} className="border-bottom border-secondary-subtle">
                       <td>
                         <div className="d-flex align-items-center gap-3">
-                          <span className="bd-avatar d-inline-flex align-items-center justify-content-center">
+                          <span className="bd-avatar bd-user-avatar d-inline-flex align-items-center justify-content-center">
                             {user.full_name?.charAt(0)}
                           </span>
                           <div className="min-w-0">

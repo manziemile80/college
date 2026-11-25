@@ -151,9 +151,9 @@ export default function Settings() {
           </div>
           <div className="card-body d-flex flex-column gap-4">
             <div className="d-flex align-items-center gap-4 flex-wrap">
-              <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary-subtle" style={{ width: '96px', height: '96px', overflow: 'hidden', borderRadius: '50%' }}>
+              <div className="bd-user-avatar d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary-subtle" style={{ width: '96px', height: '96px' }}>
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                  <img src={avatarUrl} alt="Profile" className="bd-avatar-img" />
                 ) : (
                   <User className="fs-2 text-secondary" />
                 )}

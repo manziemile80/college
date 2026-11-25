@@ -106,6 +106,16 @@ img, video, canvas, svg {
   --bd-topbar-height: 4rem;
   --bd-sidebar-width: 260px;
   --bd-sidebar-collapsed: 3.5rem;
+
+  /* ── Border radius scale (shared, intentionally limited) ── */
+  --bd-radius-card: 16px;
+  --bd-radius-form: 12px;
+  --bd-radius-input: 10px;
+  --bd-radius-btn: 10px;
+  --bd-radius-modal: 16px;
+  --bd-radius-image: 16px;
+  --bd-radius-dropdown: 10px;
+  --bd-radius-panel: 12px;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -493,11 +503,14 @@ h2, .h2 { color: var(--bd-text); }
    ───────────────────────────────────────────────────────────────────────── */
 .card {
   border-color: var(--bd-border);
-  border-radius: 0.75rem;
+  border-radius: var(--bd-radius-card);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 .card-header, .card-footer {
   border-color: var(--bd-border);
+}
+.alert, .bd-notification-panel {
+  border-radius: var(--bd-radius-panel);
 }
 .bd-stat-card {
   display: flex;
@@ -584,16 +597,19 @@ h2, .h2 { color: var(--bd-text); }
   color: var(--bd-text);
   margin-bottom: 0.5rem;
 }
-.form-control, .form-select, input, textarea, select {
+.form-control, .form-select, input:not([type='checkbox']):not([type='radio']), textarea, select {
   border-color: var(--bd-border);
-  border-radius: 0.75rem;
+  border-radius: var(--bd-radius-input);
   min-height: 40px;
   font-size: 0.9rem;
   box-sizing: border-box;
   max-width: 100%;
 }
+.form-check-input {
+  min-height: 0;
+}
 img, .bd-avatar, .avatar {
-  border-radius: 0.75rem;
+  border-radius: var(--bd-radius-image);
 }
 .form-control:focus, .form-select:focus {
   border-color: var(--bs-primary);
@@ -640,7 +656,7 @@ img, .bd-avatar, .avatar {
    8. BUTTONS (utilities)
    ───────────────────────────────────────────────────────────────────────── */
 .btn {
-  border-radius: 0.5rem;
+  border-radius: var(--bd-radius-btn);
   font-weight: 600;
   letter-spacing: -0.005em;
   padding-left: 1rem;
@@ -672,7 +688,7 @@ img, .bd-avatar, .avatar {
    9. MODALS
    ───────────────────────────────────────────────────────────────────────── */
 .modal-content {
-  border-radius: 1rem;
+  border-radius: var(--bd-radius-modal);
   box-shadow: var(--bs-box-shadow-lg);
 }
 .modal-header {
@@ -685,9 +701,67 @@ img, .bd-avatar, .avatar {
 .modal-body .form-label {
   text-transform: none;
 }
-.modal-dialog .modal-content {
+
+/* A single, predictable scroll container for React-controlled modals.
+   Bootstrap's .modal-dialog-scrollable rules are overridden inside .bd-modal. */
+.bd-modal .modal-dialog {
+  width: min(95vw, 650px);
+  max-width: none;
+  margin: auto;
+  pointer-events: auto;
+}
+.bd-modal .modal-dialog-centered {
+  min-height: 0;
+}
+.bd-modal .modal-content {
+  display: flex;
+  flex-direction: column;
   max-height: 85vh;
+  overflow: hidden;
+  background: #ffffff;
+  border-radius: var(--bd-radius-modal);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24), 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+.bd-modal .modal-header {
+  flex: 0 0 auto;
+  padding: 1.25rem 1.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid var(--bd-border);
+  border-top-left-radius: var(--bd-radius-modal);
+  border-top-right-radius: var(--bd-radius-modal);
+}
+.bd-modal .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1.5rem;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.bd-modal .modal-footer {
+  flex: 0 0 auto;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--bd-border);
+}
+.bd-modal .btn-close {
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+.bd-modal .btn-close:hover {
+  opacity: 1;
+}
+.bd-modal .btn-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.28);
+}
+.bd-modal .modal-section {
+  border: 1px solid var(--bd-border);
+  border-radius: var(--bd-radius-form);
+  padding: 1rem;
+  background: #ffffff;
+}
+.bd-modal .modal-section + .modal-section {
+  margin-top: 1rem;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -753,14 +827,24 @@ img, .bd-avatar, .avatar {
   .btn, .bd-sidebar .bd-nav-link {
     min-height: 44px;
   }
-  /* Modals become full-width sheets on phones */
+  /* Modals become nearly full-width sheets on phones, never horizontally scroll */
+  .bd-modal {
+    padding: 0.75rem;
+  }
   .bd-modal .modal-dialog {
     width: 100%;
-    max-width: calc(100vw - 1rem);
-    margin: 0.5rem;
+    max-width: none;
+    margin: auto;
   }
   .bd-modal .modal-content {
-    max-height: calc(100vh - 1rem);
+    max-height: calc(100vh - 1.5rem);
+  }
+  .bd-modal .modal-header,
+  .bd-modal .modal-body {
+    padding: 1.25rem;
+  }
+  .bd-modal .modal-body .row > [class*='col-'] + [class*='col-'] {
+    margin-top: 1rem;
   }
   .bd-topbar .bd-icon-btn {
     width: 44px;
@@ -891,30 +975,96 @@ html.dark .bd-search-input {
 /* ── React-controlled modals (Bootstrap Modal styling) ── */
 .bd-modal-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1040;
-  background-color: rgba(0, 0, 0, 0.45);
+  inset: 0;
+  z-index: 2000;
+  background-color: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
 }
 .bd-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1050;
+  inset: 0;
+  z-index: 2001;
   display: none;
   overflow-y: auto;
-  align-items: center;
-  justify-content: center;
+  overflow-x: hidden;
   padding: 1rem;
 }
+/* align-items: flex-start + margin:auto keeps tall dialogs reachable
+   while short dialogs remain perfectly centered. */
 .bd-modal.show {
   display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* ── Consistent sign-out buttons ── */
+.bd-user-menu {
+  border-radius: var(--bd-radius-dropdown);
+}
+.bd-signout-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  transition: background-color 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.bd-signout-btn svg {
+  flex-shrink: 0;
+}
+.bd-signout-btn:hover {
+  background-color: #F1F5F9;
+}
+.dark .bd-signout-btn:hover {
+  background-color: #334155;
+}
+.bd-signout-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.28);
+}
+
+/* ── Profile avatars: always a perfect circle ── */
+.bd-avatar,
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.bd-user-avatar {
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.bd-user-avatar img,
+.bd-avatar img,
+.avatar img,
+.bd-avatar-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  aspect-ratio: 1 / 1;
+  border-radius: 50% !important;
 }
 
 /* ── Typography: responsive page titles ── */

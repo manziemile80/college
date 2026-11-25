@@ -93,14 +93,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </button>
 
         <div className="relative group">
-          <button type="button" className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-emerald-600 text-white font-semibold text-sm overflow-hidden" aria-label="User menu">
+          <button type="button" className="bd-user-avatar inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-600 text-white font-semibold text-sm" aria-label="User menu">
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt={profile?.full_name || 'User'} className="w-full h-full object-cover" />
+              <img src={profile.avatar_url} alt={profile?.full_name || 'User'} className="bd-avatar-img w-full h-full object-cover" />
             ) : (
               initials
             )}
           </button>
-          <div className="absolute right-0 top-full mt-2 hidden group-hover:block w-56 rounded-xl bg-white shadow-lg border border-slate-200 py-2 dark:bg-slate-800 dark:border-slate-700 z-40">
+          <div className="bd-user-menu absolute right-0 top-full mt-2 hidden group-hover:block w-56 bg-white shadow-lg border border-slate-200 py-2 dark:bg-slate-800 dark:border-slate-700 z-40">
             <div className="px-3 py-2">
               <span className="block font-semibold text-sm text-slate-900 dark:text-slate-100">{profile?.full_name || 'User'}</span>
               <small className="text-slate-500">{role}</small>
@@ -113,8 +113,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <UserCog className="w-4 h-4" /> Settings
             </Link>
             <hr className="my-1 border-slate-200 dark:border-slate-700" />
-            <button type="button" className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-slate-100 dark:hover:bg-slate-700" onClick={signOut}>
-              <LogOut className="w-4 h-4" /> Sign out
+            <button type="button" className="bd-signout-btn w-full justify-start text-red-600" onClick={signOut}>
+              <LogOut className="w-4 h-4 shrink-0" /> Sign out
             </button>
           </div>
         </div>

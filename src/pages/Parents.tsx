@@ -228,7 +228,7 @@ export default function Parents() {
                     <tr key={parent.id} className="border-bottom border-secondary-subtle">
                       <td>
                         <div className="d-flex align-items-center gap-3">
-                          <span className="bd-avatar d-inline-flex align-items-center justify-content-center">
+                          <span className="bd-avatar bd-user-avatar d-inline-flex align-items-center justify-content-center">
                             {parent.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                           </span>
                           <div>

@@ -36,7 +36,7 @@ export function ScoreDetailsDialog({
             <div className="modal-body d-flex flex-column gap-4">
               {/* Student Info */}
               <div className="d-flex align-items-center gap-3">
-                <span className="bd-avatar">
+                <span className="bd-avatar bd-user-avatar">
                   {score.student?.first_name?.charAt(0)}
                   {score.student?.last_name?.charAt(0)}
                 </span>

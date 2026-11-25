@@ -352,7 +352,7 @@ export default function Students() {
                     <tr key={student.id} className="border-bottom border-secondary-subtle">
                       <td>
                         <div className="d-flex align-items-center gap-3">
-                          <span className="bd-avatar sm d-inline-flex align-items-center justify-content-center">
+                          <span className="bd-avatar bd-user-avatar sm d-inline-flex align-items-center justify-content-center">
                             {student.first_name.charAt(0)}{student.last_name.charAt(0)}
                           </span>
                           <div>

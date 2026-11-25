@@ -51,7 +51,7 @@ export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }
           <button type="button" className="inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" onClick={() => onCollapseToggle?.()} aria-label="Expand sidebar" title="Expand sidebar">
             <ChevronRight className="w-5 h-5" />
           </button>
-          <button type="button" className="inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" onClick={() => { signOut(); onLinkSelect?.(); }} aria-label="Sign out">
+          <button type="button" className="bd-signout-btn w-10 h-10 p-0 text-slate-500" onClick={() => { signOut(); onLinkSelect?.(); }} aria-label="Sign out" title="Sign out">
             <LogOut className="w-5 h-5 text-red-600" />
           </button>
         </div>
@@ -72,9 +72,9 @@ export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }
 
       {/* User profile section */}
       <div className="flex items-center gap-3 px-3 py-3 cursor-pointer" onClick={() => onLinkSelect?.()}>
-        <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-600 text-white font-semibold text-sm overflow-hidden">
+        <span className="bd-user-avatar inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white font-semibold text-sm">
           {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt={profile?.full_name || 'User'} className="w-full h-full object-cover" />
+            <img src={profile.avatar_url} alt={profile?.full_name || 'User'} className="bd-avatar-img w-full h-full object-cover" />
           ) : (
             profile?.full_name?.charAt(0)?.toUpperCase() || 'U'
           )}
@@ -123,7 +123,7 @@ export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }
           <UserCog className="w-5 h-5 shrink-0" />
           <span className="flex-1 truncate">Profile &amp; account</span>
         </Link>
-        <button type="button" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 w-full" onClick={() => { signOut(); onLinkSelect?.(); }}>
+        <button type="button" className="bd-signout-btn w-full justify-start text-slate-600 dark:text-slate-300" onClick={() => { signOut(); onLinkSelect?.(); }}>
           <LogOut className="w-5 h-5 shrink-0 text-red-600" />
           <span>Sign out</span>
         </button>
