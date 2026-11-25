@@ -1648,6 +1648,10 @@ export type Database = {
       }
     }
     Functions: {
+      get_public_site_stats: {
+        Args: never
+        Returns: { students: number; classes: number; attendance_rate: number }[]
+      }
       can_manage_stock: { Args: { _user_id: string }; Returns: boolean }
       can_record_stock: { Args: { _user_id: string }; Returns: boolean }
       can_view_stock: { Args: { _user_id: string }; Returns: boolean }

@@ -254,7 +254,9 @@ export default function EnrollmentPage() {
         <PageHeader
           eyebrow="School"
           title="Student Enrollment"
-          description="Enroll students in classes, transfer between classes, and view enrollment history."
+          description={isTeacher
+            ? 'Enroll students in the classes assigned to you by the Director of Studies, and view enrollment history.'
+            : 'Enroll students in classes, transfer between classes, and view enrollment history.'}
         />
 
         <div className="d-flex flex-wrap align-items-end gap-3">

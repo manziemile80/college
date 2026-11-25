@@ -21,19 +21,16 @@ export default function Login() {
     let cancelled = false;
     (async () => {
       try {
-        const yearStart = `${new Date().getFullYear()}-01-01`;
-        const [studentsRes, classesRes, attRes] = await Promise.all([
-          supabase.from('students').select('*', { count: 'exact', head: true }),
-          supabase.from('classes').select('*', { count: 'exact', head: true }),
-          supabase.from('attendance').select('status').gte('attendance_date', yearStart),
-        ]);
-        const attRows = (attRes.data as { status: string }[]) || [];
-        const present = attRows.filter((r) => r.status === 'present').length;
-        if (!cancelled) {
+        // Anonymous visitors cannot read these tables directly (RLS). The RPC
+        // returns only aggregate counts from the database.
+        const { data, error } = await supabase.rpc('get_public_site_stats');
+        if (error) throw error;
+        const row = (data as { students: number | string; classes: number | string; attendance_rate: number }[] | null)?.[0];
+        if (!cancelled && row) {
           setPromoStats({
-            students: studentsRes.count ?? 0,
-            classes: classesRes.count ?? 0,
-            attendanceRate: attRows.length ? Math.round((present / attRows.length) * 100) : 0,
+            students: Number(row.students) || 0,
+            classes: Number(row.classes) || 0,
+            attendanceRate: Number(row.attendance_rate) || 0,
           });
         }
       } catch (error) {

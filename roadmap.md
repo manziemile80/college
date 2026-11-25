@@ -10,3 +10,5 @@
 - [x] Enrollment required for quizzes, assignments and attendance (UI gating + Supabase RLS)
 - [x] In-app notifications published to related users (bell menu, realtime, triggers for scores/incidents/enrollment/announcements)
 - [x] Complete stock module: unique products by SKU, batches + FEFO, stock-in/out RPCs, expiry alerts, movement ledger, valuation, daily/weekly/monthly/annual reports and exports
+- [x] Login page shows real aggregate site statistics via a secure public RPC
+- [x] DOS-only subject management and teacher assignment; teachers enroll students in assigned classes
