@@ -31,7 +31,7 @@ export default function Students() {
   const canManage = role === 'admin' || role === 'teacher';
   const isAdmin = role === 'admin';
   const isStudent = role === 'student';
-  const { studentId, refresh: refreshStudent } = useCurrentStudent();
+  const { studentId: currentStudentId, refresh: refreshStudent } = useCurrentStudent();
   const [claimOpen, setClaimOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [students, setStudents] = useState<StudentWithClass[]>([]);
@@ -309,7 +309,7 @@ export default function Students() {
           </div>
         </div>
 
-        {isStudent && !studentId && (
+        {isStudent && !currentStudentId && (
           <div className="alert alert-warning d-flex align-items-center justify-content-between gap-3" style={{ borderRadius: '0.75rem' }}>
             <span className="bd-fs-sm">Connect your student profile to view your information.</span>
             <button type="button" className="btn btn-primary btn-sm" style={{ borderRadius: '0.5rem' }} onClick={() => setClaimOpen(true)}>
