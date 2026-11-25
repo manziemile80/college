@@ -116,6 +116,40 @@ export default function EnrollmentPage() {
     [classes, isTeacher, assignedClassIds]
   );
 
+  const handleEnrollAll = async () => {
+    if (!user || !classId || availableStudents.length === 0) return;
+    setSaving(true);
+    try {
+      for (const student of availableStudents) {
+        const existing = await supabase
+          .from('enrollments')
+          .select('id, status')
+          .eq('student_id', student.id)
+          .eq('class_id', classId)
+          .eq('academic_year', academicYear)
+          .maybeSingle();
+        if (existing.data) {
+          await supabase.from('enrollments').update({ status: 'active' }).eq('id', existing.data.id);
+        } else {
+          await supabase.from('enrollments').insert({
+            student_id: student.id,
+            class_id: classId,
+            academic_year: academicYear,
+            enrolled_by: user.id,
+            status: 'active',
+          });
+        }
+      }
+      toast.success(`${availableStudents.length} student(s) enrolled`);
+      fetchEnrollments();
+      setSearch('');
+    } catch (e: any) {
+      toast.error('Failed to enroll students', { description: e.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleEnroll = async (student: StudentWithClass) => {
     if (!user || !classId) return;
     setSaving(true);
@@ -241,10 +275,15 @@ export default function EnrollmentPage() {
 
         {canManage && classId && (
           <div className="card">
-            <div className="card-header d-flex align-items-center justify-content-between py-3">
+            <div className="card-header d-flex align-items-center justify-content-between py-3 flex-wrap gap-2">
               <h5 className="mb-0 fw-semibold text-main d-flex align-items-center gap-2">
                 <UserPlus className="text-success" /> Enroll a student
               </h5>
+              {availableStudents.length > 0 && (
+                <button type="button" className="btn btn-success btn-sm d-inline-flex align-items-center gap-1" onClick={handleEnrollAll} disabled={saving}>
+                  <UserPlus /> Enroll all shown
+                </button>
+              )}
             </div>
             <div className="card-body d-flex flex-column gap-3">
               <div className="input-group w-100 flex-grow-1">
