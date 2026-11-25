@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { supabase } from '@/integrations/supabase/client';
 import { canPublishQuiz } from '@/lib/quizPublishing';
+import { canAccessClass } from '@/lib/enrollment';
+import { useEnrollment } from '@/hooks/useEnrollment';
 import { useToast } from '@/hooks/use-toast';
 import { ClaimStudentRecordDialog } from '@/components/students/ClaimStudentRecordDialog';
 import { Plus, Trash2, ListChecks, Loader2, Send, CheckCircle2, Sparkles, PenLine, BarChart3, UserCheck } from '@/lib/icons';
@@ -69,20 +71,8 @@ export default function Quizzes() {
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [myAttempts, setMyAttempts] = useState<Attempt[]>([]);
-  const [enrolledClassIds, setEnrolledClassIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (role !== 'student' || !studentId) return;
-    supabase
-      .from('enrollments')
-      .select('class_id')
-      .eq('student_id', studentId)
-      .eq('status', 'active')
-      .then(({ data }) => {
-        setEnrolledClassIds(new Set((data || []).map((r: any) => r.class_id)));
-      });
-  }, [role, studentId]);
+  const { enrolledClassIds, isEnrolled, loading: enrollmentLoading } = useEnrollment(studentId);
 
   const [quizOpen, setQuizOpen] = useState(false);
   const [quizForm, setQuizForm] = useState(emptyQuiz);
@@ -363,15 +353,17 @@ export default function Quizzes() {
     fetchAll();
   };
 
-  const canTakeQuiz = (quiz: Quiz) => !quiz.class_id || enrolledClassIds.has(quiz.class_id);
+  const hasEnrollmentAccess = (quiz: Quiz) => canAccessClass(enrolledClassIds, quiz.class_id);
+  const canTakeQuiz = (quiz: Quiz) => enrollmentLoading || hasEnrollmentAccess(quiz);
+
+  const enrollmentMessage = (quiz: Quiz) =>
+    !isEnrolled
+      ? 'You must be enrolled in a class by a teacher before you can take quizzes.'
+      : 'You must be enrolled in this class before you can take this quiz.';
 
   const startQuiz = async (quiz: Quiz) => {
-    if (role === 'student' && !canTakeQuiz(quiz)) {
-      toast({
-        title: 'Not enrolled',
-        description: 'You must be enrolled in this class by a teacher before you can take this quiz.',
-        variant: 'destructive',
-      });
+    if (role === 'student' && !hasEnrollmentAccess(quiz)) {
+      toast({ title: 'Not enrolled', description: enrollmentMessage(quiz), variant: 'destructive' });
       return;
     }
     const { data } = await supabase.from('quiz_questions').select('*').eq('quiz_id', quiz.id).order('sort_order');
@@ -389,6 +381,11 @@ export default function Quizzes() {
         variant: 'destructive',
       });
       setClaimOpen(true);
+      return;
+    }
+    if (!hasEnrollmentAccess(takeQuiz)) {
+      toast({ title: 'Not enrolled', description: enrollmentMessage(takeQuiz), variant: 'destructive' });
+      setTakeQuiz(null);
       return;
     }
     if (takeQuestions.some((q) => !answers[q.id])) {
@@ -470,7 +467,7 @@ export default function Quizzes() {
               canTakeQuiz(quiz) ? (
                 <button type="button" className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => startQuiz(quiz)}><Send /> Start Quiz</button>
               ) : (
-                <span className="text-muted bd-fs-sm">Enroll in this class to take the quiz.</span>
+                <span className="text-muted bd-fs-sm">{enrollmentMessage(quiz)}</span>
               )
             ) : attempt ? (
               <p className="text-muted bd-fs-sm mb-0">Completed {new Date(attempt.completed_at).toLocaleDateString()}</p>
@@ -513,6 +510,15 @@ export default function Quizzes() {
         )}
 
         <ClaimStudentRecordDialog open={claimOpen} onOpenChange={setClaimOpen} onLinked={() => { refreshStudent(); }} />
+
+        {role === 'student' && studentId && !enrollmentLoading && !isEnrolled && (
+          <div className="card border-dashed border-3">
+            <div className="card-body p-4">
+              <p className="fw-semibold text-main mb-0">Enrollment required</p>
+              <p className="text-muted bd-fs-sm mb-0">Ask a teacher to enroll you in a class before taking quizzes.</p>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="d-flex justify-content-center py-8">

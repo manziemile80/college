@@ -4,6 +4,8 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { supabase } from '@/integrations/supabase/client';
+import { canAccessClass } from '@/lib/enrollment';
+import { useEnrollment } from '@/hooks/useEnrollment';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, ClipboardList, Send, GraduationCap, CalendarDays, UserCheck, Paperclip } from '@/lib/icons';
 import { ClaimStudentRecordDialog } from '@/components/students/ClaimStudentRecordDialog';
@@ -43,6 +45,7 @@ export default function Assignments() {
   const { role, user } = useAuth();
   const { toast } = useToast();
   const { studentId, refresh: refreshStudent } = useCurrentStudent();
+  const { enrolledClassIds, isEnrolled, loading: enrollmentLoading } = useEnrollment(studentId);
   const isStaff = role === 'admin' || role === 'teacher';
   const [claimOpen, setClaimOpen] = useState(false);
 
@@ -117,6 +120,14 @@ export default function Assignments() {
     fetchAll();
   };
 
+  const hasEnrollmentAccess = (assignment: Assignment) => canAccessClass(enrolledClassIds, assignment.class_id);
+  const canSubmit = (assignment: Assignment) => enrollmentLoading || hasEnrollmentAccess(assignment);
+
+  const enrollmentMessage = (assignment: Assignment) =>
+    !isEnrolled
+      ? 'You must be enrolled in a class by a teacher before submitting work.'
+      : 'You must be enrolled in this class before submitting work.';
+
   const submitWork = async () => {
     if (!submitFor) return;
     if (!studentId) {
@@ -127,6 +138,11 @@ export default function Assignments() {
       });
       setSubmitFor(null);
       setClaimOpen(true);
+      return;
+    }
+    if (!hasEnrollmentAccess(submitFor)) {
+      toast({ title: 'Not enrolled', description: enrollmentMessage(submitFor), variant: 'destructive' });
+      setSubmitFor(null);
       return;
     }
     if (!answer.answer_text.trim() && !answer.file_url.trim()) {
@@ -223,7 +239,7 @@ export default function Assignments() {
                 <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => openGrading(a)}><GraduationCap />Submissions</button>
                 <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete assignment" onClick={() => remove(a.id)}><Trash2 /></button>
               </>
-            ) : role === 'student' ? (
+            ) : role === 'student' && canSubmit(a) ? (
               <button
                 type="button"
                 className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1"
@@ -234,6 +250,8 @@ export default function Assignments() {
               >
                 <Send /> {mine ? 'Update Work' : 'Submit Work'}
               </button>
+            ) : role === 'student' ? (
+              <span className="text-muted bd-fs-sm">{enrollmentMessage(a)}</span>
             ) : null}
           </div>
         </div>
@@ -266,6 +284,15 @@ export default function Assignments() {
         )}
 
         <ClaimStudentRecordDialog open={claimOpen} onOpenChange={setClaimOpen} onLinked={() => { refreshStudent(); }} />
+
+        {role === 'student' && studentId && !enrollmentLoading && !isEnrolled && (
+          <div className="card border-dashed border-3">
+            <div className="card-body p-4">
+              <p className="fw-semibold text-main mb-0">Enrollment required</p>
+              <p className="text-muted bd-fs-sm mb-0">Ask a teacher to enroll you in a class before submitting assignments.</p>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="d-flex justify-content-center py-8">

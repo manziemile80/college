@@ -7,3 +7,4 @@
 - [x] Nav + role badges for DOS/DOD; Stock Dashboard sidebar link added
 - [x] Users page: DOS/DOD assignable; Settings: audit log viewer
 - [x] Verify typecheck/build and end-to-end role access (admin: Discipline, Enrollment, Settings audit log all load cleanly)
+- [x] Enrollment required for quizzes, assignments and attendance (UI gating + Supabase RLS)
