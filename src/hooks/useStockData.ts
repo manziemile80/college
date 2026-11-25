@@ -56,8 +56,16 @@ export function useStockData() {
       supabase.from('stock_in_transactions').select('*').order('created_at', { ascending: false }).limit(200),
       supabase.from('stock_out_transactions').select('*').order('created_at', { ascending: false }).limit(200),
     ]);
-    const firstError = [p, b, m, s, si, so].find((r) => r.error)?.error;
-    setError(firstError?.message || null);
+    const results = [p, b, m, s, si, so];
+    const isSchemaError = (message?: string) =>
+      !!message && /schema cache|could not find the table/i.test(message);
+    const schemaMissing = results.some((r) => isSchemaError(r.error?.message));
+    const otherError = results.find((r) => r.error && !isSchemaError(r.error?.message))?.error;
+    setError(
+      schemaMissing
+        ? 'Stock tables are not available in the API schema yet. Apply the stock migration (supabase/migrations/20261125020000_stock_module.sql) in the Supabase SQL Editor, then reload this page.'
+        : otherError?.message || null,
+    );
     setData({
       products: (p.data as Product[]) || [],
       batches: (b.data as Batch[]) || [],

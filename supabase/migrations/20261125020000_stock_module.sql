@@ -521,3 +521,6 @@ CREATE OR REPLACE TRIGGER set_suppliers_updated_at BEFORE UPDATE ON public.suppl
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE OR REPLACE TRIGGER set_stock_batches_updated_at BEFORE UPDATE ON public.stock_batches
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Make the new tables visible to the API immediately.
+NOTIFY pgrst, 'reload schema';
