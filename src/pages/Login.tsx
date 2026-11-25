@@ -51,6 +51,17 @@ export default function Login() {
     }
   }, [user, authLoading]);
 
+  useEffect(() => {
+    const clear = () => {
+      setEmail('');
+      setPassword('');
+      setShowPassword(false);
+      setLoading(false);
+    };
+    window.addEventListener('auth:signed-out', clear);
+    return () => window.removeEventListener('auth:signed-out', clear);
+  }, []);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -98,13 +109,13 @@ export default function Login() {
                 <p className="mt-2 text-sm text-slate-500">Sign in to your account to continue.</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-6">
+              <form onSubmit={handleSubmit} autoComplete="off" className="flex flex-col gap-4 mt-6">
                 <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 focus-within:ring-2 focus-within:ring-emerald-500">
                   <Mail className="w-4 h-4 text-slate-400 shrink-0" />
                   <input
                     id="email"
                     type="email"
-                    autoComplete="username"
+                    autoComplete="off"
                     className="w-full border-0 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none bg-transparent"
                     placeholder="you@school.edu"
                     value={email}
@@ -118,7 +129,7 @@ export default function Login() {
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     className="w-full border-0 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none bg-transparent"
                     placeholder="Enter your password"
                     value={password}

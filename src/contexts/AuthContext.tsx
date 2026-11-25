@@ -122,6 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setProfile(null);
     setRole(null);
+    // Tell any mounted auth forms to clear their fields immediately.
+    window.dispatchEvent(new Event('auth:signed-out'));
   };
 
   return (

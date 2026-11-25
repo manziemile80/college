@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff, Loader2, ShieldCheck, GraduationCap } from '@/lib/icons';
@@ -14,6 +14,31 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [accountType, setAccountType] = useState<'student' | 'parent' | 'viewer'>('student');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const clear = () => {
+      setFullName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setShowPassword(false);
+      setAccountType('student');
+      setLoading(false);
+    };
+    window.addEventListener('auth:signed-out', clear);
+    return () => window.removeEventListener('auth:signed-out', clear);
+  }, []);
+
+  // A fresh sign-up form must never inherit credentials from the previous user.
+  useEffect(() => {
+    if (!user && !authLoading) {
+      setFullName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setShowPassword(false);
+    }
+  }, [user, authLoading]);
 
   if (authLoading) {
     return (
@@ -77,7 +102,7 @@ export default function Signup() {
               <p className="mt-2 bd-fs-md text-muted">Get started with College De Rebero today</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="d-flex flex-column gap-4">
+            <form onSubmit={handleSubmit} autoComplete="off" className="d-flex flex-column gap-4">
               <div className="d-flex flex-column gap-2">
                 <label className="form-label">Full Name</label>
                 <input
@@ -111,6 +136,7 @@ export default function Signup() {
                 <input
                   className="form-control bd-h-11"
                   type="email"
+                  autoComplete="off"
                   placeholder="you@school.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -125,6 +151,7 @@ export default function Signup() {
                     id="password"
                     className="form-control bd-h-11"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
                     placeholder="Create a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -141,6 +168,7 @@ export default function Signup() {
                 <input
                   className="form-control bd-h-11"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
                   placeholder="Confirm your password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
