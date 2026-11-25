@@ -1,3 +1,4 @@
+@import "bootstrap/dist/css/bootstrap.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,7 +12,6 @@
    danger #DC2626, info #0EA5E9
    ========================================================================= */
 
-@import "bootstrap/dist/css/bootstrap.css";
 
 /* Make media responsive by default */
 img, video, canvas, svg {
