@@ -59,12 +59,12 @@ export const navItems: NavItem[] = [
 ];
 
 export const roleBadges: Record<AppRole, { label: string; className: string }> = {
-  admin: { label: 'Administrator', className: 'badge text-bg-primary' },
-  teacher: { label: 'Teacher', className: 'badge text-bg-success' },
-  parent: { label: 'Parent', className: 'badge text-bg-info' },
-  student: { label: 'Student', className: 'badge text-bg-warning' },
-  stock_manager: { label: 'Stock Manager', className: 'badge text-bg-warning' },
-  dos: { label: 'Director of Studies', className: 'badge text-bg-success' },
-  dod: { label: 'Director of Discipline', className: 'badge text-bg-danger' },
-  viewer: { label: 'Viewer (read-only)', className: 'badge text-bg-secondary' },
+  admin: { label: 'Administrator', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800' },
+  teacher: { label: 'Teacher', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800' },
+  parent: { label: 'Parent', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800' },
+  student: { label: 'Student', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800' },
+  stock_manager: { label: 'Stock Manager', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800' },
+  dos: { label: 'Director of Studies', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800' },
+  dod: { label: 'Director of Discipline', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800' },
+  viewer: { label: 'Viewer (read-only)', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700' },
 };

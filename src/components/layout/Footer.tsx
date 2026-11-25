@@ -1,52 +1,51 @@
 ﻿import schoolLogo from '@/assets/college-rebero-logo.png';
 import { MapPin, Phone, Mail, Building2, ArrowUpRight } from '@/lib/icons';
 
-// The app's live deployment link (Vercel).
 const LIVE_SITE_URL = 'https://college-mis-beta.vercel.app/';
 
 export function Footer() {
   return (
-    <footer className="mt-6 border-top border-secondary-subtle pt-4 pb-6 text-main">
-      <div className="row g-4">
-        <div className="col-12 col-sm-6 col-lg-3 d-flex flex-column gap-3">
-          <div className="d-flex align-items-center gap-2">
+    <footer className="mt-8 border-t border-slate-200 pt-6 pb-8 text-slate-900 dark:border-slate-700 dark:text-slate-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
             <img src={schoolLogo} alt="College De Rebero" width={36} height={36} className="object-contain" />
             <div>
-              <p className="fw-semibold mb-0">College De Rebero</p>
-              <p className="text-muted bd-fs-sm mb-0">Behavior Management System</p>
+              <p className="font-semibold">College De Rebero</p>
+              <p className="text-xs text-slate-500">Behavior Management System</p>
             </div>
           </div>
           <a
             href={LIVE_SITE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-outline-primary btn-sm w-100 d-inline-flex align-items-center justify-content-center gap-1"
+            className="inline-flex items-center justify-center gap-1 w-full rounded-lg border border-emerald-600 text-emerald-600 px-3 py-2 text-sm font-medium hover:bg-emerald-50"
             aria-label="Open the live site"
           >
             Live site
-            <ArrowUpRight className="bd-fs-sm" />
+            <ArrowUpRight className="w-4 h-4" />
           </a>
         </div>
 
-        <div className="col-12 col-sm-6 col-lg-3">
-          <p className="fw-semibold mb-3">School</p>
-          <ul className="list-unstyled mb-0 d-flex flex-column gap-1">
-            <li className="d-flex align-items-center gap-2 text-muted bd-fs-sm"><Building2 /> East Campus, Kigali</li>
-            <li className="d-flex align-items-center gap-2 text-muted bd-fs-sm"><MapPin /> Gicumbi, Ruvune, Rebero</li>
+        <div>
+          <p className="font-semibold mb-3">School</p>
+          <ul className="flex flex-col gap-1 text-sm text-slate-500">
+            <li className="flex items-center gap-2"><Building2 className="w-4 h-4" /> East Campus, Kigali</li>
+            <li className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Gicumbi, Ruvune, Rebero</li>
           </ul>
         </div>
 
-        <div className="col-12 col-sm-6 col-lg-3">
-          <p className="fw-semibold mb-3">Contact</p>
-          <ul className="list-unstyled mb-0 d-flex flex-column gap-1">
-            <li className="d-flex align-items-center gap-2 text-muted bd-fs-sm"><Phone /> +250 788 000 000</li>
-            <li className="d-flex align-items-center gap-2 text-muted bd-fs-sm"><Mail /> info@collegederebero.rw</li>
+        <div>
+          <p className="font-semibold mb-3">Contact</p>
+          <ul className="flex flex-col gap-1 text-sm text-slate-500">
+            <li className="flex items-center gap-2"><Phone className="w-4 h-4" /> +250 788 000 000</li>
+            <li className="flex items-center gap-2"><Mail className="w-4 h-4" /> info@collegederebero.rw</li>
           </ul>
         </div>
 
-        <div className="col-12 col-sm-6 col-lg-3 d-flex flex-column justify-content-end">
-          <p className="fw-semibold mb-3">Excellence &middot; Discipline &middot; Integrity</p>
-          <p className="text-muted bd-fs-sm">© {new Date().getFullYear()} College De Rebero. All rights reserved.</p>
+        <div className="flex flex-col justify-end">
+          <p className="font-semibold mb-3">Excellence · Discipline · Integrity</p>
+          <p className="text-xs text-slate-500">© {new Date().getFullYear()} College De Rebero. All rights reserved.</p>
         </div>
       </div>
     </footer>

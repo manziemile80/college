@@ -9,15 +9,15 @@ interface PageHeaderProps {
 
 export function PageHeader({ eyebrow, title, description, actions }: PageHeaderProps) {
   return (
-    <div className="mb-4">
+    <div className="mb-6">
       {eyebrow && (
-        <p className="bd-eyebrow mb-1">{eyebrow}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">{eyebrow}</p>
       )}
-      <h1 className="bd-page-title">{title}</h1>
+      <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100">{title}</h1>
       {description && (
-        <p className="mt-2 text-muted bd-fs-md leading-relaxed max-w-3xl">{description}</p>
+        <p className="mt-2 text-sm text-slate-500 leading-relaxed max-w-3xl">{description}</p>
       )}
-      {actions && <div className="d-flex flex-wrap align-items-center gap-2 mt-3">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2 mt-4">{actions}</div>}
     </div>
   );
 }
