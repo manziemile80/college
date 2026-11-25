@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* =========================================================================
    College De Rebero — Student Behavior Management System
    Design System v2 — Bootstrap 5.3 as the primary framework
