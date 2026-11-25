@@ -1,18 +1,49 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AuditLog } from '@/types/database';
 import { format } from 'date-fns';
-import { Bell, Shield, Database, MessageSquare, ScrollText, Loader2 } from '@/lib/icons';
+import { Bell, Shield, Database, MessageSquare, ScrollText, Loader2, User, Camera, Upload } from '@/lib/icons';
 
 export default function Settings() {
+  const { user, profile, role } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(true);
   const [smsEnabled, setSmsEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(false);
   const [twoFactor, setTwoFactor] = useState(false);
   const [sessionTimeout, setSessionTimeout] = useState(true);
+
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url ?? null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+      const url = data.publicUrl;
+      await supabase.from('profiles').update({ avatar_url: url }).eq('user_id', user.id);
+      setAvatarUrl(url);
+    } catch (err: any) {
+      console.error('Avatar upload failed:', err);
+      alert(err?.message || 'Failed to upload profile picture.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   useEffect(() => {
     supabase
@@ -77,6 +108,45 @@ export default function Settings() {
           title="Settings"
           description="Configure system preferences, notifications and security settings."
         />
+
+        {/* My Profile */}
+        <div className="card">
+          <div className="card-header d-flex align-items-start gap-3 py-3">
+            <span className="d-inline-flex align-items-center justify-content-center rounded-circle p-2 text-primary"><User className="fs-5" /></span>
+            <div>
+              <h5 className="fw-semibold text-main mb-0">My Profile</h5>
+              <p className="text-muted bd-fs-sm mb-0">Manage your profile information and picture ({role})</p>
+            </div>
+          </div>
+          <div className="card-body d-flex align-items-center gap-4 flex-wrap">
+            <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary-subtle" style={{ width: '96px', height: '96px', overflow: 'hidden' }}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <User className="fs-2 text-secondary" />
+              )}
+            </div>
+            <div className="d-flex flex-column gap-2">
+              <p className="fw-semibold text-main mb-0">{profile?.full_name || user?.email}</p>
+              <p className="text-muted bd-fs-sm mb-0">{role}</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="d-none"
+                onChange={handleAvatarUpload}
+              />
+              <button
+                type="button"
+                className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+              >
+                {uploadingAvatar ? <><span className="spinner-border spinner-border-sm" /> Uploading...</> : <><Camera /> Change picture</>}
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Notifications */}
         <div className="d-flex flex-column gap-4">

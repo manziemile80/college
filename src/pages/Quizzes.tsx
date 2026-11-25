@@ -69,7 +69,20 @@ export default function Quizzes() {
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [myAttempts, setMyAttempts] = useState<Attempt[]>([]);
+  const [enrolledClassIds, setEnrolledClassIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (role !== 'student' || !studentId) return;
+    supabase
+      .from('enrollments')
+      .select('class_id')
+      .eq('student_id', studentId)
+      .eq('status', 'active')
+      .then(({ data }) => {
+        setEnrolledClassIds(new Set((data || []).map((r: any) => r.class_id)));
+      });
+  }, [role, studentId]);
 
   const [quizOpen, setQuizOpen] = useState(false);
   const [quizForm, setQuizForm] = useState(emptyQuiz);
@@ -350,7 +363,17 @@ export default function Quizzes() {
     fetchAll();
   };
 
+  const canTakeQuiz = (quiz: Quiz) => !quiz.class_id || enrolledClassIds.has(quiz.class_id);
+
   const startQuiz = async (quiz: Quiz) => {
+    if (role === 'student' && !canTakeQuiz(quiz)) {
+      toast({
+        title: 'Not enrolled',
+        description: 'You must be enrolled in this class by a teacher before you can take this quiz.',
+        variant: 'destructive',
+      });
+      return;
+    }
     const { data } = await supabase.from('quiz_questions').select('*').eq('quiz_id', quiz.id).order('sort_order');
     setTakeQuestions((data as Question[]) || []);
     setAnswers({});
@@ -444,7 +467,11 @@ export default function Quizzes() {
                 <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete quiz" onClick={() => removeQuiz(quiz.id)}><Trash2 /></button>
               </>
             ) : role === 'student' && !attempt ? (
-              <button type="button" className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => startQuiz(quiz)}><Send /> Start Quiz</button>
+              canTakeQuiz(quiz) ? (
+                <button type="button" className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => startQuiz(quiz)}><Send /> Start Quiz</button>
+              ) : (
+                <span className="text-muted bd-fs-sm">Enroll in this class to take the quiz.</span>
+              )
             ) : attempt ? (
               <p className="text-muted bd-fs-sm mb-0">Completed {new Date(attempt.completed_at).toLocaleDateString()}</p>
             ) : null}

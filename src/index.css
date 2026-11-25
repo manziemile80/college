@@ -584,11 +584,16 @@ h2, .h2 { color: var(--bd-text); }
   color: var(--bd-text);
   margin-bottom: 0.5rem;
 }
-.form-control, .form-select {
+.form-control, .form-select, input, textarea, select {
   border-color: var(--bd-border);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   min-height: 40px;
   font-size: 0.9rem;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+img, .bd-avatar, .avatar {
+  border-radius: 0.75rem;
 }
 .form-control:focus, .form-select:focus {
   border-color: var(--bs-primary);

@@ -93,8 +93,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </button>
 
         <div className="relative group">
-          <button type="button" className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-emerald-600 text-white font-semibold text-sm" aria-label="User menu">
-            {initials}
+          <button type="button" className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-emerald-600 text-white font-semibold text-sm overflow-hidden" aria-label="User menu">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt={profile?.full_name || 'User'} className="w-full h-full object-cover" />
+            ) : (
+              initials
+            )}
           </button>
           <div className="absolute right-0 top-full mt-2 hidden group-hover:block w-56 rounded-xl bg-white shadow-lg border border-slate-200 py-2 dark:bg-slate-800 dark:border-slate-700 z-40">
             <div className="px-3 py-2">

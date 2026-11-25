@@ -72,8 +72,12 @@ export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }
 
       {/* User profile section */}
       <div className="flex items-center gap-3 px-3 py-3 cursor-pointer" onClick={() => onLinkSelect?.()}>
-        <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-600 text-white font-semibold text-sm">
-          {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+        <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-600 text-white font-semibold text-sm overflow-hidden">
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt={profile?.full_name || 'User'} className="w-full h-full object-cover" />
+          ) : (
+            profile?.full_name?.charAt(0)?.toUpperCase() || 'U'
+          )}
         </span>
         <div className="min-w-0 flex-1 flex flex-col gap-0.5">
           <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{profile?.full_name || 'User'}</p>
