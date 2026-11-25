@@ -8,3 +8,4 @@
 - [x] Users page: DOS/DOD assignable; Settings: audit log viewer
 - [x] Verify typecheck/build and end-to-end role access (admin: Discipline, Enrollment, Settings audit log all load cleanly)
 - [x] Enrollment required for quizzes, assignments and attendance (UI gating + Supabase RLS)
+- [x] In-app notifications published to related users (bell menu, realtime, triggers for scores/incidents/enrollment/announcements)

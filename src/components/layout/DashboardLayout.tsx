@@ -4,10 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import schoolLogo from '@/assets/college-rebero-logo.png';
-import { Loader2, Menu, Bell, Sun, Moon, UserCog, LogOut, X } from '@/lib/icons';
+import { Loader2, Menu, Sun, Moon, UserCog, LogOut, X } from '@/lib/icons';
 import { navItems } from './navItems';
 import { SidebarNav } from './SidebarNav';
 import { Footer } from './Footer';
+import { NotificationsMenu } from './NotificationsMenu';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -81,12 +82,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           />
         </div>
 
-        <div className="relative">
-          <button type="button" className="inline-flex items-center justify-center w-10 h-10 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" title="Notifications">
-            <Bell className="w-5 h-5" />
-          </button>
-          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-600" />
-        </div>
+        <NotificationsMenu />
 
         <button type="button" className="inline-flex items-center justify-center w-10 h-10 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" onClick={toggleTheme} title="Toggle theme">
           {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
