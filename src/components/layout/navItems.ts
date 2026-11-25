@@ -33,7 +33,7 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'teacher', 'parent', 'student', 'viewer', 'stock_manager', 'dos', 'dod'], group: 'Overview' },
 
-  { label: 'Students', href: '/students', icon: GraduationCap, roles: ['admin', 'teacher', 'viewer', 'dos'], group: 'School' },
+  { label: 'Students', href: '/students', icon: GraduationCap, roles: ['admin', 'teacher', 'viewer', 'dos', 'student'], group: 'School' },
   { label: 'Enrollment', href: '/enrollment', icon: UserPlus, roles: ['admin', 'teacher', 'dos'], group: 'School' },
   { label: 'Classes', href: '/classes', icon: BookOpen, roles: ['admin', 'teacher', 'viewer', 'dos'], group: 'School' },
   { label: 'Subjects', href: '/subjects', icon: Library, roles: ['admin', 'teacher', 'viewer', 'dos'], group: 'School' },
@@ -55,7 +55,7 @@ export const navItems: NavItem[] = [
   { label: 'Stock Dashboard', href: '/stock-dashboard', icon: Boxes, roles: ['stock_manager'], group: 'Operations' },
 
   { label: 'Users', href: '/users', icon: Users, roles: ['admin'], group: 'Admin' },
-  { label: 'Settings', href: '/settings', icon: Settings, roles: ['admin'], group: 'Admin' },
+  { label: 'Settings', href: '/settings', icon: Settings, roles: ['admin', 'teacher', 'parent', 'student', 'viewer', 'stock_manager', 'dos', 'dod'], group: 'Overview' },
 ];
 
 export const roleBadges: Record<AppRole, { label: string; className: string }> = {

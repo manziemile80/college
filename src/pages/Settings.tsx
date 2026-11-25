@@ -8,7 +8,8 @@ import { format } from 'date-fns';
 import { Bell, Shield, Database, MessageSquare, ScrollText, Loader2, User, Camera, Upload } from '@/lib/icons';
 
 export default function Settings() {
-  const { user, profile, role } = useAuth();
+  const { user, profile, role, refreshProfile } = useAuth();
+  const isAdmin = role === 'admin';
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(true);
   const [smsEnabled, setSmsEnabled] = useState(true);
@@ -19,6 +20,10 @@ export default function Settings() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url ?? null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [fullName, setFullName] = useState(profile?.full_name ?? '');
+  const [phone, setPhone] = useState(profile?.phone ?? '');
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -37,6 +42,7 @@ export default function Settings() {
       const url = data.publicUrl;
       await supabase.from('profiles').update({ avatar_url: url }).eq('user_id', user.id);
       setAvatarUrl(url);
+      await refreshProfile();
     } catch (err: any) {
       console.error('Avatar upload failed:', err);
       alert(err?.message || 'Failed to upload profile picture.');
@@ -45,7 +51,32 @@ export default function Settings() {
     }
   };
 
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setSavingProfile(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ full_name: fullName, phone: phone || null })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      await refreshProfile();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to save profile.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   useEffect(() => {
+    setAvatarUrl(profile?.avatar_url ?? null);
+    setFullName(profile?.full_name ?? '');
+    setPhone(profile?.phone ?? '');
+  }, [profile]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
     supabase
       .from('audit_logs')
       .select('*')
@@ -55,7 +86,7 @@ export default function Settings() {
         setLogs((data as AuditLog[]) || []);
         setLogsLoading(false);
       });
-  }, []);
+  }, [isAdmin]);
 
   const settingCard = (
     icon: React.ReactNode,
@@ -118,36 +149,60 @@ export default function Settings() {
               <p className="text-muted bd-fs-sm mb-0">Manage your profile information and picture ({role})</p>
             </div>
           </div>
-          <div className="card-body d-flex align-items-center gap-4 flex-wrap">
-            <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary-subtle" style={{ width: '96px', height: '96px', overflow: 'hidden' }}>
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <User className="fs-2 text-secondary" />
-              )}
+          <div className="card-body d-flex flex-column gap-4">
+            <div className="d-flex align-items-center gap-4 flex-wrap">
+              <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary-subtle" style={{ width: '96px', height: '96px', overflow: 'hidden', borderRadius: '50%' }}>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                ) : (
+                  <User className="fs-2 text-secondary" />
+                )}
+              </div>
+              <div className="d-flex flex-column gap-2">
+                <p className="fw-semibold text-main mb-0">{profile?.full_name || user?.email}</p>
+                <p className="text-muted bd-fs-sm mb-0">{role}</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="d-none"
+                  onChange={handleAvatarUpload}
+                />
+                <button
+                  type="button"
+                  className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+                  style={{ borderRadius: '0.5rem' }}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                >
+                  {uploadingAvatar ? <><span className="spinner-border spinner-border-sm" /> Uploading...</> : <><Camera /> Change picture</>}
+                </button>
+              </div>
             </div>
-            <div className="d-flex flex-column gap-2">
-              <p className="fw-semibold text-main mb-0">{profile?.full_name || user?.email}</p>
-              <p className="text-muted bd-fs-sm mb-0">{role}</p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="d-none"
-                onChange={handleAvatarUpload}
-              />
-              <button
-                type="button"
-                className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingAvatar}
-              >
-                {uploadingAvatar ? <><span className="spinner-border spinner-border-sm" /> Uploading...</> : <><Camera /> Change picture</>}
-              </button>
-            </div>
+            <form className="d-flex flex-column gap-3" onSubmit={handleSaveProfile}>
+              <div>
+                <label className="form-label">Full name</label>
+                <input className="form-control" value={fullName} onChange={(e) => setFullName(e.target.value)} style={{ borderRadius: '0.5rem' }} />
+              </div>
+              <div>
+                <label className="form-label">Phone</label>
+                <input className="form-control" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ borderRadius: '0.5rem' }} />
+              </div>
+              <div>
+                <label className="form-label">Email</label>
+                <input className="form-control" value={profile?.email ?? user?.email ?? ''} disabled style={{ borderRadius: '0.5rem' }} />
+              </div>
+              <div>
+                <button type="submit" className="btn btn-success btn-sm" style={{ borderRadius: '0.5rem' }} disabled={savingProfile}>
+                  {savingProfile ? <><span className="spinner-border spinner-border-sm" /> Saving...</> : 'Save profile'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
 
+        {isAdmin && (
+          <>
         {/* Notifications */}
         <div className="d-flex flex-column gap-4">
           <div className="card">
@@ -268,6 +323,8 @@ export default function Settings() {
             )}
           </div>
         </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

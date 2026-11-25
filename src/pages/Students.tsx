@@ -10,6 +10,8 @@ import { format } from 'date-fns';
 import { LinkParentsDialog } from '@/components/students/LinkParentsDialog';
 import { LinkStudentAccountDialog } from '@/components/students/LinkStudentAccountDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrentStudent } from '@/hooks/useCurrentStudent';
+import { ClaimStudentRecordDialog } from '@/components/students/ClaimStudentRecordDialog';
 import { cn } from '@/lib/utils';
 
 interface LinkedParent extends StudentParent {
@@ -28,6 +30,9 @@ export default function Students() {
   const { role } = useAuth();
   const canManage = role === 'admin' || role === 'teacher';
   const isAdmin = role === 'admin';
+  const isStudent = role === 'student';
+  const { studentId, refresh: refreshStudent } = useCurrentStudent();
+  const [claimOpen, setClaimOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [students, setStudents] = useState<StudentWithClass[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -304,6 +309,15 @@ export default function Students() {
           </div>
         </div>
 
+        {isStudent && !studentId && (
+          <div className="alert alert-warning d-flex align-items-center justify-content-between gap-3" style={{ borderRadius: '0.75rem' }}>
+            <span className="bd-fs-sm">Connect your student profile to view your information.</span>
+            <button type="button" className="btn btn-primary btn-sm" style={{ borderRadius: '0.5rem' }} onClick={() => setClaimOpen(true)}>
+              Find my profile
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <div className="d-flex align-items-center justify-content-center py-8">
             <span className="spinner-border spinner-border-lg text-success" role="status" aria-label="Loading students" />
@@ -493,6 +507,15 @@ export default function Students() {
             onUpdate={fetchData}
           />
         )}
+
+        <ClaimStudentRecordDialog
+          open={claimOpen}
+          onOpenChange={setClaimOpen}
+          onLinked={() => {
+            refreshStudent();
+            fetchData();
+          }}
+        />
       </div>
     </DashboardLayout>
   );
