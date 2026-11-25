@@ -1,247 +1,165 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useMemo, useState, type ElementType } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { StockTabs } from '@/components/stock/StockTabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useStockData, Product } from '@/hooks/useStockData';
+import { canManageStockSettings } from '@/lib/stockRoles';
+import { expiryBadge, expiryLabel, expiryStatus, formatMoney, inventoryValue, stockAlert, unitCost } from '@/lib/stock';
+import { exportCsv, exportPdf } from '@/lib/stockExport';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Pencil, Search, Package, ArrowDownCircle, ArrowUpCircle, History } from '@/lib/icons';
+import { supabase } from '@/integrations/supabase/client';
+import { Download, FileText, Package, Pencil, Plus, Search, Boxes } from '@/lib/icons';
 
-interface StockItem {
-  id: string;
-  name: string;
-  category: string;
-  unit: string;
-  quantity: number;
-  min_quantity: number;
-  unit_price: number;
-  location: string | null;
-  notes: string | null;
-}
-
-interface Movement {
-  id: string;
-  item_id: string;
-  movement_type: string;
-  quantity: number;
-  reason: string | null;
-  movement_date: string;
-}
-
-const emptyItem = {
-  name: '',
-  category: 'general',
-  unit: 'pcs',
-  quantity: '0',
-  min_quantity: '0',
-  unit_price: '0',
-  location: '',
-  notes: '',
+const emptyForm = {
+  name: '', product_code: '', category: 'general', unit: 'pcs', description: '',
+  min_quantity: '0', location: '', notes: '',
 };
-
-const categories = ['general', 'stationery', 'furniture', 'ict', 'kitchen', 'cleaning', 'sports', 'lab'];
+const PAGE_SIZE = 12;
 
 export default function Stock() {
   const { role, user } = useAuth();
   const { toast } = useToast();
-  const canManage = role === 'stock_manager';
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const { products, batches, movements, loading, error, refresh } = useStockData();
+  const canManage = canManageStockSettings(role);
 
-  const [items, setItems] = useState<StockItem[]>([]);
-  const [movements, setMovements] = useState<Movement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(params.get('search') || '');
+  const [filter, setFilter] = useState<'all' | 'low' | 'out' | 'expiring'>('all');
+  const [page, setPage] = useState(0);
+  const [editing, setEditing] = useState<Product | 'new' | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
 
-  const [open, setOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyItem);
+  const rows = useMemo(() => products.map((product) => {
+    const productMovements = movements.filter((m) => m.item_id === product.id);
+    const productBatches = batches.filter((b) => b.product_id === product.id);
+    const received = productMovements.filter((m) => m.movement_type === 'in');
+    const issued = productMovements.filter((m) => m.movement_type === 'out');
+    const earliest = productBatches
+      .filter((b) => b.remaining_quantity > 0 && b.expiry_date)
+      .sort((a, b) => (a.expiry_date || '').localeCompare(b.expiry_date || ''))[0];
+    return {
+      product,
+      stockIn: received.reduce((sum, m) => sum + Number(m.quantity || 0), 0),
+      stockOut: issued.reduce((sum, m) => sum + Number(m.quantity || 0), 0),
+      value: inventoryValue(product),
+      expiry: earliest ? expiryStatus(earliest.expiry_date) : 'none',
+      batches: productBatches.length,
+      ...stockAlert(product),
+    };
+  }), [products, batches, movements]);
 
-  const [moveItem, setMoveItem] = useState<StockItem | null>(null);
-  const [moveType, setMoveType] = useState<'in' | 'out'>('in');
-  const [moveQty, setMoveQty] = useState('1');
-  const [moveReason, setMoveReason] = useState('');
+  const filtered = rows.filter((row) => {
+    const q = search.toLowerCase();
+    const matches = `${row.product.name} ${row.product.product_code} ${row.product.category}`.toLowerCase().includes(q);
+    if (!matches) return false;
+    if (filter === 'low') return row.isLow;
+    if (filter === 'out') return row.isOut;
+    if (filter === 'expiring') return ['expired', 'today', 'within7', 'within30'].includes(row.expiry);
+    return row.product.status === 'active';
+  });
 
-  const [historyItem, setHistoryItem] = useState<StockItem | null>(null);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const visible = filtered.slice(Math.min(page, totalPages - 1) * PAGE_SIZE, (Math.min(page, totalPages - 1) + 1) * PAGE_SIZE);
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+  const totals = useMemo(() => ({
+    value: rows.reduce((sum, r) => sum + r.value, 0),
+    quantity: rows.reduce((sum, r) => sum + Number(r.product.quantity || 0), 0),
+    low: rows.filter((r) => r.isLow).length,
+    out: rows.filter((r) => r.isOut).length,
+  }), [rows]);
 
-  const fetchAll = async () => {
-    setLoading(true);
-    const [i, m] = await Promise.all([
-      supabase.from('stock_items').select('*').order('name'),
-      supabase.from('stock_movements').select('*').order('created_at', { ascending: false }).limit(300),
-    ]);
-    setItems((i.data as StockItem[]) || []);
-    setMovements((m.data as Movement[]) || []);
-    setLoading(false);
-  };
-
-  const openNew = () => {
-    setEditingId(null);
-    setForm(emptyItem);
-    setOpen(true);
-  };
-
-  const openEdit = (item: StockItem) => {
-    setEditingId(item.id);
-    setForm({
-      name: item.name,
-      category: item.category,
-      unit: item.unit,
-      quantity: String(item.quantity),
-      min_quantity: String(item.min_quantity),
-      unit_price: String(item.unit_price ?? 0),
-      location: item.location || '',
-      notes: item.notes || '',
+  const openEditor = (product: Product | 'new') => {
+    setEditing(product);
+    setForm(product === 'new' ? emptyForm : {
+      name: product.name,
+      product_code: product.product_code,
+      category: product.category,
+      unit: product.unit,
+      description: product.description || '',
+      min_quantity: String(product.min_quantity),
+      location: product.location || '',
+      notes: product.notes || '',
     });
-    setOpen(true);
   };
 
-  const saveItem = async () => {
-    if (!form.name.trim()) {
-      toast({ title: 'Item name is required', variant: 'destructive' });
+  const saveProduct = async () => {
+    const name = form.name.trim();
+    const code = form.product_code.trim().toUpperCase();
+    if (!name || !code) {
+      toast({ title: 'Name and product code are required', variant: 'destructive' });
       return;
     }
+    const duplicate = products.find((p) => p.id !== (editing === 'new' ? null : (editing as Product).id)
+      && p.product_code.trim().toUpperCase() === code);
+    if (duplicate) {
+      toast({ title: 'Product code already exists', description: 'Use the existing product for new stock instead.', variant: 'destructive' });
+      return;
+    }
+    const similar = products.find((p) => p.id !== (editing === 'new' ? null : (editing as Product).id)
+      && p.name.trim().toLowerCase() === name.toLowerCase());
+    if (similar && !confirm(`A product named "${similar.name}" already exists (${similar.product_code}). Create another product anyway?`)) return;
+
+    setSaving(true);
     const payload = {
-      name: form.name.trim().slice(0, 150),
-      category: form.category,
-      unit: form.unit.trim().slice(0, 30) || 'pcs',
-      quantity: Math.max(Number(form.quantity) || 0, 0),
-      min_quantity: Math.max(Number(form.min_quantity) || 0, 0),
-      unit_price: Math.max(Number(form.unit_price) || 0, 0),
+      name: name.slice(0, 150),
+      product_code: code.slice(0, 50),
+      category: form.category || 'general',
+      unit: form.unit || 'pcs',
+      description: form.description.trim().slice(0, 500) || null,
+      min_quantity: Math.max(0, Number(form.min_quantity) || 0),
       location: form.location.trim().slice(0, 150) || null,
       notes: form.notes.trim().slice(0, 500) || null,
     };
-    if (!editingId) {
-      const existing = items.find((i) => i.name.trim().toLowerCase() === payload.name.toLowerCase());
-      if (existing) {
-        const addQty = payload.quantity;
-        if (addQty > 0) {
-          const { error: mErr } = await supabase.from('stock_movements').insert({
-            item_id: existing.id, movement_type: 'in', quantity: addQty, reason: 'Added stock', recorded_by: user!.id,
-          });
-          if (mErr) return toast({ title: 'Could not add stock', description: mErr.message, variant: 'destructive' });
-        }
-        if (payload.unit_price > 0) await supabase.from('stock_items').update({ unit_price: payload.unit_price }).eq('id', existing.id);
-        toast({ title: 'Stock updated', description: `${existing.name}: ${Number(existing.quantity)} + ${addQty} = ${Number(existing.quantity) + addQty} ${existing.unit}` });
-        setOpen(false);
-        fetchAll();
-        return;
-      }
-    }
-    const { error } = editingId
-      ? await supabase.from('stock_items').update(payload).eq('id', editingId)
-      : await supabase.from('stock_items').insert({ ...payload, created_by: user!.id });
-    if (error) {
-      toast({ title: 'Could not save item', description: error.message, variant: 'destructive' });
+    const { error: saveError } = editing === 'new'
+      ? await supabase.from('stock_items').insert({ ...payload, created_by: user!.id })
+      : await supabase.from('stock_items').update(payload).eq('id', (editing as Product).id);
+    setSaving(false);
+    if (saveError) {
+      toast({ title: 'Could not save product', description: saveError.message, variant: 'destructive' });
       return;
     }
-    toast({ title: editingId ? 'Item updated' : 'Item added' });
-    setOpen(false);
-    fetchAll();
+    toast({ title: editing === 'new' ? 'Product created' : 'Product updated' });
+    setEditing(null);
+    refresh();
   };
 
-  const removeItem = async (id: string) => {
-    const { error } = await supabase.from('stock_items').delete().eq('id', id);
-    if (error) {
-      toast({ title: 'Could not delete item', description: error.message, variant: 'destructive' });
-      return;
-    }
-    fetchAll();
+  const toggleStatus = async (product: Product) => {
+    const { error: updateError } = await supabase.from('stock_items')
+      .update({ status: product.status === 'active' ? 'inactive' : 'active' })
+      .eq('id', product.id);
+    if (updateError) return toast({ title: 'Could not update status', description: updateError.message, variant: 'destructive' });
+    toast({ title: 'Product status updated' });
+    refresh();
   };
 
-  const openMove = (item: StockItem, type: 'in' | 'out') => {
-    setMoveItem(item);
-    setMoveType(type);
-    setMoveQty('1');
-    setMoveReason('');
-  };
-
-  const saveMovement = async () => {
-    if (!moveItem) return;
-    const qty = Number(moveQty);
-    if (!qty || qty <= 0) {
-      toast({ title: 'Enter an amount greater than zero', variant: 'destructive' });
-      return;
-    }
-    if (moveType === 'out' && qty > Number(moveItem.quantity)) {
-      toast({
-        title: 'Not enough in stock',
-        description: `Only ${moveItem.quantity} ${moveItem.unit} available.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-    const { error } = await supabase.from('stock_movements').insert({
-      item_id: moveItem.id,
-      movement_type: moveType,
-      quantity: qty,
-      reason: moveReason.trim().slice(0, 300) || null,
-      recorded_by: user!.id,
-    });
-    if (error) {
-      toast({ title: 'Could not record movement', description: error.message, variant: 'destructive' });
-      return;
-    }
-    toast({ title: moveType === 'in' ? 'Stock received' : 'Stock issued' });
-    setMoveItem(null);
-    fetchAll();
-  };
-
-  const filtered = items.filter(
-    (i) =>
-      i.name.toLowerCase().includes(search.toLowerCase()) ||
-      i.category.toLowerCase().includes(search.toLowerCase()),
-  );
-  const lowStock = items.filter((i) => Number(i.quantity) <= Number(i.min_quantity));
-  const totalValue = items.reduce((s, i) => s + Number(i.unit_price || 0) * Number(i.quantity || 0), 0);
-
-  const stockCard = (item: StockItem) => {
-    const low = Number(item.quantity) <= Number(item.min_quantity);
-    return (
-      <div className="card h-100 d-flex flex-column">
-        <div className="card-body d-flex flex-column gap-3 p-4">
-          <div className="d-flex align-items-start justify-content-between gap-2">
-            <span className="d-inline-flex align-items-center justify-content-center rounded-3 bg-success-subtle text-success p-2"><Package className="fs-5" /></span>
-            <span className={`badge bd-fs-xs ${low ? 'text-bg-danger bg-danger-subtle' : 'text-bg-secondary bg-secondary-subtle'}`}>
-              {item.quantity} {item.unit}
-            </span>
-          </div>
-          <div className="min-w-0">
-            <h3 className="fw-semibold text-main mb-1 text-truncate">{item.name}</h3>
-            <p className="text-muted bd-fs-sm mb-0 text-truncate">{item.category}{item.location ? ` · ${item.location}` : ''}</p>
-            <p className="text-muted bd-fs-sm mt-2 mb-0">
-              Unit price: {Number(item.unit_price || 0).toLocaleString()} RWF · Total:{' '}
-              <span className="fw-semibold text-main">{(Number(item.unit_price || 0) * Number(item.quantity)).toLocaleString()} RWF</span>
-            </p>
-            {low && (
-              <p className="mt-2 bd-fs-sm fw-medium text-danger mb-0">
-                At or below minimum level ({item.min_quantity} {item.unit})
-              </p>
-            )}
-          </div>
-          <div className="d-flex flex-wrap align-items-center gap-2 mt-auto">
-            {canManage && (
-              <>
-                <button type="button" className="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1" onClick={() => openMove(item, 'in')}>
-                  <ArrowDownCircle /> Stock In
-                </button>
-                <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1" onClick={() => openMove(item, 'out')}>
-                  <ArrowUpCircle /> Stock Out
-                </button>
-              </>
-            )}
-            <button type="button" className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" onClick={() => setHistoryItem(item)}><History /> History</button>
-            {canManage && (
-              <>
-                <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center" aria-label="Edit item" onClick={() => openEdit(item)}><Pencil /></button>
-                <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete item" onClick={() => removeItem(item.id)}><Trash2 /></button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+  const exportRows = filtered.map((r) => ({
+    code: r.product.product_code,
+    name: r.product.name,
+    category: r.product.category,
+    unit: r.product.unit,
+    stockIn: r.stockIn,
+    stockOut: r.stockOut,
+    available: r.product.quantity,
+    cost: unitCost(r.product),
+    value: r.value,
+    min: r.product.min_quantity,
+    expiry: expiryLabel[r.expiry],
+  }));
+  const columns = [
+    { header: 'Code', key: 'code' }, { header: 'Product', key: 'name' }, { header: 'Category', key: 'category' },
+    { header: 'Unit', key: 'unit' }, { header: 'Stock In', key: 'stockIn' }, { header: 'Stock Out', key: 'stockOut' },
+    { header: 'Available', key: 'available' }, { header: 'Avg Cost', key: 'cost' }, { header: 'Value', key: 'value' },
+    { header: 'Min', key: 'min' }, { header: 'Expiry', key: 'expiry' },
+  ];
+  const meta = {
+    title: 'Product Inventory',
+    period: new Date().toLocaleDateString(),
+    generatedBy: user?.email || 'System',
+    summary: `Unique products: ${filtered.length} · Total quantity: ${totals.quantity} · Inventory value: ${formatMoney(totals.value)}`,
   };
 
   return (
@@ -249,200 +167,130 @@ export default function Stock() {
       <div className="d-flex flex-column gap-4">
         <PageHeader
           eyebrow="Operations"
-          title="Stock Management"
-          description={canManage ? 'Track school supplies, record what comes in and what is issued out.' : 'View the school stock list and current quantities.'}
-          actions={canManage ? (
-            <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={openNew}><Plus /> New Item</button>
-          ) : undefined}
+          title="Product Inventory"
+          description="One row per unique product. All receipts and issues are kept in the movement history."
+          actions={
+            <div className="d-flex flex-wrap gap-2">
+              <button type="button" className="btn btn-outline-secondary d-inline-flex align-items-center gap-1" onClick={() => exportCsv(exportRows, columns, meta)}><Download /> Excel (CSV)</button>
+              <button type="button" className="btn btn-outline-primary d-inline-flex align-items-center gap-1" onClick={() => exportPdf(exportRows, columns, meta)}><FileText /> PDF / Print</button>
+              {canManage && <button type="button" className="btn btn-success d-inline-flex align-items-center gap-1" onClick={() => openEditor('new')}><Plus /> New Product</button>}
+            </div>
+          }
         />
+        <StockTabs />
 
         <div className="row g-3">
-          <div className="col-6 col-md-6 col-xl-4">
-            <div className="card h-100 d-flex align-items-center gap-3 p-4">
-              <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle p-3 text-success"><Package className="fs-5" /></div>
-              <div>
-                <p className="text-muted bd-fs-sm mb-0">Items tracked</p>
-                <p className="fw-bold text-main bd-fs-lg mb-0">{items.length}</p>
-              </div>
+          {([
+            ['Unique products', rows.length, Package],
+            ['Total quantity', totals.quantity, Boxes],
+            ['Inventory value', formatMoney(totals.value), FileText],
+            ['Low / out of stock', `${totals.low} / ${totals.out}`, Package],
+          ] as [string, string | number, ElementType][]).map(([label, value, Icon]) => (
+            <div className="col-6 col-lg-3" key={label as string}>
+              <div className="card h-100"><div className="card-body p-3">
+                <div className="d-flex align-items-center gap-2 text-secondary bd-fs-sm"><Icon className="text-success" /> {label as string}</div>
+                <p className="fs-5 fw-semibold text-main mb-0 mt-2">{value as string}</p>
+              </div></div>
             </div>
-          </div>
-          <div className="col-6 col-md-6 col-xl-4">
-            <div className={`card h-100 d-flex align-items-center gap-3 p-4 ${lowStock.length > 0 ? 'text-danger' : ''}`}>
-              <div className={`d-inline-flex align-items-center justify-content-center rounded-circle p-3 ${lowStock.length > 0 ? 'bg-danger-subtle text-danger' : 'bg-secondary-subtle text-secondary'}`}><Package className="fs-5" /></div>
-              <div>
-                <p className="text-muted bd-fs-sm mb-0">Low or out of stock</p>
-                <p className={`fw-bold bd-fs-lg mb-0 ${lowStock.length > 0 ? 'text-danger' : 'text-main'}`}>{lowStock.length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="col-12 col-xl-4">
-            <div className="card h-100 d-flex align-items-center gap-3 p-4">
-              <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle p-3 text-success"><Package className="fs-5" /></div>
-              <div>
-                <p className="text-muted bd-fs-sm mb-0">Total value (RWF)</p>
-                <p className="fw-bold text-main bd-fs-lg mb-0">{totalValue.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        <div className="input-group w-100 w-md-auto flex-grow-1">
-          <span className="input-group-text bg-white border-secondary-subtle"><Search className="text-secondary" /></span>
-          <input type="search" className="form-control border-secondary-subtle" placeholder="Search item or category" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search stock" />
+        {error && <div className="alert alert-danger mb-0">Could not load stock data: {error}</div>}
+
+        <div className="card">
+          <div className="card-header d-flex flex-wrap align-items-center gap-3 py-3">
+            <div className="input-group flex-grow-1" style={{ maxWidth: 360 }}>
+              <span className="input-group-text bg-white border-secondary-subtle"><Search className="text-secondary" /></span>
+              <input className="form-control border-secondary-subtle" placeholder="Search name, code or category..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} />
+            </div>
+            <select className="form-select w-auto" value={filter} onChange={(e) => { setFilter(e.target.value as typeof filter); setPage(0); }}>
+              <option value="all">All active products</option>
+              <option value="low">Low stock</option>
+              <option value="out">Out of stock</option>
+              <option value="expiring">Expiring soon</option>
+            </select>
+          </div>
+          <div className="card-body p-0">
+            {loading ? (
+              <div className="d-flex justify-content-center py-8"><span className="spinner-border spinner-border-lg text-success" role="status" /></div>
+            ) : visible.length === 0 ? (
+              <div className="empty-state"><Package className="empty-state-icon text-secondary" /><p className="text-secondary mb-0">No products found</p></div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead><tr className="border-bottom border-secondary-subtle">
+                    <th>Code</th><th>Product</th><th>Unit</th><th className="text-end">Stock In</th>
+                    <th className="text-end">Stock Out</th><th className="text-end">Available</th>
+                    <th className="text-end">Avg Cost</th><th className="text-end">Value</th>
+                    <th>Expiry</th><th className="text-end">Actions</th>
+                  </tr></thead>
+                  <tbody>
+                    {visible.map((row) => (
+                      <tr key={row.product.id} className="border-bottom border-secondary-subtle">
+                        <td className="text-muted bd-fs-sm">{row.product.product_code}</td>
+                        <td>
+                          <span className="fw-medium text-main">{row.product.name}</span>
+                          <span className="d-block text-muted bd-fs-xs">{row.product.category}{row.batches ? ` · ${row.batches} batch(es)` : ''}</span>
+                          {(row.isOut || row.isLow) && <span className={`badge ${row.isOut ? 'text-bg-danger' : 'text-bg-warning'} bd-fs-xs ms-1`}>{row.isOut ? 'Out of stock' : `Low (min ${row.product.min_quantity})`}</span>}
+                        </td>
+                        <td className="bd-fs-sm">{row.product.unit}</td>
+                        <td className="text-end">{row.stockIn}</td>
+                        <td className="text-end">{row.stockOut}</td>
+                        <td className="text-end fw-semibold">{row.product.quantity}</td>
+                        <td className="text-end bd-fs-sm">{formatMoney(unitCost(row.product))}</td>
+                        <td className="text-end fw-semibold">{formatMoney(row.value)}</td>
+                        <td><span className={`badge ${expiryBadge[row.expiry]} bd-fs-xs`}>{expiryLabel[row.expiry]}</span></td>
+                        <td className="text-end">
+                          <div className="d-flex justify-content-end gap-1">
+                            <button type="button" className="btn btn-outline-success btn-sm" title="Receive stock" onClick={() => navigate(`/stock/in?product=${row.product.id}`)}>In</button>
+                            <button type="button" className="btn btn-outline-warning btn-sm" title="Issue stock" onClick={() => navigate(`/stock/out?product=${row.product.id}`)}>Out</button>
+                            {canManage && <>
+                              <button type="button" className="btn btn-outline-primary btn-sm" aria-label="Edit product" onClick={() => openEditor(row.product)}><Pencil /></button>
+                              <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => toggleStatus(row.product)}>{row.product.status === 'active' ? 'Disable' : 'Enable'}</button>
+                            </>}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+          {totalPages > 1 && <div className="card-footer d-flex justify-content-between align-items-center">
+            <span className="text-muted bd-fs-sm">Page {Math.min(page, totalPages - 1) + 1} of {totalPages}</span>
+            <div className="d-flex gap-2">
+              <button type="button" className="btn btn-outline-secondary btn-sm" disabled={page <= 0} onClick={() => setPage(page - 1)}>Previous</button>
+              <button type="button" className="btn btn-outline-secondary btn-sm" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>Next</button>
+            </div>
+          </div>}
         </div>
-
-        {loading ? (
-          <div className="d-flex justify-content-center py-8">
-            <span className="spinner-border spinner-border-lg text-success" role="status" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="card">
-            <div className="card-body d-flex flex-column align-items-center py-12 text-center">
-              <Package className="fs-3 mb-3 text-secondary" />
-              <p className="fw-semibold text-main mb-2">No stock items yet</p>
-            </div>
-          </div>
-        ) : (
-          <div className="row g-3 row-cols-1 row-cols-md-2 row-cols-lg-3">
-            {filtered.map((item) => <div key={item.id} className="col">{stockCard(item)}</div>)}
-          </div>
-        )}
-
-        {/* ── Add / edit item modal ── */}
-        {open && (
-          <>
-            <div className="bd-modal-backdrop" />
-            <div className="bd-modal show">
-              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
-                    <h5 className="modal-title fw-semibold text-main mb-0">{editingId ? 'Edit Item' : 'New Item'}</h5>
-                    <button type="button" className="btn-close" onClick={() => setOpen(false)} aria-label="Close" />
-                  </div>
-                  <div className="modal-body d-flex flex-column gap-3">
-                    <div className="d-flex flex-column gap-2">
-                      <label className="form-label">Item name</label>
-                      <input className="form-control" value={form.name} maxLength={150} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                    </div>
-                    <div className="row g-3">
-                      <div className="col-6 col-md-4">
-                        <label className="form-label">Category</label>
-                        <select className="form-select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                          {categories.map((c) => <option key={c} value={c} className="text-capitalize">{c}</option>)}
-                        </select>
-                      </div>
-                      <div className="col-6 col-md-4">
-                        <label className="form-label">Unit</label>
-                        <input className="form-control" value={form.unit} maxLength={30} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
-                      </div>
-                      <div className="col-6 col-md-4">
-                        <label className="form-label">Unit price (RWF)</label>
-                        <input type="number" min={0} className="form-control" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
-                      </div>
-                    </div>
-                    <div className="row g-3">
-                      <div className="col-6 col-md-4">
-                        <label className="form-label">Quantity in stock</label>
-                        <input type="number" min={0} className="form-control" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
-                      </div>
-                      <div className="col-6 col-md-4">
-                        <label className="form-label">Minimum level</label>
-                        <input type="number" min={0} className="form-control" value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} />
-                      </div>
-                      <div className="col-6 col-md-4">
-                        <label className="form-label">Storage location</label>
-                        <input className="form-control" value={form.location} maxLength={150} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Room, shelf..." />
-                      </div>
-                    </div>
-                    {!editingId && items.some((i) => i.name.trim().toLowerCase() === form.name.trim().toLowerCase()) && (
-                      <p className="text-success bd-fs-sm">This item already exists — the quantity will be added to the current total.</p>
-                    )}
-                    <div className="d-flex justify-content-end gap-2 pt-2">
-                      <button type="button" className="btn btn-outline-secondary" onClick={() => setOpen(false)}>Cancel</button>
-                      <button type="button" className="btn btn-success" onClick={saveItem}>{editingId ? 'Save Changes' : 'Add Item'}</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ── Receive / issue modal ── */}
-        {moveItem && (
-          <>
-            <div className="bd-modal-backdrop" />
-            <div className="bd-modal show">
-              <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
-                    <h5 className="modal-title fw-semibold text-main mb-0">{moveType === 'in' ? 'Stock in' : 'Stock out'} — {moveItem.name}</h5>
-                    <button type="button" className="btn-close" onClick={() => setMoveItem(null)} aria-label="Close" />
-                  </div>
-                  <div className="modal-body d-flex flex-column gap-3">
-                    <p className="text-muted bd-fs-sm mb-0">Currently in stock: {moveItem.quantity} {moveItem.unit}</p>
-                    <div className="d-flex flex-column gap-2">
-                      <label className="form-label">Amount</label>
-                      <input type="number" className="form-control" min={1} value={moveQty} onChange={(e) => setMoveQty(e.target.value)} />
-                    </div>
-                    <div className="d-flex flex-column gap-2">
-                      <label className="form-label">Reason / reference</label>
-                      <input className="form-control" value={moveReason} maxLength={300} placeholder={moveType === 'in' ? 'Purchase, donation...' : 'Given to class, repair...'} onChange={(e) => setMoveReason(e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="modal-footer d-flex justify-content-end gap-2">
-                    <button type="button" className="btn btn-outline-secondary" onClick={() => setMoveItem(null)}>Cancel</button>
-                    <button type="button" className="btn btn-success" onClick={saveMovement}>Record</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ── History modal ── */}
-        {historyItem && (
-          <>
-            <div className="bd-modal-backdrop" />
-            <div className="bd-modal show">
-              <div className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header d-flex justify-content-between align-items-center border-bottom border-secondary-subtle py-3">
-                    <h5 className="modal-title fw-semibold text-main mb-0">{historyItem.name} — Movements</h5>
-                    <button type="button" className="btn-close" onClick={() => setHistoryItem(null)} aria-label="Close" />
-                  </div>
-                  <div className="modal-body">
-                    {(() => {
-                      const rows = movements.filter((m) => m.item_id === historyItem?.id);
-                      if (rows.length === 0) return <p className="text-muted bd-fs-sm mb-0">No movements recorded yet.</p>;
-                      return (
-                        <div className="d-flex flex-column gap-2">
-                          {rows.map((m) => (
-                            <div key={m.id} className="d-flex align-items-center justify-content-between gap-3 rounded-3 border border-secondary-subtle p-3">
-                              <div>
-                                <p className="fw-semibold text-main mb-0">
-                                  {m.movement_type === 'in' ? 'Received' : 'Issued'} {m.quantity} {historyItem?.unit}
-                                </p>
-                                <p className="text-muted bd-fs-sm mb-0 mt-1">
-                                  {new Date(m.movement_date).toLocaleDateString()}
-                                  {m.reason ? ` · ${m.reason}` : ''}
-                                </p>
-                              </div>
-                              <span className={`badge bd-fs-sm ${m.movement_type === 'in' ? 'text-bg-success' : 'text-bg-danger'}`}>
-                                {m.movement_type === 'in' ? '+' : '−'}{m.quantity}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
       </div>
+
+      {editing && (
+        <>
+          <div className="bd-modal-backdrop" />
+          <div className="bd-modal show"><div className="modal-dialog modal-dialog-scrollable modal-dialog-centered"><div className="modal-content">
+            <div className="modal-header d-flex justify-content-between py-3"><h5 className="modal-title fw-semibold text-main mb-0">{editing === 'new' ? 'New Product' : 'Edit Product'}</h5>
+              <button type="button" className="btn-close" onClick={() => setEditing(null)} aria-label="Close" /></div>
+            <div className="modal-body d-flex flex-column gap-3">
+              <div className="row g-3">
+                <div className="col-md-6"><label className="form-label">Product name</label><input className="form-control" maxLength={150} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+                <div className="col-md-6"><label className="form-label">Product code / SKU</label><input className="form-control" maxLength={50} value={form.product_code} onChange={(e) => setForm({ ...form, product_code: e.target.value })} /></div>
+                <div className="col-md-4"><label className="form-label">Category</label><input className="form-control" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
+                <div className="col-md-4"><label className="form-label">Unit</label><input className="form-control" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} placeholder="pcs, kg, litres..." /></div>
+                <div className="col-md-4"><label className="form-label">Minimum stock level</label><input type="number" min={0} className="form-control" value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} /></div>
+                <div className="col-12"><label className="form-label">Description</label><textarea className="form-control" maxLength={500} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+                <div className="col-md-6"><label className="form-label">Location</label><input className="form-control" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
+                <div className="col-md-6"><label className="form-label">Notes</label><input className="form-control" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+              </div>
+              <p className="text-muted bd-fs-sm mb-0">A product is never duplicated by a stock receipt: if the code already exists, the stock is added to that product.</p>
+            </div>
+            <div className="modal-footer d-flex justify-content-end gap-2"><button type="button" className="btn btn-outline-secondary" onClick={() => setEditing(null)}>Cancel</button>
+              <button type="button" className="btn btn-success" onClick={saveProduct} disabled={saving}>{saving ? 'Saving...' : 'Save Product'}</button></div>
+          </div></div></div>
+        </>
+      )}
     </DashboardLayout>
   );
 }

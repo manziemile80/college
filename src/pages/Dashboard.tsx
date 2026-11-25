@@ -145,6 +145,7 @@ export default function Dashboard() {
     parent: 'Parent',
     student: 'Student',
     stock_manager: 'Stock Manager',
+    storekeeper: 'Storekeeper',
     dos: 'Director of Studies',
     dod: 'Director of Discipline',
     viewer: 'Viewer',

@@ -9,3 +9,4 @@
 - [x] Verify typecheck/build and end-to-end role access (admin: Discipline, Enrollment, Settings audit log all load cleanly)
 - [x] Enrollment required for quizzes, assignments and attendance (UI gating + Supabase RLS)
 - [x] In-app notifications published to related users (bell menu, realtime, triggers for scores/incidents/enrollment/announcements)
+- [x] Complete stock module: unique products by SKU, batches + FEFO, stock-in/out RPCs, expiry alerts, movement ledger, valuation, daily/weekly/monthly/annual reports and exports

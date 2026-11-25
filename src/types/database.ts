@@ -1,6 +1,6 @@
 // Custom types for the Conduct app
 
-export type AppRole = 'admin' | 'teacher' | 'parent' | 'student' | 'viewer' | 'stock_manager' | 'dos' | 'dod';
+export type AppRole = 'admin' | 'teacher' | 'parent' | 'student' | 'viewer' | 'stock_manager' | 'storekeeper' | 'dos' | 'dod';
 
 export type BehaviorCategory = 'discipline' | 'respect' | 'attendance' | 'participation';
 

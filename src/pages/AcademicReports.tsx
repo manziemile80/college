@@ -128,7 +128,7 @@ export default function AcademicReports() {
 
     autoTable(doc, {
       startY: 30,
-      theme: 'row',
+      theme: 'plain',
       styles: { fontSize: 9, cellPadding: 1.5, textColor: 0, lineColor: 0, lineWidth: 0.2 },
       body: [
         [{ content: 'School Name: COLLEGE DE REBERO', colSpan: 2, styles: { fontStyle: 'bold' } }],
@@ -172,7 +172,7 @@ export default function AcademicReports() {
 
     autoTable(doc, {
       startY: y,
-      theme: 'row',
+      theme: 'plain',
       tableWidth: 'wrap',
       margin: { left: 14, right: 14 },
       styles: { fontSize: 7.5, cellPadding: 1, textColor: 0, lineColor: 0, lineWidth: 0.2, halign: 'center' },
@@ -204,7 +204,7 @@ export default function AcademicReports() {
     const annualCell = (txt: string) => ({ content: txt, colSpan: 3 });
     autoTable(doc, {
       startY: y,
-      theme: 'row',
+      theme: 'plain',
       tableWidth: 'wrap',
       margin: { left: 14, right: 14 },
       styles: { fontSize: 8.5, cellPadding: 1.5, textColor: 0, lineColor: 0, lineWidth: 0.2, halign: 'center', fontStyle: 'bold' },

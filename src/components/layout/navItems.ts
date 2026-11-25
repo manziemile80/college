@@ -19,6 +19,11 @@ import {
   Boxes,
   UserPlus,
   Gavel,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  AlertTriangle,
+  History,
+  Coins,
 } from '@/lib/icons';
 import { AppRole } from '@/types/database';
 
@@ -51,8 +56,16 @@ export const navItems: NavItem[] = [
   { label: 'Academic Reports', href: '/academic-reports', icon: FileText, roles: ['admin', 'teacher', 'parent', 'student', 'dos'], group: 'Records' },
   { label: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'teacher', 'parent', 'viewer', 'dos'], group: 'Records' },
 
-  { label: 'Stock Management', href: '/stock', icon: Package, roles: ['stock_manager'], group: 'Operations' },
-  { label: 'Stock Dashboard', href: '/stock-dashboard', icon: Boxes, roles: ['stock_manager'], group: 'Operations' },
+  { label: 'Stock Dashboard', href: '/stock-dashboard', icon: Boxes, roles: ['admin', 'stock_manager', 'storekeeper', 'viewer'], group: 'Operations' },
+  { label: 'Product Inventory', href: '/stock', icon: Package, roles: ['admin', 'stock_manager', 'storekeeper', 'viewer'], group: 'Operations' },
+  { label: 'Stock In', href: '/stock/in', icon: ArrowDownCircle, roles: ['admin', 'stock_manager', 'storekeeper'], group: 'Operations' },
+  { label: 'Stock Out', href: '/stock/out', icon: ArrowUpCircle, roles: ['admin', 'stock_manager', 'storekeeper'], group: 'Operations' },
+  { label: 'Stock Batches', href: '/stock/batches', icon: Boxes, roles: ['admin', 'stock_manager', 'storekeeper', 'viewer'], group: 'Operations' },
+  { label: 'Expiry Management', href: '/stock/expiry', icon: CalendarCheck, roles: ['admin', 'stock_manager', 'storekeeper', 'viewer'], group: 'Operations' },
+  { label: 'Low Stock Alerts', href: '/stock/alerts', icon: AlertTriangle, roles: ['admin', 'stock_manager', 'storekeeper', 'viewer'], group: 'Operations' },
+  { label: 'Stock Movements', href: '/stock/movements', icon: History, roles: ['admin', 'stock_manager', 'storekeeper', 'viewer'], group: 'Operations' },
+  { label: 'Stock Reports', href: '/stock/reports', icon: BarChart3, roles: ['admin', 'stock_manager', 'storekeeper', 'viewer'], group: 'Operations' },
+  { label: 'Inventory Valuation', href: '/stock/valuation', icon: Coins, roles: ['admin', 'stock_manager', 'storekeeper', 'viewer'], group: 'Operations' },
 
   { label: 'Users', href: '/users', icon: Users, roles: ['admin'], group: 'Admin' },
   { label: 'Settings', href: '/settings', icon: Settings, roles: ['admin', 'teacher', 'parent', 'student', 'viewer', 'stock_manager', 'dos', 'dod'], group: 'Overview' },
@@ -64,6 +77,7 @@ export const roleBadges: Record<AppRole, { label: string; className: string }> =
   parent: { label: 'Parent', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800' },
   student: { label: 'Student', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800' },
   stock_manager: { label: 'Stock Manager', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800' },
+  storekeeper: { label: 'Storekeeper', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-800' },
   dos: { label: 'Director of Studies', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800' },
   dod: { label: 'Director of Discipline', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800' },
   viewer: { label: 'Viewer (read-only)', className: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700' },

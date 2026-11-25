@@ -1322,43 +1322,55 @@ export type Database = {
       }
       stock_items: {
         Row: {
+          average_unit_cost: number
           category: string
           created_at: string
           created_by: string
+          description: string | null
           id: string
           location: string | null
           min_quantity: number
           name: string
           notes: string | null
+          product_code: string
           quantity: number
+          status: string
           unit: string
           unit_price: number
           updated_at: string
         }
         Insert: {
+          average_unit_cost?: number
           category?: string
           created_at?: string
           created_by: string
+          description?: string | null
           id?: string
           location?: string | null
           min_quantity?: number
           name: string
           notes?: string | null
+          product_code: string
           quantity?: number
+          status?: string
           unit?: string
           unit_price?: number
           updated_at?: string
         }
         Update: {
+          average_unit_cost?: number
           category?: string
           created_at?: string
           created_by?: string
+          description?: string | null
           id?: string
           location?: string | null
           min_quantity?: number
           name?: string
           notes?: string | null
+          product_code?: string
           quantity?: number
+          status?: string
           unit?: string
           unit_price?: number
           updated_at?: string
@@ -1367,34 +1379,61 @@ export type Database = {
       }
       stock_movements: {
         Row: {
+          batch_id: string | null
           created_at: string
           id: string
           item_id: string
           movement_date: string
           movement_type: string
+          new_quantity: number
+          previous_quantity: number
+          product_code: string | null
           quantity: number
           reason: string | null
+          recipient: string | null
+          reference: string | null
           recorded_by: string
+          supplier: string | null
+          total_price: number
+          unit_price: number
         }
         Insert: {
+          batch_id?: string | null
           created_at?: string
           id?: string
           item_id: string
           movement_date?: string
           movement_type: string
+          new_quantity?: number
+          previous_quantity?: number
+          product_code?: string | null
           quantity: number
           reason?: string | null
+          recipient?: string | null
+          reference?: string | null
           recorded_by: string
+          supplier?: string | null
+          total_price?: number
+          unit_price?: number
         }
         Update: {
+          batch_id?: string | null
           created_at?: string
           id?: string
           item_id?: string
           movement_date?: string
           movement_type?: string
+          new_quantity?: number
+          previous_quantity?: number
+          product_code?: string | null
           quantity?: number
           reason?: string | null
+          recipient?: string | null
+          reference?: string | null
           recorded_by?: string
+          supplier?: string | null
+          total_price?: number
+          unit_price?: number
         }
         Relationships: [
           {
@@ -1405,6 +1444,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      suppliers: {
+        Row: { address: string | null; contact_person: string | null; created_at: string; created_by: string; email: string | null; id: string; name: string; notes: string | null; phone: string | null; updated_at: string }
+        Insert: { address?: string | null; contact_person?: string | null; created_at?: string; created_by: string; email?: string | null; id?: string; name: string; notes?: string | null; phone?: string | null; updated_at?: string }
+        Update: { address?: string | null; contact_person?: string | null; created_at?: string; created_by?: string; email?: string | null; id?: string; name?: string; notes?: string | null; phone?: string | null; updated_at?: string }
+        Relationships: []
+      }
+      stock_batches: {
+        Row: { batch_number: string; created_at: string; created_by: string; expiry_date: string | null; id: string; manufacturing_date: string | null; notes: string | null; product_id: string; quantity_received: number; remaining_quantity: number; supplier_id: string | null; unit: string; unit_cost: number; updated_at: string }
+        Insert: { batch_number: string; created_at?: string; created_by: string; expiry_date?: string | null; id?: string; manufacturing_date?: string | null; notes?: string | null; product_id: string; quantity_received?: number; remaining_quantity?: number; supplier_id?: string | null; unit?: string; unit_cost?: number; updated_at?: string }
+        Update: { batch_number?: string; created_at?: string; created_by?: string; expiry_date?: string | null; id?: string; manufacturing_date?: string | null; notes?: string | null; product_id?: string; quantity_received?: number; remaining_quantity?: number; supplier_id?: string | null; unit?: string; unit_cost?: number; updated_at?: string }
+        Relationships: []
+      }
+      stock_in_transactions: {
+        Row: { created_at: string; notes: string | null; id: string; reference: string; recorded_by: string; supplier_id: string | null; total_amount: number; total_lines: number; total_quantity: number; transaction_date: string }
+        Insert: { created_at?: string; notes?: string | null; id?: string; reference: string; recorded_by: string; supplier_id?: string | null; total_amount?: number; total_lines?: number; total_quantity?: number; transaction_date?: string }
+        Update: { created_at?: string; notes?: string | null; id?: string; reference?: string; recorded_by?: string; supplier_id?: string | null; total_amount?: number; total_lines?: number; total_quantity?: number; transaction_date?: string }
+        Relationships: []
+      }
+      stock_in_items: {
+        Row: { batch_id: string | null; created_at: string; expiry_date: string | null; id: string; manufacturing_date: string | null; notes: string | null; product_id: string; quantity: number; total_price: number; transaction_id: string; unit: string; unit_cost: number }
+        Insert: { batch_id?: string | null; created_at?: string; expiry_date?: string | null; id?: string; manufacturing_date?: string | null; notes?: string | null; product_id: string; quantity: number; total_price?: number; transaction_id: string; unit?: string; unit_cost?: number }
+        Update: { batch_id?: string | null; created_at?: string; expiry_date?: string | null; id?: string; manufacturing_date?: string | null; notes?: string | null; product_id?: string; quantity?: number; total_price?: number; transaction_id?: string; unit?: string; unit_cost?: number }
+        Relationships: []
+      }
+      stock_out_transactions: {
+        Row: { created_at: string; id: string; notes: string | null; reason: string; recipient: string | null; reference: string; recorded_by: string; total_amount: number; total_lines: number; total_quantity: number; transaction_date: string }
+        Insert: { created_at?: string; id?: string; notes?: string | null; reason?: string; recipient?: string | null; reference: string; recorded_by: string; total_amount?: number; total_lines?: number; total_quantity?: number; transaction_date?: string }
+        Update: { created_at?: string; id?: string; notes?: string | null; reason?: string; recipient?: string | null; reference?: string; recorded_by?: string; total_amount?: number; total_lines?: number; total_quantity?: number; transaction_date?: string }
+        Relationships: []
+      }
+      stock_out_items: {
+        Row: { batch_id: string | null; created_at: string; id: string; notes: string | null; product_id: string; quantity: number; total_price: number; transaction_id: string; unit: string; unit_price: number }
+        Insert: { batch_id?: string | null; created_at?: string; id?: string; notes?: string | null; product_id: string; quantity: number; total_price?: number; transaction_id: string; unit?: string; unit_price?: number }
+        Update: { batch_id?: string | null; created_at?: string; id?: string; notes?: string | null; product_id?: string; quantity?: number; total_price?: number; transaction_id?: string; unit?: string; unit_price?: number }
+        Relationships: []
+      }
+      stock_adjustments: {
+        Row: { adjustment_type: string; batch_id: string | null; created_at: string; id: string; notes: string | null; performed_by: string; product_id: string; quantity: number; reason: string }
+        Insert: { adjustment_type: string; batch_id?: string | null; created_at?: string; id?: string; notes?: string | null; performed_by: string; product_id: string; quantity: number; reason: string }
+        Update: { adjustment_type?: string; batch_id?: string | null; created_at?: string; id?: string; notes?: string | null; performed_by?: string; product_id?: string; quantity?: number; reason?: string }
+        Relationships: []
       }
       student_parents: {
         Row: {
@@ -1568,6 +1649,16 @@ export type Database = {
     }
     Functions: {
       can_manage_stock: { Args: { _user_id: string }; Returns: boolean }
+      can_record_stock: { Args: { _user_id: string }; Returns: boolean }
+      can_view_stock: { Args: { _user_id: string }; Returns: boolean }
+      record_stock_in: {
+        Args: { p_reference: string; p_supplier_id: string | null; p_transaction_date: string; p_notes: string | null; p_lines: Json }
+        Returns: string
+      }
+      record_stock_out: {
+        Args: { p_reference: string; p_transaction_date: string; p_reason: string; p_recipient: string | null; p_notes: string | null; p_lines: Json; p_allow_restricted?: boolean }
+        Returns: string
+      }
       get_current_student_id: { Args: { _user_id: string }; Returns: string }
       get_current_user_class_ids: { Args: never; Returns: string[] }
       get_marks_by_reg_number: {
@@ -1633,6 +1724,7 @@ export type Database = {
         | "viewer"
         | "student"
         | "stock_manager"
+        | "storekeeper"
         | "dos"
         | "dod"
       attendance_status: "present" | "absent" | "late" | "excused"
@@ -1776,6 +1868,7 @@ export const Constants = {
         "viewer",
         "student",
         "stock_manager",
+        "storekeeper",
         "dos",
         "dod",
       ],

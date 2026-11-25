@@ -1,339 +1,233 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { StockTabs } from '@/components/stock/StockTabs';
+import { useStockData } from '@/hooks/useStockData';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Package, AlertTriangle, ClipboardList, Loader2, ArrowRight, CheckCircle2, Truck, Coins } from '@/lib/icons';
+import { supabase } from '@/integrations/supabase/client';
+import { expiryLabel, expiryStatus, formatMoney, inventoryValue, periodKey, stockAlert } from '@/lib/stock';
+import { canRecordStock } from '@/lib/stockRoles';
+import { AlertTriangle, ArrowDownCircle, ArrowUpCircle, Boxes, CalendarCheck, Coins, Package } from '@/lib/icons';
 
-interface StockItem {
-  id: string;
-  name: string;
-  category: string;
-  unit: string;
-  quantity: number;
-  min_quantity: number;
-  location: string | null;
-}
+const EXPIRY_COLORS: Record<string, string> = {
+  expired: '#dc2626', today: '#ea580c', within7: '#f59e0b', within30: '#eab308', within60: '#0ea5e9', safe: '#10b981', none: '#94a3b8',
+};
 
 interface PurchaseOrder {
-  id: string;
-  item_id: string;
-  supplier: string | null;
-  quantity: number;
-  unit_price: number;
-  status: string;
-  expected_date: string | null;
-  notes: string | null;
-  created_at: string;
+  id: string; item_id: string; supplier: string | null; quantity: number; unit_price: number;
+  status: string; expected_date: string | null; notes: string | null; created_at: string;
 }
-
-const statusStyles: Record<string, string> = {
-  pending: 'text-bg-warning bg-warning-subtle',
-  ordered: 'text-bg-success bg-success-subtle',
-  received: 'text-bg-info bg-info-subtle',
-  cancelled: 'text-bg-danger bg-danger-subtle',
-};
 
 export default function StockDashboard() {
   const { role, user } = useAuth();
   const { toast } = useToast();
-  const canManage = role === 'stock_manager';
-
-  const [items, setItems] = useState<StockItem[]>([]);
+  const { products, batches, movements, loading, error, refresh } = useStockData();
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [poForm, setPoForm] = useState({ item_id: '', supplier: '', quantity: '', unit_price: '', expected_date: '' });
+  const today = new Date().toISOString().slice(0, 10);
+  const canWrite = canRecordStock(role);
 
-  const [form, setForm] = useState({
-    item_id: '',
-    supplier: '',
-    quantity: '',
-    unit_price: '',
-    expected_date: '',
-    notes: '',
-  });
-
-  useEffect(() => {
-    fetchAll();
-  }, []);
-
-  const fetchAll = async () => {
-    setLoading(true);
-    const [i, o] = await Promise.all([
-      supabase.from('stock_items').select('*').order('name'),
-      supabase.from('purchase_orders').select('*').order('created_at', { ascending: false }).limit(100),
-    ]);
-    setItems((i.data as StockItem[]) || []);
-    setOrders((o.data as PurchaseOrder[]) || []);
-    setLoading(false);
+  const loadOrders = async () => {
+    const { data } = await supabase.from('purchase_orders').select('*').order('created_at', { ascending: false }).limit(100);
+    setOrders((data as PurchaseOrder[]) || []);
   };
+  useEffect(() => { loadOrders(); }, []);
 
-  const lowStock = useMemo(
-    () => items.filter((it) => Number(it.quantity) <= Number(it.min_quantity)),
-    [items],
-  );
-  const outOfStock = useMemo(() => items.filter((it) => Number(it.quantity) <= 0), [items]);
-  const openOrders = useMemo(
-    () => orders.filter((o) => o.status === 'pending' || o.status === 'ordered'),
-    [orders],
-  );
-  const openValue = useMemo(
-    () => openOrders.reduce((sum, o) => sum + Number(o.quantity) * Number(o.unit_price), 0),
-    [openOrders],
-  );
-
-  const itemName = (id: string) => items.find((it) => it.id === id)?.name || 'Unknown item';
-  const itemUnit = (id: string) => items.find((it) => it.id === id)?.unit || '';
-
-  const submitOrder = async () => {
-    if (!form.item_id) {
-      toast({ title: 'Choose an item to order', variant: 'destructive' });
-      return;
+  const createOrder = async () => {
+    if (!poForm.item_id || !(Number(poForm.quantity) > 0)) {
+      return toast({ title: 'Select a product and enter a quantity', variant: 'destructive' });
     }
-    const qty = Number(form.quantity);
-    if (!qty || qty <= 0) {
-      toast({ title: 'Enter a quantity greater than zero', variant: 'destructive' });
-      return;
-    }
-    setSaving(true);
-    const { error } = await supabase.from('purchase_orders').insert({
-      item_id: form.item_id,
-      supplier: form.supplier.trim().slice(0, 150) || null,
-      quantity: qty,
-      unit_price: Math.max(Number(form.unit_price) || 0, 0),
-      expected_date: form.expected_date || null,
-      notes: form.notes.trim().slice(0, 500) || null,
-      created_by: user!.id,
+    const { error: insertError } = await supabase.from('purchase_orders').insert({
+      item_id: poForm.item_id, supplier: poForm.supplier.trim().slice(0, 150) || null,
+      quantity: Number(poForm.quantity), unit_price: Math.max(0, Number(poForm.unit_price) || 0),
+      expected_date: poForm.expected_date || null, notes: null, created_by: user!.id,
     });
-    setSaving(false);
-    if (error) {
-      toast({ title: 'Could not save the order', description: error.message, variant: 'destructive' });
-      return;
-    }
+    if (insertError) return toast({ title: 'Could not create order', description: insertError.message, variant: 'destructive' });
     toast({ title: 'Purchase order created' });
-    setForm({ item_id: '', supplier: '', quantity: '', unit_price: '', expected_date: '', notes: '' });
-    fetchAll();
+    setPoForm({ item_id: '', supplier: '', quantity: '', unit_price: '', expected_date: '' });
+    loadOrders();
   };
 
-  const updateStatus = async (order: PurchaseOrder, status: string) => {
-    const { error } = await supabase.from('purchase_orders').update({ status }).eq('id', order.id);
-    if (error) {
-      toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
-      return;
-    }
+  const setOrderStatus = async (order: PurchaseOrder, status: string) => {
+    const { error: updateError } = await supabase.from('purchase_orders').update({ status }).eq('id', order.id);
+    if (updateError) return toast({ title: 'Could not update order', description: updateError.message, variant: 'destructive' });
     if (status === 'received') {
-      await supabase.from('stock_movements').insert({
-        item_id: order.item_id,
-        movement_type: 'in',
-        quantity: order.quantity,
-        reason: `Purchase order received${order.supplier ? ` from ${order.supplier}` : ''}`,
-        movement_date: new Date().toISOString().slice(0, 10),
-        recorded_by: user!.id,
+      const { error: movementError } = await supabase.from('stock_movements').insert({
+        item_id: order.item_id, movement_type: 'in', quantity: order.quantity,
+        unit_price: order.unit_price, reason: `Purchase order received${order.supplier ? ` from ${order.supplier}` : ''}`,
+        movement_date: today, recorded_by: user!.id,
       });
-      toast({ title: 'Delivery received', description: 'Stock levels have been updated.' });
-    } else {
-      toast({ title: 'Order updated' });
+      if (movementError) return toast({ title: 'Order marked received but stock was not updated', description: movementError.message, variant: 'destructive' });
+      refresh();
     }
-    fetchAll();
+    toast({ title: `Order ${status}` });
+    loadOrders();
   };
 
-  const stats = [
-    { icon: Package, label: 'Items tracked', value: items.length, cls: 'bg-success-subtle text-success' },
-    { icon: AlertTriangle, label: 'Need reordering', value: lowStock.length, cls: 'bg-danger-subtle text-danger' },
-    { icon: ClipboardList, label: 'Open orders', value: openOrders.length, cls: 'bg-warning-subtle text-warning' },
-    { icon: Coins, label: 'Open order value', value: openValue.toLocaleString() + ' RWF', cls: 'bg-success-subtle text-success' },
-  ];
+  const stats = useMemo(() => {
+    const todayIn = movements.filter((m) => m.movement_type === 'in' && m.movement_date === today);
+    const todayOut = movements.filter((m) => m.movement_type === 'out' && m.movement_date === today);
+    const sum = (rows: typeof movements, field: 'quantity' | 'total_price') => rows.reduce((s, m) => s + Number(m[field] || 0), 0);
+    const expiring = batches.filter((b) => ['expired', 'today', 'within7', 'within30'].includes(expiryStatus(b.expiry_date)));
+    return {
+      uniqueProducts: products.length,
+      totalQuantity: products.reduce((s, p) => s + Number(p.quantity || 0), 0),
+      inToday: sum(todayIn, 'quantity'), outToday: sum(todayOut, 'quantity'),
+      inValueToday: sum(todayIn, 'total_price'), outValueToday: sum(todayOut, 'total_price'),
+      low: products.filter((p) => stockAlert(p).isLow).length,
+      out: products.filter((p) => stockAlert(p).isOut).length,
+      expired: batches.filter((b) => expiryStatus(b.expiry_date) === 'expired').length,
+      expiring: expiring.length,
+      totalValue: products.reduce((s, p) => s + inventoryValue(p), 0),
+    };
+  }, [products, batches, movements, today]);
+
+  const charts = useMemo(() => {
+    const bucket = (period: 'daily' | 'weekly' | 'monthly' | 'annual') => {
+      const map = new Map<string, { label: string; in: number; out: number }>();
+      movements.forEach((m) => {
+        const key = periodKey(m.movement_date, period);
+        const row = map.get(key) || { label: key, in: 0, out: 0 };
+        row[m.movement_type === 'in' ? 'in' : 'out'] += Number(m.quantity || 0);
+        map.set(key, row);
+      });
+      return [...map.values()].sort((a, b) => a.label.localeCompare(b.label)).slice(-12);
+    };
+    const top = (type: string) => {
+      const map = new Map<string, number>();
+      movements.filter((m) => m.movement_type === type).forEach((m) => {
+        const name = products.find((p) => p.id === m.item_id)?.name || m.product_code || 'Unknown';
+        map.set(name, (map.get(name) || 0) + Number(m.quantity || 0));
+      });
+      return [...map.entries()].map(([name, qty]) => ({ name, qty })).sort((a, b) => b.qty - a.qty).slice(0, 8);
+    };
+    const expiry = Object.entries(['expired', 'today', 'within7', 'within30', 'within60', 'safe', 'none']
+      .reduce<Record<string, number>>((acc, key) => ({ ...acc, [key]: batches.filter((b) => expiryStatus(b.expiry_date) === key).length }), {}))
+      .map(([key, value]) => ({ name: expiryLabel[key as keyof typeof expiryLabel], value, color: EXPIRY_COLORS[key] }));
+    return { daily: bucket('daily'), weekly: bucket('weekly'), monthly: bucket('monthly'), annual: bucket('annual'),
+      topIn: top('in'), topOut: top('out'), expiry };
+  }, [movements, products, batches]);
+
+  const cards = [
+    ['Total Unique Products', stats.uniqueProducts, Package],
+    ['Total Stock Quantity', stats.totalQuantity, Boxes],
+    ['Stock-In Today', stats.inToday, ArrowDownCircle],
+    ['Stock-Out Today', stats.outToday, ArrowUpCircle],
+    ['Stock-In Value Today', formatMoney(stats.inValueToday), Coins],
+    ['Stock-Out Value Today', formatMoney(stats.outValueToday), Coins],
+    ['Low Stock Products', stats.low, AlertTriangle],
+    ['Out-of-Stock Products', stats.out, AlertTriangle],
+    ['Expired Batches', stats.expired, CalendarCheck],
+    ['Expiring Soon', stats.expiring, CalendarCheck],
+    ['Total Inventory Value', formatMoney(stats.totalValue), Coins],
+  ] as const;
+
+  if (loading) return <DashboardLayout><div className="d-flex justify-content-center py-12"><span className="spinner-border spinner-border-lg text-success" role="status" /></div></DashboardLayout>;
 
   return (
     <DashboardLayout>
       <div className="d-flex flex-column gap-4">
-        <PageHeader
-          eyebrow="Operations"
-          title="Stock Dashboard"
-          description="Inventory levels, reorder alerts and purchase orders."
-          actions={
-            <Link to="/stock" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1">
-              Stock items <ArrowRight />
-            </Link>
-          }
-        />
+        <PageHeader eyebrow="Operations" title="Stock Dashboard" description="Live inventory statistics computed from stock transactions and batches."
+          actions={<div className="d-flex gap-2"><Link to="/stock/in" className="btn btn-success d-inline-flex align-items-center gap-1"><ArrowDownCircle /> Stock In</Link><Link to="/stock/out" className="btn btn-outline-warning d-inline-flex align-items-center gap-1"><ArrowUpCircle /> Stock Out</Link></div>} />
+        <StockTabs />
+        {error && <div className="alert alert-danger mb-0">Could not load stock data: {error}</div>}
 
-        {/* Stats */}
-        <div className="row g-3">
-          {stats.map((s) => (
-            <div className="col-6 col-sm-6 col-lg-3" key={s.label}>
-              <div className="card h-100 d-flex align-items-center gap-3 p-4">
-                <div className={`d-inline-flex align-items-center justify-content-center rounded-3 p-2 ${s.cls}`}>
-                  <s.icon className="fs-5" />
-                </div>
-                <div>
-                  <p className="text-muted bd-fs-sm mb-0">{s.label}</p>
-                  <p className="fw-bold text-main bd-fs-lg mb-0">{s.value}</p>
-                </div>
-              </div>
-            </div>
+        <div className="row g-3 row-cols-2 row-cols-md-3 row-cols-xl-6">
+          {cards.map(([label, value, Icon]) => (
+            <div key={label}><div className="card h-100"><div className="card-body p-3">
+              <div className="d-flex align-items-center gap-2 text-secondary bd-fs-sm"><Icon className="text-success" /> {label}</div>
+              <p className="fs-5 fw-semibold text-main mb-0 mt-2">{value}</p>
+            </div></div></div>
           ))}
         </div>
 
-        {loading ? (
-          <div className="d-flex justify-content-center py-8">
-            <span className="spinner-border spinner-border-lg text-success" role="status" />
-          </div>
-        ) : (
-          <div className="row g-3">
-            <div className="col-12 col-lg-6">
-              <div className="card h-100 d-flex flex-column p-4">
-                <h2 className="fw-semibold text-main mb-3">Inventory levels</h2>
-                {items.length === 0 ? (
-                  <p className="py-8 text-center text-muted bd-fs-sm mb-0">No stock items yet. Add items on the stock page first.</p>
-                ) : (
-                  <div className="d-flex flex-column gap-4">
-                    {items.map((it) => {
-                      const min = Number(it.min_quantity) || 0;
-                      const target = Math.max(min * 2, Number(it.quantity), 1);
-                      const pct = Math.min((Number(it.quantity) / target) * 100, 100);
-                      const low = Number(it.quantity) <= min;
-                      return (
-                        <div key={it.id}>
-                          <div className="d-flex align-items-center justify-content-between gap-3 mb-1">
-                            <span className="fw-medium text-main">{it.name}</span>
-                            <span className={low ? 'text-danger' : 'text-muted'}>
-                              {it.quantity} {it.unit} · min {min}
-                            </span>
-                          </div>
-                          <div className="progress h-3">
-                            <div className={`progress-bar ${low ? 'bg-danger' : 'bg-success'}`} style={{ width: `${pct}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="row g-3">
+          {([['Daily movement', charts.daily], ['Weekly movement', charts.weekly], ['Monthly movement', charts.monthly], ['Annual movement', charts.annual]] as const).map(([title, data]) => (
+            <div className="col-md-6" key={title}><div className="card h-100"><div className="card-header py-3"><h5 className="mb-0 fw-semibold text-main">{title}</h5></div>
+              <div className="card-body"><div style={{ height: 230 }}>
+                <ResponsiveContainer width="100%" height="100%"><BarChart data={data as { label: string; in: number; out: number }[]}>
+                  <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="label" /><YAxis /><Tooltip />
+                  <Legend /><Bar dataKey="in" name="Stock In" fill="#10b981" /><Bar dataKey="out" name="Stock Out" fill="#f59e0b" />
+                </BarChart></ResponsiveContainer>
+              </div></div></div></div>
+          ))}
+        </div>
 
-            <div className="col-12 col-lg-6">
-              <div className="d-flex flex-column gap-3">
-                <div className="card h-100 d-flex flex-column p-4">
-                  <h2 className="fw-semibold text-main mb-3">Purchase orders</h2>
-                  {orders.length === 0 ? (
-                    <p className="py-8 text-center text-muted bd-fs-sm mb-0">No purchase orders yet.</p>
-                  ) : (
-                    <div className="d-flex flex-column gap-3">
-                      {orders.map((o) => (
-                        <div key={o.id} className="d-flex flex-wrap align-items-center justify-content-between gap-3 rounded-3 border border-secondary-subtle p-3">
-                          <div className="min-w-0">
-                            <p className="fw-medium text-main mb-0">{itemName(o.item_id)}</p>
-                            <p className="text-muted bd-fs-sm mb-0 mt-1">
-                              {o.quantity} {itemUnit(o.item_id)}
-                              {o.supplier ? ` · ${o.supplier}` : ''}
-                              {o.expected_date ? ` · expected ${o.expected_date}` : ''}
-                            </p>
-                          </div>
-                          <div className="d-flex align-items-center gap-2 flex-shrink-0">
-                            <span className={`badge bd-fs-sm ${statusStyles[o.status] || 'text-bg-secondary'}`}>{o.status}</span>
-                            {canManage && o.status === 'pending' && (
-                              <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => updateStatus(o, 'ordered')}>
-                                <Truck /> Mark ordered
-                              </button>
-                            )}
-                            {canManage && (o.status === 'pending' || o.status === 'ordered') && (
-                              <>
-                                <button type="button" className="btn btn-success btn-sm d-inline-flex align-items-center gap-1" onClick={() => updateStatus(o, 'received')}>
-                                  <CheckCircle2 /> Received
-                                </button>
-                                <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => updateStatus(o, 'cancelled')}>Cancel</button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+        <div className="row g-3">
+          <div className="col-md-6"><div className="card h-100"><div className="card-header py-3"><h5 className="mb-0 fw-semibold text-main">Top Received Products</h5></div>
+            <div className="card-body"><div style={{ height: 240 }}><ResponsiveContainer width="100%" height="100%"><BarChart layout="vertical" data={charts.topIn}>
+              <CartesianGrid strokeDasharray="3 3" /><XAxis type="number" /><YAxis type="category" dataKey="name" width={110} /><Tooltip />
+              <Bar dataKey="qty" fill="#10b981" />
+            </BarChart></ResponsiveContainer></div></div>
+          </div></div>
+          <div className="col-md-6"><div className="card h-100"><div className="card-header py-3"><h5 className="mb-0 fw-semibold text-main">Top Issued Products</h5></div>
+            <div className="card-body"><div style={{ height: 240 }}><ResponsiveContainer width="100%" height="100%"><BarChart layout="vertical" data={charts.topOut}>
+              <CartesianGrid strokeDasharray="3 3" /><XAxis type="number" /><YAxis type="category" dataKey="name" width={110} /><Tooltip />
+              <Bar dataKey="qty" fill="#f59e0b" />
+            </BarChart></ResponsiveContainer></div></div>
+          </div></div>
+        </div>
 
-                <div className="card h-100 d-flex flex-column p-4">
-                  <h2 className="fw-semibold text-main mb-3">Reorder alerts</h2>
-                  {lowStock.length === 0 ? (
-                    <p className="py-6 text-center text-muted bd-fs-sm mb-0">All items are above their minimum level.</p>
-                  ) : (
-                    <div className="d-flex flex-column gap-2">
-                      {lowStock.map((it) => (
-                        <div key={it.id} className="d-flex align-items-center justify-content-between gap-3 rounded-3 border border-danger-subtle bg-danger-subtle p-3">
-                          <div className="min-w-0">
-                            <p className="fw-semibold text-danger mb-0">{it.name}</p>
-                            <p className="text-danger bd-fs-sm mb-0 mt-1">{it.quantity} {it.unit} left (min {it.min_quantity})</p>
-                          </div>
-                          {canManage && (
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary btn-sm flex-shrink-0"
-                              onClick={() => setForm((f) => ({
-                                ...f,
-                                item_id: it.id,
-                                quantity: String(Math.max(Number(it.min_quantity) * 2 - Number(it.quantity), 1)),
-                              }))}
-                            >
-                              Order
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="row g-3">
+          <div className="col-md-6"><div className="card h-100"><div className="card-header py-3"><h5 className="mb-0 fw-semibold text-main">Expiry Status Overview</h5></div>
+            <div className="card-body"><div style={{ height: 260 }}><ResponsiveContainer width="100%" height="100%"><PieChart>
+              <Pie data={charts.expiry} dataKey="value" nameKey="name" outerRadius={85} label>
+                {charts.expiry.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+              </Pie><Tooltip />
+            </PieChart></ResponsiveContainer></div></div>
+          </div></div>
+          <div className="col-md-6"><div className="card h-100"><div className="card-header py-3"><h5 className="mb-0 fw-semibold text-main">Products Needing Attention</h5></div>
+            <div className="card-body"><div style={{ height: 260 }}><ResponsiveContainer width="100%" height="100%"><BarChart data={[
+              { name: 'Low stock', value: stats.low }, { name: 'Out of stock', value: stats.out },
+              { name: 'Expired', value: stats.expired }, { name: 'Expiring soon', value: stats.expiring },
+            ]}>
+              <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><Tooltip />
+              <Bar dataKey="value" fill="#dc2626" radius={[4, 4, 0, 0]} />
+            </BarChart></ResponsiveContainer></div></div>
+          </div></div>
+        </div>
 
-        {canManage && (
-          <div className="card">
-            <div className="card-header d-flex align-items-center justify-content-between py-3 border-bottom border-secondary-subtle">
-              <h5 className="mb-0 fw-semibold text-main">New purchase order</h5>
-            </div>
-            <div className="card-body d-flex flex-column gap-3">
-              <div className="d-flex flex-column gap-2">
-                <label className="form-label">Item</label>
-                <select className="form-select" value={form.item_id} onChange={(e) => setForm({ ...form, item_id: e.target.value })}>
-                  <option value="">Select item</option>
-                  {items.map((it) => (
-                    <option key={it.id} value={it.id}>{it.name} ({it.quantity} {it.unit})</option>
-                  ))}
-                </select>
-              </div>
-              <div className="d-flex flex-column gap-2">
-                <label className="form-label">Supplier</label>
-                <input className="form-control" value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} placeholder="e.g. Rebero Suppliers Ltd" />
-              </div>
-              <div className="row g-3">
-                <div className="col-6 col-sm-4">
-                  <label className="form-label">Quantity</label>
-                  <input type="number" className="form-control" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
-                </div>
-                <div className="col-6 col-sm-4">
-                  <label className="form-label">Unit price (RWF)</label>
-                  <input type="number" className="form-control" min="0" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
-                </div>
-              </div>
-              <div className="d-flex flex-column gap-2">
-                <label className="form-label">Expected delivery</label>
-                <input type="date" className="form-control" value={form.expected_date} onChange={(e) => setForm({ ...form, expected_date: e.target.value })} />
-              </div>
-              <div className="d-flex flex-column gap-2">
-                <label className="form-label">Notes</label>
-                <textarea className="form-control" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-              </div>
-              <div>
-                <button type="button" className="btn btn-success d-inline-flex align-items-center gap-1" onClick={submitOrder} disabled={saving}>
-                  {saving && <span className="spinner-border spinner-border-sm" />}Create order
-                </button>
-              </div>
-            </div>
+        {canWrite && <div className="card"><div className="card-body d-flex flex-wrap align-items-end gap-3 py-3">
+          <div><label className="form-label mb-1">Product</label><select className="form-select" value={poForm.item_id} onChange={(e) => setPoForm({ ...poForm, item_id: e.target.value })}>
+            <option value="">Select product</option>{products.map((p) => <option key={p.id} value={p.id}>{p.product_code} — {p.name}</option>)}
+          </select></div>
+          <div><label className="form-label mb-1">Supplier</label><input className="form-control" value={poForm.supplier} onChange={(e) => setPoForm({ ...poForm, supplier: e.target.value })} /></div>
+          <div><label className="form-label mb-1">Quantity</label><input type="number" min={0.01} step="any" className="form-control" value={poForm.quantity} onChange={(e) => setPoForm({ ...poForm, quantity: e.target.value })} /></div>
+          <div><label className="form-label mb-1">Unit price</label><input type="number" min={0} step="any" className="form-control" value={poForm.unit_price} onChange={(e) => setPoForm({ ...poForm, unit_price: e.target.value })} /></div>
+          <div><label className="form-label mb-1">Expected date</label><input type="date" className="form-control" value={poForm.expected_date} onChange={(e) => setPoForm({ ...poForm, expected_date: e.target.value })} /></div>
+          <button type="button" className="btn btn-success" onClick={createOrder}>Create Order</button>
+        </div></div>}
+
+        <div className="card">
+          <div className="card-header py-3 d-flex justify-content-between align-items-center">
+            <h5 className="mb-0 fw-semibold text-main">Purchase Orders</h5>
+            <span className="text-muted bd-fs-sm">{orders.filter((o) => ['pending', 'ordered'].includes(o.status)).length} open</span>
           </div>
-        )}
+          <div className="card-body p-0">
+            {orders.length === 0 ? <p className="text-muted bd-fs-sm p-4 mb-0">No purchase orders yet. Create one from the Product Inventory page.</p>
+              : <div className="table-responsive"><table className="table table-hover align-middle mb-0">
+                <thead><tr className="border-bottom border-secondary-subtle"><th>Product</th><th>Supplier</th><th className="text-end">Qty</th><th className="text-end">Unit price</th><th>Expected</th><th>Status</th><th className="text-end">Actions</th></tr></thead>
+                <tbody>{orders.map((order) => (
+                  <tr key={order.id} className="border-bottom border-secondary-subtle">
+                    <td className="text-main">{products.find((p) => p.id === order.item_id)?.name || 'Unknown item'}</td>
+                    <td className="bd-fs-sm">{order.supplier || '—'}</td>
+                    <td className="text-end">{order.quantity}</td>
+                    <td className="text-end bd-fs-sm">{formatMoney(order.unit_price)}</td>
+                    <td className="bd-fs-sm">{order.expected_date ? new Date(order.expected_date).toLocaleDateString() : '—'}</td>
+                    <td><span className={`badge bd-fs-sm ${order.status === 'received' ? 'text-bg-success' : order.status === 'cancelled' ? 'text-bg-danger' : order.status === 'ordered' ? 'text-bg-info' : 'text-bg-secondary'}`}>{order.status}</span></td>
+                    <td className="text-end">{canWrite && order.status !== 'received' && order.status !== 'cancelled' && (
+                      <button type="button" className="btn btn-sm btn-outline-success" onClick={() => setOrderStatus(order, order.status === 'pending' ? 'ordered' : 'received')}>
+                        {order.status === 'pending' ? 'Mark Ordered' : 'Receive'}
+                      </button>
+                    )}</td>
+                  </tr>
+                ))}</tbody>
+              </table></div>}
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );

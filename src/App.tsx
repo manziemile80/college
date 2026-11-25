@@ -28,6 +28,14 @@ import Assignments from "./pages/Assignments";
 import Quizzes from "./pages/Quizzes";
 import Stock from "./pages/Stock";
 import StockDashboard from "./pages/StockDashboard";
+import StockIn from "./pages/stock/StockIn";
+import StockOut from "./pages/stock/StockOut";
+import StockBatches from "./pages/stock/StockBatches";
+import StockExpiry from "./pages/stock/StockExpiry";
+import StockAlerts from "./pages/stock/StockAlerts";
+import StockMovements from "./pages/stock/StockMovements";
+import StockReports from "./pages/stock/StockReports";
+import StockValuation from "./pages/stock/StockValuation";
 import { StockOnly } from "./components/auth/StockOnly";
 import Discipline from "./pages/Discipline";
 import EnrollmentPage from "./pages/Enrollment";
@@ -63,6 +71,14 @@ const App = () => (
             <Route path="/quizzes" element={<Quizzes />} />
             <Route path="/stock" element={<StockOnly><Stock /></StockOnly>} />
             <Route path="/stock-dashboard" element={<StockOnly><StockDashboard /></StockOnly>} />
+            <Route path="/stock/in" element={<StockOnly><StockIn /></StockOnly>} />
+            <Route path="/stock/out" element={<StockOnly><StockOut /></StockOnly>} />
+            <Route path="/stock/batches" element={<StockOnly><StockBatches /></StockOnly>} />
+            <Route path="/stock/expiry" element={<StockOnly><StockExpiry /></StockOnly>} />
+            <Route path="/stock/alerts" element={<StockOnly><StockAlerts /></StockOnly>} />
+            <Route path="/stock/movements" element={<StockOnly><StockMovements /></StockOnly>} />
+            <Route path="/stock/reports" element={<StockOnly><StockReports /></StockOnly>} />
+            <Route path="/stock/valuation" element={<StockOnly><StockValuation /></StockOnly>} />
             <Route path="/discipline" element={<Discipline />} />
             <Route path="/enrollment" element={<EnrollmentPage />} />
             <Route path="/users" element={<Users />} />

@@ -19,6 +19,7 @@ const roleIcons: Record<AppRole, React.ComponentType<any>> = {
   parent: Shield,
   student: Shield,
   stock_manager: Shield,
+  storekeeper: Shield,
   dos: ShieldCheck,
   dod: ShieldAlert,
   viewer: Shield,
@@ -133,6 +134,7 @@ export default function UsersPage() {
     parent: { label: 'Parent', icon: Shield, badge: 'badge text-bg-info' },
     student: { label: 'Student', icon: Shield, badge: 'badge text-bg-warning' },
     stock_manager: { label: 'Stock Manager', icon: Shield, badge: 'badge text-bg-secondary' },
+    storekeeper: { label: 'Storekeeper', icon: Shield, badge: 'badge text-bg-secondary' },
     dos: { label: 'Director of Studies', icon: ShieldCheck, badge: 'badge text-bg-success' },
     dod: { label: 'Director of Discipline', icon: ShieldAlert, badge: 'badge text-bg-danger' },
     viewer: { label: 'Viewer (read-only)', icon: Shield, badge: 'badge text-bg-secondary' },
@@ -277,6 +279,7 @@ export default function UsersPage() {
                         <option value="parent">Parent</option>
                         <option value="student">Student</option>
                         <option value="stock_manager">Stock Manager</option>
+                        <option value="storekeeper">Storekeeper</option>
                         <option value="dos">Director of Studies</option>
                         <option value="dod">Director of Discipline</option>
                         <option value="viewer">Viewer (read-only)</option>

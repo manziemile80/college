@@ -9,6 +9,7 @@ import { Plus, Search, ClipboardList, Loader2, Send, Eye, RotateCcw, Bell } from
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ScoreBadge } from '@/components/dashboard/ScoreBadge';
+import { ScoreDetailsDialog } from '@/components/scores/ScoreDetailsDialog';
 import { cn } from '@/lib/utils';
 
 interface StudentWithClass extends Student {
