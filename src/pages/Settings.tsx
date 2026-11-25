@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuditLog } from '@/types/database';
 import { format } from 'date-fns';
 import { Bell, Shield, Database, MessageSquare, ScrollText, Loader2, User, Camera, Upload } from '@/lib/icons';
+import { fileToAvatarDataUrl } from '@/lib/avatar';
 
 export default function Settings() {
   const { user, profile, role, refreshProfile } = useAuth();
@@ -28,26 +29,22 @@ export default function Settings() {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file.');
-      return;
-    }
     setUploadingAvatar(true);
     try {
-      const ext = file.name.split('.').pop() || 'png';
-      const path = `${user.id}/avatar.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-      const url = data.publicUrl;
-      await supabase.from('profiles').update({ avatar_url: url }).eq('user_id', user.id);
-      setAvatarUrl(url);
+      const dataUrl = await fileToAvatarDataUrl(file);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: dataUrl })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      setAvatarUrl(dataUrl);
       await refreshProfile();
     } catch (err: any) {
-      console.error('Avatar upload failed:', err);
-      alert(err?.message || 'Failed to upload profile picture.');
+      console.error('Avatar update failed:', err);
+      alert(err?.message || 'Failed to update profile picture.');
     } finally {
       setUploadingAvatar(false);
+      e.target.value = '';
     }
   };
 
