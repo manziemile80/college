@@ -65,14 +65,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <Link to="/dashboard" className="bd-brand" aria-label="College De Rebero home">
           <img src={schoolLogo} alt="College De Rebero" width={28} height={28} />
-          College De Rebero
+          <span className="d-none d-sm-inline">College De Rebero</span>
         </Link>
 
-        <span className="bd-page-title">Student Behavior Management System</span>
+        <span className="bd-page-title d-none d-md-inline">Student Behavior Management System</span>
 
         <input
           type="search"
-          className="form-control bd-search-input rounded-pill"
+          className="form-control bd-search-input rounded-pill d-none d-md-block"
           placeholder="Search anything..."
           aria-label="Search"
           data-bs-toggle="modal"

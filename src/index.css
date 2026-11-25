@@ -9,6 +9,11 @@
 
 @import "bootstrap/dist/css/bootstrap.css";
 
+/* Make media responsive by default */
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
 /* ─────────────────────────────────────────────────────────────────────────
    1. GLOBAL VARIABLES (palette + layout tokens)
    ───────────────────────────────────────────────────────────────────────── */
@@ -256,6 +261,8 @@ h2, .h2 { color: var(--bd-text); }
   background: #ffffff;
   border-bottom: 1px solid var(--bd-border);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 .bd-topbar .bd-brand {
   display: flex;
@@ -554,7 +561,7 @@ h2, .h2 { color: var(--bd-text); }
   border-color: var(--bd-border);
 }
 .table-hover tbody tr:hover {
-  background-color: rgba(22, 163, 74, 0.045);
+  background-color: rgba(15, 23, 42, 0.04);
 }
 .table .action-col, .table .actions {
   white-space: nowrap;
@@ -723,9 +730,28 @@ h2, .h2 { color: var(--bd-text); }
    12. RESPONSIVE RULES
    ───────────────────────────────────────────────────────────────────────── */
 @media (max-width: 767.98px) {
+  /* Let content flex rows wrap on mobile so they never overflow horizontally */
+  main .d-flex,
+  .card .d-flex,
+  .card-body .d-flex,
+  .card-header .d-flex,
+  .modal-body .d-flex,
+  .modal-header .d-flex,
+  .bd-main .d-flex {
+    flex-wrap: wrap;
+  }
   /* Touch targets ≥44px on mobile for controls */
   .btn, .bd-sidebar .bd-nav-link {
     min-height: 44px;
+  }
+  /* Modals become full-width sheets on phones */
+  .bd-modal .modal-dialog {
+    width: 100%;
+    max-width: calc(100vw - 1rem);
+    margin: 0.5rem;
+  }
+  .bd-modal .modal-content {
+    max-height: calc(100vh - 1rem);
   }
   .bd-topbar .bd-icon-btn {
     width: 44px;
@@ -773,7 +799,7 @@ html.dark .bd-stat-card {
   border-color: #334155;
 }
 html.dark .table thead th { color: #94A3B8; }
-html.dark .table-hover tbody tr:hover { background-color: rgba(22, 163, 74, 0.12); }
+html.dark .table-hover tbody tr:hover { background-color: rgba(148, 163, 184, 0.12); }
 html.dark .form-control, html.dark .form-select,
 html.dark .bd-search-input {
   background-color: #1E293B;
@@ -832,6 +858,15 @@ html.dark .bd-search-input {
 .bd-scroll-table {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+.recharts-responsive-container,
+.recharts-wrapper {
+  min-width: 0 !important;
+}
+@media (max-width: 767.98px) {
+  .recharts-responsive-container {
+    font-size: 0.75rem;
+  }
 }
 
 .bd-card {
