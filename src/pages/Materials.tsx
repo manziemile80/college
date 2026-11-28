@@ -2,6 +2,7 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, scopedById, type Scope } from '@/lib/scope';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,9 +24,11 @@ interface Material {
 const emptyForm = { title: '', description: '', file_url: '', subject_id: '', class_id: '' };
 
 export default function Materials() {
-  const { role, user } = useAuth();
+  const { user, roles, can } = useAuth();
+  const [scope, setScope] = useState<Scope | null>(null);
   const { toast } = useToast();
-  const isStaff = role === 'admin' || role === 'teacher';
+  const isStaff = roles.includes('admin') || roles.includes('dos') || roles.includes('teacher');
+  const canManage = can('materials.manage') && isStaff;
 
   const [materials, setMaterials] = useState<Material[]>([]);
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
@@ -37,23 +40,42 @@ export default function Materials() {
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
-    fetchAll();
-  }, []);
+    let cancelled = false;
+    buildScope(supabase, user?.id, roles).then((s) => { if (!cancelled) setScope(s); });
+    return () => { cancelled = true; };
+  }, [user?.id, roles]);
+
+  useEffect(() => {
+    if (scope) void fetchAll();
+  }, [scope]);
 
   const fetchAll = async () => {
+    if (!scope) return;
     setLoading(true);
     const [m, s, c] = await Promise.all([
       supabase.from('materials').select('*').order('created_at', { ascending: false }),
       supabase.from('subjects').select('id, name').order('name'),
       supabase.from('classes').select('id, name').order('name'),
     ]);
-    setMaterials((m.data as Material[]) || []);
-    setSubjects(s.data || []);
-    setClasses(c.data || []);
+    setMaterials(
+      ((m.data as Material[]) || []).filter((x) =>
+        (scope.classIds === null || (x.class_id && scope.classIds.includes(x.class_id)) || x.class_id === null)
+        && (scope.subjectIds === null || (x.subject_id && scope.subjectIds.includes(x.subject_id)) || x.subject_id === null),
+      ),
+    );
+    setSubjects(scopedById(s.data || [], scope.subjectIds));
+    setClasses(scopedById(c.data || [], scope.classIds));
     setLoading(false);
   };
 
   const save = async () => {
+    if (!canManage || !scope) return;
+    if (scope.classIds !== null && form.class_id && !scope.classIds.includes(form.class_id)) {
+      toast({ title: 'You are not assigned to this class', variant: 'destructive' }); return;
+    }
+    if (scope.subjectIds !== null && form.subject_id && !scope.subjectIds.includes(form.subject_id)) {
+      toast({ title: 'You are not assigned to this subject', variant: 'destructive' }); return;
+    }
     if (!form.title.trim()) {
       toast({ title: 'Title is required', variant: 'destructive' });
       return;
@@ -121,7 +143,7 @@ export default function Materials() {
               <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"><Download /> Open</button>
             </a>
           )}
-          {isStaff && (
+          {canManage && (
             <>
               <button
                 type="button"
@@ -156,7 +178,7 @@ export default function Materials() {
           eyebrow="E-Learning"
           title="Learning Materials"
           description="Notes, PDFs and resources shared with students for each subject and class."
-          actions={isStaff ? (
+          actions={canManage ? (
             <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={() => { setEditingId(null); setForm(emptyForm); setOpen(true); }}>
               <Plus /> Add Material
             </button>

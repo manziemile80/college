@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import schoolLogo from '@/assets/college-rebero-logo.png';
 import { UserCog, LogOut, Sun, Moon, ChevronLeft, ChevronRight } from '@/lib/icons';
 import { navItems, roleBadges, NavItem } from './navItems';
+import { hasAnyPermission } from '@/lib/permissions';
 
 interface SidebarNavProps {
   collapsed?: boolean;
@@ -15,12 +16,17 @@ interface SidebarNavProps {
 }
 
 export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }: SidebarNavProps) {
-  const { role, profile, signOut } = useAuth();
+  const { role, roles, permissions, profile, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 
-  const visible = navItems.filter((item) => role && item.roles.includes(role));
+  // Navigation is permission-driven; role lists remain only as a fallback.
+  const visible = navItems.filter((item) =>
+    hasAnyPermission(permissions, Array.isArray(item.permission) ? item.permission : [item.permission])
+    || (!permissions.length && !!role && item.roles.includes(role)),
+  );
   const badge = role ? roleBadges[role] : null;
+  const badges = roles.map((r) => roleBadges[r]).filter(Boolean).slice(0, 2);
 
   /* ── Collapsed (icon-only) sidebar ── */
   if (collapsed) {
@@ -81,7 +87,9 @@ export function SidebarNav({ collapsed = false, onLinkSelect, onCollapseToggle }
         </span>
         <div className="min-w-0 flex-1 flex flex-col gap-0.5">
           <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{profile?.full_name || 'User'}</p>
-          {badge && <span className={cn('self-start text-xs font-semibold px-2 py-0.5 rounded-full', badge.className)}>{badge.label}</span>}
+          {(badges.length ? badges : badge ? [badge] : []).map((b, i) => (
+            <span key={i} className={cn('self-start text-xs font-semibold px-2 py-0.5 rounded-full mb-1', b.className)}>{b.label}</span>
+          ))}
         </div>
         <button type="button" onClick={toggleTheme} className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-700" aria-label="Toggle theme" title="Toggle theme">
           {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}

@@ -3,14 +3,14 @@ import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, scopedById, type Scope } from '@/lib/scope';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { supabase } from '@/integrations/supabase/client';
 import { canPublishQuiz } from '@/lib/quizPublishing';
 import { canAccessClass } from '@/lib/enrollment';
 import { useEnrollment } from '@/hooks/useEnrollment';
 import { useToast } from '@/hooks/use-toast';
-import { ClaimStudentRecordDialog } from '@/components/students/ClaimStudentRecordDialog';
-import { Plus, Trash2, ListChecks, Loader2, Send, CheckCircle2, Sparkles, PenLine, BarChart3, UserCheck } from '@/lib/icons';
+import { Plus, Trash2, ListChecks, Loader2, Send, CheckCircle2, Sparkles, PenLine, BarChart3 } from '@/lib/icons';
 
 interface DraftQuestion {
   question_text: string;
@@ -61,11 +61,13 @@ const emptyQuiz = { title: '', description: '', subject_id: '', class_id: '', ti
 const emptyQuestion = { question_text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_option: 'a', points: '1' };
 
 export default function Quizzes() {
-  const { role, user } = useAuth();
+  const { user, roles, can } = useAuth();
+  const [scope, setScope] = useState<Scope | null>(null);
   const { toast } = useToast();
-  const { studentId, refresh: refreshStudent } = useCurrentStudent();
-  const isStaff = role === 'admin' || role === 'teacher';
-  const [claimOpen, setClaimOpen] = useState(false);
+  const { studentId } = useCurrentStudent();
+  const isStaff = roles.includes('admin') || roles.includes('dos') || roles.includes('teacher');
+  const canManage = can('quizzes.manage') && isStaff;
+  const canTakePermission = can('quizzes.take') && !!studentId;
 
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
@@ -167,19 +169,32 @@ export default function Quizzes() {
   };
 
   useEffect(() => {
-    fetchAll();
-  }, [studentId]);
+    let cancelled = false;
+    buildScope(supabase, user?.id, roles).then((s) => { if (!cancelled) setScope(s); });
+    return () => { cancelled = true; };
+  }, [user?.id, roles]);
+
+  useEffect(() => {
+    if (scope) void fetchAll();
+  }, [studentId, scope]);
 
   const fetchAll = async () => {
+    if (!scope) return;
     setLoading(true);
+    const query = supabase.from('quizzes').select('*').order('created_at', { ascending: false });
     const [q, s, c] = await Promise.all([
-      supabase.from('quizzes').select('*').order('created_at', { ascending: false }),
+      isStaff ? query : query.eq('is_published', true),
       supabase.from('subjects').select('id, name').order('name'),
       supabase.from('classes').select('id, name').order('name'),
     ]);
-    setQuizzes((q.data as Quiz[]) || []);
-    setSubjects(s.data || []);
-    setClasses(c.data || []);
+    setQuizzes(
+      ((q.data as Quiz[]) || []).filter((x) =>
+        (scope.classIds === null || (x.class_id && scope.classIds.includes(x.class_id)) || x.class_id === null)
+        && (scope.subjectIds === null || (x.subject_id && scope.subjectIds.includes(x.subject_id)) || x.subject_id === null),
+      ),
+    );
+    setSubjects(scopedById(s.data || [], scope.subjectIds));
+    setClasses(scopedById(c.data || [], scope.classIds));
     if (studentId) {
       const { data } = await supabase.from('quiz_attempts').select('*').eq('student_id', studentId);
       setMyAttempts((data as Attempt[]) || []);
@@ -295,7 +310,8 @@ export default function Quizzes() {
   const openManage = async (quiz: Quiz) => {
     setManageQuiz(quiz);
     setQuestionForm(emptyQuestion);
-    const { data } = await supabase.from('quiz_questions').select('*').eq('quiz_id', quiz.id).order('sort_order');
+    // Author-only view; answer keys are never exposed to students.
+    const { data } = await supabase.from('quiz_questions_staff').select('*').eq('quiz_id', quiz.id).order('sort_order');
     setQuestions((data as Question[]) || []);
   };
 
@@ -354,7 +370,7 @@ export default function Quizzes() {
   };
 
   const hasEnrollmentAccess = (quiz: Quiz) => canAccessClass(enrolledClassIds, quiz.class_id);
-  const canTakeQuiz = (quiz: Quiz) => enrollmentLoading || hasEnrollmentAccess(quiz);
+  const canTakeQuiz = (quiz: Quiz) => canTakePermission && (enrollmentLoading || hasEnrollmentAccess(quiz));
 
   const enrollmentMessage = (quiz: Quiz) =>
     !isEnrolled
@@ -362,28 +378,29 @@ export default function Quizzes() {
       : 'You must be enrolled in this class before you can take this quiz.';
 
   const startQuiz = async (quiz: Quiz) => {
-    if (role === 'student' && !hasEnrollmentAccess(quiz)) {
+    if (roles.includes('student') && !canTakeQuiz(quiz)) {
       toast({ title: 'Not enrolled', description: enrollmentMessage(quiz), variant: 'destructive' });
       return;
     }
-    const { data } = await supabase.from('quiz_questions').select('*').eq('quiz_id', quiz.id).order('sort_order');
+    // Students read questions through a view that never exposes correct_option;
+    // grading happens server-side via submit_quiz_attempt().
+    const { data } = await supabase.from('quiz_questions_public').select('*').eq('quiz_id', quiz.id).order('sort_order');
     setTakeQuestions((data as Question[]) || []);
     setAnswers({});
     setTakeQuiz(quiz);
   };
 
   const submitQuiz = async () => {
-    if (!takeQuiz) return;
+    if (!takeQuiz || !canTakeQuiz(takeQuiz)) return;
     if (!studentId) {
       toast({
-        title: 'Connect your student profile first',
-        description: 'Pick your name so we can save your answers.',
+        title: 'Student profile not linked',
+        description: 'Ask the administration to link your account before taking quizzes.',
         variant: 'destructive',
       });
-      setClaimOpen(true);
       return;
     }
-    if (!hasEnrollmentAccess(takeQuiz)) {
+    if (!canTakeQuiz(takeQuiz)) {
       toast({ title: 'Not enrolled', description: enrollmentMessage(takeQuiz), variant: 'destructive' });
       setTakeQuiz(null);
       return;
@@ -392,24 +409,16 @@ export default function Quizzes() {
       toast({ title: 'Answer every question before submitting', variant: 'destructive' });
       return;
     }
-    let score = 0;
-    let total = 0;
-    takeQuestions.forEach((q) => {
-      total += Number(q.points);
-      if (answers[q.id] === q.correct_option) score += Number(q.points);
+    // The database grades the attempt; the client never supplies a score.
+    const { data, error } = await supabase.rpc('submit_quiz_attempt', {
+      _quiz_id: takeQuiz.id,
+      _answers: answers,
     });
-    const { error } = await supabase.from('quiz_attempts').insert({
-      quiz_id: takeQuiz.id,
-      student_id: studentId,
-      answers,
-      score,
-      total_points: total,
-    });
-    if (error) {
-      toast({ title: 'Could not submit quiz', description: error.message, variant: 'destructive' });
+    if (error || !data?.length) {
+      toast({ title: 'Could not submit quiz', description: error?.message || 'No result returned', variant: 'destructive' });
       return;
     }
-    toast({ title: 'Quiz submitted', description: `You scored ${score}/${total}` });
+    toast({ title: 'Quiz submitted', description: `You scored ${data[0].score}/${data[0].total_points}` });
     setTakeQuiz(null);
     fetchAll();
   };
@@ -457,13 +466,13 @@ export default function Quizzes() {
             )}
           </div>
           <div className="d-flex flex-wrap align-items-center gap-2 mt-auto">
-            {isStaff ? (
+            {canManage ? (
               <>
                 <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => openManage(quiz)}><PenLine /> Questions</button>
                 <button type="button" className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" onClick={() => openResults(quiz)}><BarChart3 /> Results</button>
                 <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete quiz" onClick={() => removeQuiz(quiz.id)}><Trash2 /></button>
               </>
-            ) : role === 'student' && !attempt ? (
+            ) : canTakeQuiz(quiz) && !attempt ? (
               canTakeQuiz(quiz) ? (
                 <button type="button" className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => startQuiz(quiz)}><Send /> Start Quiz</button>
               ) : (
@@ -485,7 +494,7 @@ export default function Quizzes() {
           eyebrow="E-Learning"
           title="Quizzes"
           description={isStaff ? 'Build multiple-choice quizzes and review auto-scored student results.' : 'Take published quizzes and see your score instantly.'}
-          actions={isStaff ? (
+          actions={canManage ? (
             <div className="d-flex flex-wrap gap-2">
               <button type="button" className="btn btn-outline-success d-inline-flex align-items-center gap-1" onClick={() => { setAiDraft(null); setAiOpen(true); }}>
                 <Sparkles /> Generate with AI
@@ -497,21 +506,13 @@ export default function Quizzes() {
           ) : undefined}
         />
 
-        {role === 'student' && !studentId && (
-          <div className="card border-dashed border-3">
-            <div className="card-body d-flex align-items-center justify-content-between gap-4 p-4">
-              <div>
-                <p className="fw-semibold text-main mb-0">Connect your student profile</p>
-                <p className="text-muted bd-fs-sm mb-0">Pick your name once so your quiz answers are saved.</p>
-              </div>
-              <button type="button" className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => setClaimOpen(true)}><UserCheck /> Find my profile</button>
-            </div>
+        {roles.includes('student') && !studentId && (
+          <div className="alert alert-info bd-fs-sm mb-0">
+            Your student account is not yet linked to a student record. Ask the administration to link it before taking quizzes.
           </div>
         )}
 
-        <ClaimStudentRecordDialog open={claimOpen} onOpenChange={setClaimOpen} onLinked={() => { refreshStudent(); }} />
-
-        {role === 'student' && studentId && !enrollmentLoading && !isEnrolled && (
+        {roles.includes('student') && studentId && !enrollmentLoading && !isEnrolled && (
           <div className="card border-dashed border-3">
             <div className="card-body p-4">
               <p className="fw-semibold text-main mb-0">Enrollment required</p>
@@ -519,6 +520,7 @@ export default function Quizzes() {
             </div>
           </div>
         )}
+
 
         {loading ? (
           <div className="d-flex justify-content-center py-8">

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { RequirePermission } from "@/components/auth/RequirePermission";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import CheckMarks from "./pages/CheckMarks";
@@ -18,6 +19,7 @@ import Reports from "./pages/Reports";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Forbidden from "./pages/Forbidden";
 import Subjects from "./pages/Subjects";
 import Marks from "./pages/Marks";
 import Attendance from "./pages/Attendance";
@@ -36,58 +38,70 @@ import StockAlerts from "./pages/stock/StockAlerts";
 import StockMovements from "./pages/stock/StockMovements";
 import StockReports from "./pages/stock/StockReports";
 import StockValuation from "./pages/stock/StockValuation";
-import { StockOnly } from "./components/auth/StockOnly";
 import Discipline from "./pages/Discipline";
 import EnrollmentPage from "./pages/Enrollment";
+import Certificates from "./pages/Certificates";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
+
+/** Every protected route is gated by a database-backed permission. */
+const guard = (permission: Parameters<typeof RequirePermission>[0]['permission'], element: React.ReactNode) => (
+  <RequirePermission permission={permission}>{element}</RequirePermission>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/check-marks" element={<CheckMarks />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/students" element={<Students />} />
-            <Route path="/classes" element={<Classes />} />
-            <Route path="/parents" element={<Parents />} />
-            <Route path="/scores" element={<Scores />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/subjects" element={<Subjects />} />
-            <Route path="/marks" element={<Marks />} />
-            <Route path="/attendance" element={<Attendance />} />
-            <Route path="/academic-reports" element={<AcademicReports />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/materials" element={<Materials />} />
-            <Route path="/assignments" element={<Assignments />} />
-            <Route path="/quizzes" element={<Quizzes />} />
-            <Route path="/stock" element={<StockOnly><Stock /></StockOnly>} />
-            <Route path="/stock-dashboard" element={<StockOnly><StockDashboard /></StockOnly>} />
-            <Route path="/stock/in" element={<StockOnly><StockIn /></StockOnly>} />
-            <Route path="/stock/out" element={<StockOnly><StockOut /></StockOnly>} />
-            <Route path="/stock/batches" element={<StockOnly><StockBatches /></StockOnly>} />
-            <Route path="/stock/expiry" element={<StockOnly><StockExpiry /></StockOnly>} />
-            <Route path="/stock/alerts" element={<StockOnly><StockAlerts /></StockOnly>} />
-            <Route path="/stock/movements" element={<StockOnly><StockMovements /></StockOnly>} />
-            <Route path="/stock/reports" element={<StockOnly><StockReports /></StockOnly>} />
-            <Route path="/stock/valuation" element={<StockOnly><StockValuation /></StockOnly>} />
-            <Route path="/discipline" element={<Discipline />} />
-            <Route path="/enrollment" element={<EnrollmentPage />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/settings" element={<Settings />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/check-marks" element={<CheckMarks />} />
+              <Route path="/forbidden" element={<Forbidden />} />
+
+              <Route path="/dashboard" element={guard('dashboard.view', <Dashboard />)} />
+              <Route path="/students" element={guard('students.view', <Students />)} />
+              <Route path="/classes" element={guard('classes.view', <Classes />)} />
+              <Route path="/parents" element={guard('students.manage', <Parents />)} />
+              <Route path="/scores" element={guard('scores.behavior.view', <Scores />)} />
+              <Route path="/reports" element={guard('reports.behavior.view', <Reports />)} />
+              <Route path="/subjects" element={guard('subjects.view', <Subjects />)} />
+              <Route path="/marks" element={guard(['marks.enter', 'marks.review'], <Marks />)} />
+              <Route path="/attendance" element={guard('attendance.view', <Attendance />)} />
+              <Route path="/academic-reports" element={guard('reports.academic.view', <AcademicReports />)} />
+              <Route path="/courses" element={guard('courses.view', <Courses />)} />
+              <Route path="/materials" element={guard('materials.view', <Materials />)} />
+              <Route path="/assignments" element={guard('assignments.view', <Assignments />)} />
+              <Route path="/quizzes" element={guard('quizzes.view', <Quizzes />)} />
+
+              <Route path="/stock" element={guard('stock.manage', <Stock />)} />
+              <Route path="/stock-dashboard" element={guard('stock.view', <StockDashboard />)} />
+              <Route path="/stock/in" element={guard('stock.manage', <StockIn />)} />
+              <Route path="/stock/out" element={guard('stock.manage', <StockOut />)} />
+              <Route path="/stock/batches" element={guard('stock.view', <StockBatches />)} />
+              <Route path="/stock/expiry" element={guard('stock.view', <StockExpiry />)} />
+              <Route path="/stock/alerts" element={guard('stock.view', <StockAlerts />)} />
+              <Route path="/stock/movements" element={guard('stock.view', <StockMovements />)} />
+              <Route path="/stock/reports" element={guard('stock.reports', <StockReports />)} />
+              <Route path="/stock/valuation" element={guard('stock.reports', <StockValuation />)} />
+
+              <Route path="/discipline" element={guard('discipline.view', <Discipline />)} />
+              <Route path="/enrollment" element={guard('enrollment.view', <EnrollmentPage />)} />
+              <Route path="/certificates" element={guard(['certificates.request', 'certificates.view', 'certificates.approve'], <Certificates />)} />
+              <Route path="/notifications" element={guard('notifications.view', <Notifications />)} />
+              <Route path="/users" element={guard('users.view', <Users />)} />
+              <Route path="/settings" element={guard('profile.view', <Settings />)} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

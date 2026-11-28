@@ -1,4 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, type Scope } from '@/lib/scope';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +19,8 @@ const COLORS = ['#16A34A', '#0EA5E9', '#F59E0B', '#DC2626'];
 const GREEN = '#16A34A';
 
 export default function Reports() {
+  const { user, roles } = useAuth();
+  const [scope, setScope] = useState<Scope | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('month');
   const [categoryData, setCategoryData] = useState<{ name: string; average: number; count: number }[]>([]);
@@ -31,10 +35,17 @@ export default function Reports() {
   });
 
   useEffect(() => {
-    fetchReportData();
-  }, [timeRange]);
+    let cancelled = false;
+    buildScope(supabase, user?.id, roles).then((s) => { if (!cancelled) setScope(s); });
+    return () => { cancelled = true; };
+  }, [user?.id, roles]);
+
+  useEffect(() => {
+    if (scope) void fetchReportData();
+  }, [timeRange, scope]);
 
   const fetchReportData = async () => {
+    if (!scope) return;
     setLoading(true);
     try {
       const now = new Date();
@@ -47,12 +58,16 @@ export default function Reports() {
         startDate.setFullYear(now.getFullYear() - 1);
       }
 
-      const { data: scores } = await supabase
+      const query = supabase
         .from('behavior_scores')
         .select('*')
         .gte('score_date', startDate.toISOString().split('T')[0]);
+      const { data: rawScores } = scope.studentIds === null
+        ? await query
+        : await query.in('student_id', scope.studentIds.length ? scope.studentIds : ['00000000-0000-0000-0000-000000000000']);
+      const scores = rawScores || [];
 
-      if (!scores || scores.length === 0) {
+      if (scores.length === 0) {
         setCategoryData([]);
         setTrendData([]);
         setDistributionData([]);

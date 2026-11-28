@@ -10,8 +10,7 @@ import { format } from 'date-fns';
 import { LinkParentsDialog } from '@/components/students/LinkParentsDialog';
 import { LinkStudentAccountDialog } from '@/components/students/LinkStudentAccountDialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCurrentStudent } from '@/hooks/useCurrentStudent';
-import { ClaimStudentRecordDialog } from '@/components/students/ClaimStudentRecordDialog';
+import { buildScope, scopedByStudents, scopedById, type Scope } from '@/lib/scope';
 import { cn } from '@/lib/utils';
 
 interface LinkedParent extends StudentParent {
@@ -27,12 +26,13 @@ interface StudentWithClass extends Student {
 }
 
 export default function Students() {
-  const { role } = useAuth();
-  const canManage = role === 'admin' || role === 'teacher';
+  const { role, roles, user, can } = useAuth();
+  // Write actions require the DB-authoritative permission AND a record that is
+  // inside the caller's scope (RLS is the final enforcement layer).
+  const canManage = can('students.manage');
   const isAdmin = role === 'admin';
-  const isStudent = role === 'student';
-  const { studentId: currentStudentId, refresh: refreshStudent } = useCurrentStudent();
-  const [claimOpen, setClaimOpen] = useState(false);
+  const [scope, setScope] = useState<Scope | null>(null);
+  const scopeKey = `${user?.id ?? ''}|${roles.slice().sort().join(',')}`;
   const [searchParams, setSearchParams] = useSearchParams();
   const [students, setStudents] = useState<StudentWithClass[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -65,32 +65,58 @@ export default function Students() {
   const [status, setStatus] = useState('active');
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    let cancelled = false;
+    setScope(null);
+    buildScope(supabase, user?.id, roles).then((s) => { if (!cancelled) setScope(s); });
+    return () => { cancelled = true; };
+  }, [scopeKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fetchData = async () => {
+  useEffect(() => {
+    if (scope) void fetchData(scope);
+  }, [scope]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isInScope = (studentId: string) => scope?.studentIds === null || !!scope?.studentIds?.includes(studentId);
+
+  const fetchData = async (activeScope: Scope) => {
     try {
+      // Empty scope (e.g. a student account with no linked record) → no queries.
+      if (activeScope.studentIds !== null && activeScope.studentIds.length === 0) {
+        setStudents([]);
+        setClasses([]);
+        setLoading(false);
+        return;
+      }
+
+      let studentsQuery = supabase
+        .from('students')
+        .select('*, class:classes(*), student_parents(*, parent:parents(*))')
+        .order('last_name');
+      if (activeScope.studentIds !== null) studentsQuery = studentsQuery.in('id', activeScope.studentIds);
+      let classesQuery = supabase.from('classes').select('*').order('name');
+      if (activeScope.classIds !== null && activeScope.classIds.length > 0) {
+        classesQuery = classesQuery.in('id', activeScope.classIds);
+      } else if (activeScope.classIds !== null) {
+        classesQuery = supabase.from('classes').select('*').order('name').eq('id', '__none__');
+      }
+
       const [studentsRes, classesRes, cumRes] = await Promise.all([
-        supabase
-          .from('students')
-          .select('*, class:classes(*), student_parents(*, parent:parents(*))')
-          .order('last_name'),
-        supabase.from('classes').select('*').order('name'),
+        studentsQuery,
+        classesQuery,
         supabase.from('student_cumulative_scores' as any).select('*'),
       ]);
 
       if (studentsRes.data) {
+        const cumRows = scopedByStudents((cumRes as any)?.data || [], activeScope);
         const cumMap = new Map<string, { cumulative_score: number; remaining_marks: number; entries_count: number }>();
-        if (cumRes && (cumRes as any).data) {
-          for (const row of (cumRes as any).data as any[]) {
-            cumMap.set(row.student_id, {
-              cumulative_score: row.cumulative_score ?? 0,
-              remaining_marks: row.remaining_marks ?? 100,
-              entries_count: row.entries_count ?? 0,
-            });
-          }
+        for (const row of cumRows as any[]) {
+          cumMap.set(row.student_id, {
+            cumulative_score: row.cumulative_score ?? 0,
+            remaining_marks: row.remaining_marks ?? 100,
+            entries_count: row.entries_count ?? 0,
+          });
         }
-        const merged = (studentsRes.data as StudentWithClass[]).map((s) => ({
+        const allowed = studentsRes.data as StudentWithClass[];
+        const merged = scopedById(allowed, activeScope.studentIds).map((s) => ({
           ...s,
           cumulative_score: cumMap.get(s.id)?.cumulative_score ?? 0,
           remaining_marks: cumMap.get(s.id)?.remaining_marks ?? 100,
@@ -99,7 +125,7 @@ export default function Students() {
         setStudents(merged);
       }
       if (classesRes.data) {
-        setClasses(classesRes.data as Class[]);
+        setClasses(scopedById(classesRes.data as Class[], activeScope.classIds));
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -110,11 +136,13 @@ export default function Students() {
   };
 
   const handleOpenLinkDialog = (student: StudentWithClass) => {
+    if (!canManage || !isInScope(student.id)) return;
     setSelectedStudent(student);
     setLinkDialogOpen(true);
   };
 
   const handleOpenEditDialog = (student: StudentWithClass) => {
+    if (!canManage || !isInScope(student.id)) return;
     setEditingStudent(student);
     setFirstName(student.first_name);
     setLastName(student.last_name);
@@ -127,7 +155,7 @@ export default function Students() {
 
   const handleEditStudent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingStudent) return;
+    if (!canManage || !editingStudent || !isInScope(editingStudent.id)) return;
     setFormLoading(true);
 
     try {
@@ -149,7 +177,7 @@ export default function Students() {
       setIsEditDialogOpen(false);
       setEditingStudent(null);
       resetForm();
-      fetchData();
+      if (scope) void fetchData(scope);
     } catch (error: any) {
       toast.error('Failed to update student', { description: error.message });
     } finally {
@@ -159,6 +187,7 @@ export default function Students() {
 
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManage || (scope?.classIds !== null && !scope?.classIds?.includes(classId))) return;
     setFormLoading(true);
 
     try {
@@ -175,7 +204,7 @@ export default function Students() {
       toast.success('Student added successfully');
       setIsAddDialogOpen(false);
       resetForm();
-      fetchData();
+      if (scope) void fetchData(scope);
     } catch (error: any) {
       toast.error('Failed to add student', { description: error.message });
     } finally {
@@ -184,11 +213,12 @@ export default function Students() {
   };
 
   const handleDeleteStudent = async (student: StudentWithClass) => {
+    if (!canManage || !isInScope(student.id)) return;
     if (!confirm(`Delete student ${student.first_name} ${student.last_name}? This cannot be undone.`)) return;
     const { error } = await supabase.from('students').delete().eq('id', student.id);
     if (error) return toast.error('Failed to delete', { description: error.message });
     toast.success('Student deleted');
-    fetchData();
+    if (scope) void fetchData(scope);
   };
 
   const resetForm = () => {
@@ -309,15 +339,6 @@ export default function Students() {
           </div>
         </div>
 
-        {isStudent && !currentStudentId && (
-          <div className="alert alert-warning d-flex align-items-center justify-content-between gap-3" style={{ borderRadius: '0.75rem' }}>
-            <span className="bd-fs-sm">Connect your student profile to view your information.</span>
-            <button type="button" className="btn btn-primary btn-sm" style={{ borderRadius: '0.5rem' }} onClick={() => setClaimOpen(true)}>
-              Find my profile
-            </button>
-          </div>
-        )}
-
         {loading ? (
           <div className="d-flex align-items-center justify-content-center py-8">
             <span className="spinner-border spinner-border-lg text-success" role="status" aria-label="Loading students" />
@@ -328,7 +349,9 @@ export default function Students() {
               <GraduationCap className="mb-4 fs-3 text-secondary" />
               <h3 className="fw-semibold text-main mb-2">No students found</h3>
               <p className="text-secondary bd-fs-sm mb-0">
-                {searchQuery ? 'Try adjusting your search' : 'Add your first student to get started'}
+                {scope?.studentIds?.length === 0
+                  ? 'No student records are linked to your account.'
+                  : searchQuery ? 'Try adjusting your search' : 'Add your first student to get started'}
               </p>
             </div>
           </div>
@@ -494,7 +517,7 @@ export default function Students() {
             currentUserId={accountStudent.user_id ?? null}
             open={accountDialogOpen}
             onOpenChange={setAccountDialogOpen}
-            onLinked={fetchData}
+            onLinked={() => { if (scope) void fetchData(scope); }}
           />
         )}
 
@@ -504,18 +527,10 @@ export default function Students() {
             studentName={`${selectedStudent.first_name} ${selectedStudent.last_name}`}
             open={linkDialogOpen}
             onOpenChange={setLinkDialogOpen}
-            onUpdate={fetchData}
+            onUpdate={() => { if (scope) void fetchData(scope); }}
           />
         )}
 
-        <ClaimStudentRecordDialog
-          open={claimOpen}
-          onOpenChange={setClaimOpen}
-          onLinked={() => {
-            refreshStudent();
-            fetchData();
-          }}
-        />
       </div>
     </DashboardLayout>
   );

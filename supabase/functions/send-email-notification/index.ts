@@ -1,12 +1,20 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@4.0.0";
+import {
+  getUser,
+  isUuid,
+  json,
+  requireInternalSecret,
+  requireRole,
+} from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-internal-secret",
 };
+
+const STAFF_ROLES = ["admin", "teacher", "dos", "dod"];
 
 interface EmailRequest {
   behaviorScoreId: string;
@@ -14,6 +22,46 @@ interface EmailRequest {
   score: number;
   date: string;
   isSmsBackup?: boolean;
+}
+
+function isDateString(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}(?:[T ].*)?$/.test(value)) {
+    return false;
+  }
+  return !Number.isNaN(Date.parse(value));
+}
+
+/** Send via the Resend REST API using Deno's global fetch. */
+async function sendWithResend(
+  apiKey: string,
+  from: string,
+  to: string[],
+  subject: string,
+  html: string,
+): Promise<{ ok: boolean; id: string | null; error: string | null }> {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ from, to, subject, html }),
+  });
+  const text = await response.text();
+  let payload: any = null;
+  try {
+    payload = text ? JSON.parse(text) : null;
+  } catch {
+    // Non-JSON response; handled below.
+  }
+  if (!response.ok) {
+    return {
+      ok: false,
+      id: null,
+      error: payload?.message ?? payload?.error ?? `Resend error [${response.status}]`,
+    };
+  }
+  return { ok: true, id: payload?.id ?? null, error: null };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -25,30 +73,101 @@ const handler = async (req: Request): Promise<Response> => {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       console.error("RESEND_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ error: "Email service not configured" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return json({ error: "Email service not configured" }, 500);
     }
 
-    const resend = new Resend(resendApiKey);
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
-    const { behaviorScoreId, studentId, score, date, isSmsBackup }: EmailRequest = await req.json();
+    // --- Authorization -----------------------------------------------------
+    // Normal calls: verified JWT + academic-staff DB role.
+    // SMS backup calls: trusted server-to-server path guarded by the shared secret.
+    if (req.headers.has("x-internal-secret")) {
+      const denied = requireInternalSecret(req);
+      if (denied) return denied;
+      console.log("Email request authorized via internal secret (SMS backup)");
+    } else {
+      const user = await getUser(req, supabaseUrl, supabaseAnonKey);
+      const denied = await requireRole(
+        user,
+        supabaseUrl,
+        supabaseServiceKey,
+        STAFF_ROLES,
+      );
+      if (denied) return denied;
+      console.log(`Email request authorized for user: ${user!.id}`);
+    }
+
+    // --- Input validation --------------------------------------------------
+    let body: Record<string, unknown>;
+    try {
+      const parsed = await req.json();
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return json({ error: "Invalid request body" }, 400);
+      }
+      body = parsed as Record<string, unknown>;
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+
+    const behaviorScoreId = body.behaviorScoreId;
+    const studentId = body.studentId;
+    const score = body.score;
+    const date = body.date;
+    const isSmsBackup = body.isSmsBackup === true;
+
+    if (!isUuid(behaviorScoreId)) {
+      return json({ error: "behaviorScoreId must be a valid UUID" }, 400);
+    }
+    if (!isUuid(studentId)) {
+      return json({ error: "studentId must be a valid UUID" }, 400);
+    }
+    if (typeof score !== "number" || !Number.isFinite(score)) {
+      return json({ error: "score must be a finite number" }, 400);
+    }
+    if (!isDateString(date)) {
+      return json({ error: "date must be a valid date string" }, 400);
+    }
+
     console.log(`Processing email notification for student: ${studentId}, score: ${score}`);
     console.log(`Is SMS backup: ${isSmsBackup}`);
 
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Re-read the real score row; never use a caller-supplied score in the email.
+    const { data: behaviorScore, error: scoreError } = await supabase
+      .from("behavior_scores")
+      .select("id, student_id, score, score_date")
+      .eq("id", behaviorScoreId)
+      .maybeSingle();
+
+    if (scoreError) {
+      console.error("Error loading behavior score:", scoreError);
+      return json({ error: "Could not verify behavior score" }, 500);
+    }
+    if (!behaviorScore) {
+      return json({ error: "Behavior score not found" }, 404);
+    }
+    if (behaviorScore.student_id !== studentId) {
+      return json({ error: "Behavior score does not belong to this student" }, 403);
+    }
+    const trustedScore = Number(behaviorScore.score);
+    if (!Number.isFinite(trustedScore)) {
+      return json({ error: "Stored behavior score is invalid" }, 500);
+    }
+    const trustedDate = String(behaviorScore.score_date ?? date).slice(0, 10);
+
     // Get student details
-    const { data: student } = await supabase
+    const { data: student, error: studentError } = await supabase
       .from("students")
       .select("first_name, last_name, class:classes(name)")
       .eq("id", studentId)
       .single();
 
-    if (!student) {
-      throw new Error("Student not found");
+    if (studentError || !student) {
+      console.error("Student not found:", studentError);
+      return json({ error: "Student not found" }, 404);
     }
 
     console.log(`Student found: ${student.first_name} ${student.last_name}`);
@@ -62,17 +181,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!parentLinks || parentLinks.length === 0) {
       console.log("No primary contact parent found for student");
-      return new Response(
-        JSON.stringify({ message: "No primary contact parent found" }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return json({ message: "No primary contact parent found" }, 200);
     }
 
     console.log(`Found ${parentLinks.length} primary contact parent(s)`);
 
     // Determine "from" address - use verified domain if available
     const fromDomain = Deno.env.get("RESEND_FROM_DOMAIN");
-    const fromAddress = fromDomain 
+    const fromAddress = fromDomain
       ? `Behavior Tracker <notifications@${fromDomain}>`
       : "Behavior Tracker <onboarding@resend.dev>";
     console.log(`Sending from: ${fromAddress}`);
@@ -86,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
         continue;
       }
 
-      const subject = isSmsBackup 
+      const subject = isSmsBackup
         ? `[Important] Behavior Score Update for ${student.first_name} ${student.last_name}`
         : `Behavior Score Update for ${student.first_name} ${student.last_name}`;
 
@@ -98,8 +214,8 @@ const handler = async (req: Request): Promise<Response> => {
           <p>We would like to inform you that the behavior score for your child has been updated:</p>
           <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 5px 0;"><strong>Student:</strong> ${student.first_name} ${student.last_name}</p>
-            <p style="margin: 5px 0;"><strong>Score:</strong> ${score}</p>
-            <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
+            <p style="margin: 5px 0;"><strong>Score:</strong> ${trustedScore}</p>
+            <p style="margin: 5px 0;"><strong>Date:</strong> ${trustedDate}</p>
           </div>
           <p>Thank you for your continued support in your child's education.</p>
           <p style="color: #666; font-size: 12px; margin-top: 30px;">
@@ -115,16 +231,22 @@ const handler = async (req: Request): Promise<Response> => {
       let resendMessageId = null;
 
       try {
-        const emailResponse = await resend.emails.send({
-          from: fromAddress,
-          to: [parent.email],
-          subject: subject,
-          html: htmlContent,
-        });
-
-        console.log(`Email sent successfully to ${parent.email}:`, emailResponse);
-        emailStatus = "sent";
-        resendMessageId = emailResponse.data?.id || null;
+        const result = await sendWithResend(
+          resendApiKey,
+          fromAddress,
+          [parent.email],
+          subject,
+          htmlContent,
+        );
+        if (result.ok) {
+          console.log(`Email sent successfully to ${parent.email}:`, result.id);
+          emailStatus = "sent";
+          resendMessageId = result.id;
+        } else {
+          console.error(`Failed to send email to ${parent.email}:`, result.error);
+          emailStatus = "failed";
+          errorMessage = result.error;
+        }
       } catch (emailError: any) {
         console.error(`Failed to send email to ${parent.email}:`, emailError);
         emailStatus = "failed";
@@ -143,7 +265,7 @@ const handler = async (req: Request): Promise<Response> => {
           status: emailStatus,
           sent_at: emailStatus === "sent" ? new Date().toISOString() : null,
           error_message: errorMessage,
-          is_sms_backup: isSmsBackup || false,
+          is_sms_backup: isSmsBackup,
           resend_message_id: resendMessageId,
         });
 
@@ -160,16 +282,10 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    return new Response(
-      JSON.stringify({ success: true, results }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return json({ success: true, results }, 200);
   } catch (error: any) {
     console.error("Error in send-email-notification function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return json({ error: error.message }, 500);
   }
 };
 

@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      certificate_requests: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string | null
+          request_type: string
+          requested_by: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          request_type: string
+          requested_by: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          request_type?: string
+          requested_by?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          entity: string | null
+          entity_id: string | null
+          id: string
+          is_read: boolean
+          kind: string
+          role: Database["public"]["Enums"]["app_role"] | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          entity?: string | null
+          entity_id?: string | null
+          id?: string
+          is_read?: boolean
+          kind?: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          entity?: string | null
+          entity_id?: string | null
+          id?: string
+          is_read?: boolean
+          kind?: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      permissions: {
+        Row: { description: string | null; key: string; module: string }
+        Insert: { description?: string | null; key: string; module: string }
+        Update: { description?: string | null; key?: string; module?: string }
+        Relationships: []
+      }
+      role_permissions: {
+        Row: { permission_key: string; role: Database["public"]["Enums"]["app_role"] }
+        Insert: { permission_key: string; role: Database["public"]["Enums"]["app_role"] }
+        Update: { permission_key?: string; role?: Database["public"]["Enums"]["app_role"] }
+        Relationships: []
+      }
       announcements: {
         Row: {
           audience: string
@@ -1636,6 +1729,52 @@ export type Database = {
       }
     }
     Views: {
+      quiz_questions_staff: {
+        Row: {
+          correct_option: string
+          id: string
+          option_a: string
+          option_b: string
+          option_c: string | null
+          option_d: string | null
+          points: number
+          question_text: string
+          quiz_id: string
+          sort_order: number
+        }
+        Relationships: []
+      }
+      quiz_questions_public: {
+        Row: {
+          id: string
+          option_a: string
+          option_b: string
+          option_c: string | null
+          option_d: string | null
+          points: number
+          question_text: string
+          quiz_id: string
+          sort_order: number
+        }
+        Relationships: []
+      }
+      student_annual_results: {
+        Row: {
+          academic_year: string | null
+          annual_available: boolean
+          annual_percentage: number | null
+          annual_total: number | null
+          class_id: string | null
+          student_id: string | null
+          term1_count: number
+          term1_total: number | null
+          term2_count: number
+          term2_total: number | null
+          term3_count: number
+          term3_total: number | null
+        }
+        Relationships: []
+      }
       student_cumulative_scores: {
         Row: {
           cumulative_score: number | null
@@ -1663,6 +1802,60 @@ export type Database = {
         Args: { p_reference: string; p_transaction_date: string; p_reason: string; p_recipient: string | null; p_notes: string | null; p_lines: Json; p_allow_restricted?: boolean }
         Returns: string
       }
+      create_certificate_request: {
+        Args: { _reason?: string; _request_type: string }
+        Returns: string
+      }
+      current_user_permissions: { Args: never; Returns: string[] }
+      get_all_permissions: {
+        Args: never
+        Returns: { description: string | null; key: string; module: string }[]
+      }
+      get_quiz_answer_key: {
+        Args: { _quiz_id: string }
+        Returns: { correct_option: string; id: string; points: number }[]
+      }
+      get_role_permissions: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: string[]
+      }
+      get_user_roles: { Args: { _user_id: string }; Returns: Database["public"]["Enums"]["app_role"][] }
+      has_permission: { Args: { _permission: string; _user_id: string }; Returns: boolean }
+      is_teacher_of_class: { Args: { _class_id: string; _user_id: string }; Returns: boolean }
+      is_teacher_of_student: { Args: { _student_id: string; _user_id: string }; Returns: boolean }
+      is_teacher_of_subject: { Args: { _subject_id: string; _user_id: string }; Returns: boolean }
+      review_certificate_request: {
+        Args: { _note?: string; _request_id: string; _status: string }
+        Returns: undefined
+      }
+      set_role_permissions: {
+        Args: { _permissions: string[]; _role: Database["public"]["Enums"]["app_role"] }
+        Returns: undefined
+      }
+      set_user_roles: {
+        Args: { _roles: Database["public"]["Enums"]["app_role"][]; _user_id: string }
+        Returns: undefined
+      }
+      submit_quiz_attempt: {
+        Args: { _answers: Json; _quiz_id: string }
+        Returns: { attempt_id: string; score: number; total_points: number }[]
+      }
+      get_class_annual_results: {
+        Args: { _academic_year: string; _class_id: string }
+        Returns: {
+          annual_available: boolean
+          annual_percentage: number | null
+          annual_total: number | null
+          position: number | null
+          student_id: string
+          term1_count: number
+          term1_total: number | null
+          term2_count: number
+          term2_total: number | null
+          term3_count: number
+          term3_total: number | null
+        }[]
+      }
       get_current_student_id: { Args: { _user_id: string }; Returns: string }
       get_current_user_class_ids: { Args: never; Returns: string[] }
       get_marks_by_reg_number: {
@@ -1679,6 +1872,20 @@ export type Database = {
         }[]
       }
       get_parent_student_ids: { Args: { _user_id: string }; Returns: string[] }
+      get_student_annual_result: {
+        Args: { _academic_year: string; _student_id: string }
+        Returns: {
+          annual_available: boolean
+          annual_percentage: number | null
+          annual_total: number | null
+          term1_count: number
+          term1_total: number | null
+          term2_count: number
+          term2_total: number | null
+          term3_count: number
+          term3_total: number | null
+        }[]
+      }
       get_student_cumulative_score: {
         Args: { _student_id: string }
         Returns: number

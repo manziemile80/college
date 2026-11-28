@@ -2,13 +2,13 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, scopedById, type Scope } from '@/lib/scope';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { supabase } from '@/integrations/supabase/client';
 import { canAccessClass } from '@/lib/enrollment';
 import { useEnrollment } from '@/hooks/useEnrollment';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, ClipboardList, Send, GraduationCap, CalendarDays, UserCheck, Paperclip } from '@/lib/icons';
-import { ClaimStudentRecordDialog } from '@/components/students/ClaimStudentRecordDialog';
+import { Plus, Trash2, ClipboardList, Send, GraduationCap, CalendarDays, Paperclip } from '@/lib/icons';
 
 interface Assignment {
   id: string;
@@ -42,12 +42,14 @@ const emptyForm = {
 };
 
 export default function Assignments() {
-  const { role, user } = useAuth();
+  const { user, roles, can } = useAuth();
+  const [scope, setScope] = useState<Scope | null>(null);
   const { toast } = useToast();
-  const { studentId, refresh: refreshStudent } = useCurrentStudent();
+  const { studentId } = useCurrentStudent();
   const { enrolledClassIds, isEnrolled, loading: enrollmentLoading } = useEnrollment(studentId);
-  const isStaff = role === 'admin' || role === 'teacher';
-  const [claimOpen, setClaimOpen] = useState(false);
+  const isStaff = roles.includes('admin') || roles.includes('dos') || roles.includes('teacher');
+  const canManage = can('assignments.manage') && isStaff;
+  const canSubmitPermission = can('assignments.submit') && !!studentId;
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [mySubmissions, setMySubmissions] = useState<Submission[]>([]);
@@ -65,19 +67,32 @@ export default function Assignments() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
   useEffect(() => {
-    fetchAll();
-  }, [studentId]);
+    let cancelled = false;
+    buildScope(supabase, user?.id, roles).then((s) => { if (!cancelled) setScope(s); });
+    return () => { cancelled = true; };
+  }, [user?.id, roles]);
+
+  useEffect(() => {
+    if (scope) void fetchAll();
+  }, [studentId, scope]);
 
   const fetchAll = async () => {
+    if (!scope) return;
     setLoading(true);
+    const query = supabase.from('assignments').select('*').order('created_at', { ascending: false });
     const [a, s, c] = await Promise.all([
-      supabase.from('assignments').select('*').order('created_at', { ascending: false }),
+      isStaff ? query : query.eq('is_published', true),
       supabase.from('subjects').select('id, name').order('name'),
       supabase.from('classes').select('id, name').order('name'),
     ]);
-    setAssignments((a.data as Assignment[]) || []);
-    setSubjects(s.data || []);
-    setClasses(c.data || []);
+    setAssignments(
+      ((a.data as Assignment[]) || []).filter((x) =>
+        (scope.classIds === null || (x.class_id && scope.classIds.includes(x.class_id)) || x.class_id === null)
+        && (scope.subjectIds === null || (x.subject_id && scope.subjectIds.includes(x.subject_id)) || x.subject_id === null),
+      ),
+    );
+    setSubjects(scopedById(s.data || [], scope.subjectIds));
+    setClasses(scopedById(c.data || [], scope.classIds));
     if (studentId) {
       const { data } = await supabase.from('assignment_submissions').select('*').eq('student_id', studentId);
       setMySubmissions((data as Submission[]) || []);
@@ -86,6 +101,13 @@ export default function Assignments() {
   };
 
   const save = async () => {
+    if (!canManage || !scope) return;
+    if (scope.classIds !== null && form.class_id && !scope.classIds.includes(form.class_id)) {
+      toast({ title: 'You are not assigned to this class', variant: 'destructive' }); return;
+    }
+    if (scope.subjectIds !== null && form.subject_id && !scope.subjectIds.includes(form.subject_id)) {
+      toast({ title: 'You are not assigned to this subject', variant: 'destructive' }); return;
+    }
     if (!form.title.trim()) {
       toast({ title: 'Title is required', variant: 'destructive' });
       return;
@@ -112,6 +134,7 @@ export default function Assignments() {
   };
 
   const remove = async (id: string) => {
+    if (!canManage) return;
     const { error } = await supabase.from('assignments').delete().eq('id', id);
     if (error) {
       toast({ title: 'Could not delete', description: error.message, variant: 'destructive' });
@@ -121,7 +144,7 @@ export default function Assignments() {
   };
 
   const hasEnrollmentAccess = (assignment: Assignment) => canAccessClass(enrolledClassIds, assignment.class_id);
-  const canSubmit = (assignment: Assignment) => enrollmentLoading || hasEnrollmentAccess(assignment);
+  const canSubmit = (assignment: Assignment) => canSubmitPermission && (enrollmentLoading || hasEnrollmentAccess(assignment));
 
   const enrollmentMessage = (assignment: Assignment) =>
     !isEnrolled
@@ -129,15 +152,14 @@ export default function Assignments() {
       : 'You must be enrolled in this class before submitting work.';
 
   const submitWork = async () => {
-    if (!submitFor) return;
+    if (!submitFor || !canSubmit(submitFor)) return;
     if (!studentId) {
       toast({
-        title: 'Connect your student profile first',
-        description: 'Pick your name so we can save your work.',
+        title: 'Student profile not linked',
+        description: 'Ask the administration to link your account before submitting work.',
         variant: 'destructive',
       });
       setSubmitFor(null);
-      setClaimOpen(true);
       return;
     }
     if (!hasEnrollmentAccess(submitFor)) {
@@ -181,7 +203,7 @@ export default function Assignments() {
   };
 
   const grade = async (submission: Submission, points: string, feedback: string) => {
-    if (!gradeFor) return;
+    if (!gradeFor || !canManage) return;
     const value = Math.min(Math.max(Number(points) || 0, 0), gradeFor.max_points);
     const { error } = await supabase
       .from('assignment_submissions')
@@ -234,12 +256,12 @@ export default function Assignments() {
             <div className="rounded-3 bg-secondary-subtle p-3 bd-fs-sm text-secondary">Feedback: {mine.feedback}</div>
           )}
           <div className="d-flex align-items-center gap-2 mt-auto">
-            {isStaff ? (
+            {canManage ? (
               <>
                 <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => openGrading(a)}><GraduationCap />Submissions</button>
                 <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete assignment" onClick={() => remove(a.id)}><Trash2 /></button>
               </>
-            ) : role === 'student' && canSubmit(a) ? (
+            ) : canSubmit(a) ? (
               <button
                 type="button"
                 className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1"
@@ -266,26 +288,18 @@ export default function Assignments() {
           eyebrow="E-Learning"
           title="Assignments"
           description={isStaff ? 'Post assignments with due dates, then review and grade student submissions.' : 'View assignments, submit your work and see your marks and feedback.'}
-          actions={isStaff ? (
+          actions={canManage ? (
             <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={() => setOpen(true)}><Plus /> New Assignment</button>
           ) : undefined}
         />
 
-        {role === 'student' && !studentId && (
-          <div className="card border-dashed border-3">
-            <div className="card-body d-flex align-items-center justify-content-between gap-4 p-4">
-              <div>
-                <p className="fw-semibold text-main mb-0">Connect your student profile</p>
-                <p className="text-muted bd-fs-sm mb-0">Pick your name once so your work is saved.</p>
-              </div>
-              <button type="button" className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => setClaimOpen(true)}><UserCheck /> Find my profile</button>
-            </div>
+        {roles.includes('student') && !studentId && (
+          <div className="alert alert-info bd-fs-sm mb-0">
+            Your student account is not yet linked to a student record. Ask the administration to link it before submitting work.
           </div>
         )}
 
-        <ClaimStudentRecordDialog open={claimOpen} onOpenChange={setClaimOpen} onLinked={() => { refreshStudent(); }} />
-
-        {role === 'student' && studentId && !enrollmentLoading && !isEnrolled && (
+        {roles.includes('student') && studentId && !enrollmentLoading && !isEnrolled && (
           <div className="card border-dashed border-3">
             <div className="card-body p-4">
               <p className="fw-semibold text-main mb-0">Enrollment required</p>
@@ -293,6 +307,7 @@ export default function Assignments() {
             </div>
           </div>
         )}
+
 
         {loading ? (
           <div className="d-flex justify-content-center py-8">

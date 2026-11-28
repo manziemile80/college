@@ -1,17 +1,34 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  getUser,
+  isUuid,
+  json,
+  requireInternalSecret,
+  requireRole,
+} from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-internal-secret",
 };
+
+const STAFF_ROLES = ["admin", "teacher", "dos", "dod"];
+const MAX_PER_CATEGORY = 40;
 
 interface SmsRequest {
   behaviorScoreId: string;
   studentId: string;
   score: number;
   date: string;
+}
+
+function isDateString(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}(?:[T ].*)?$/.test(value)) {
+    return false;
+  }
+  return !Number.isNaN(Date.parse(value));
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -23,10 +40,11 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const twilioPhoneNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
-    
+
     // Africa's Talking
     const atApiKey = Deno.env.get("AFRICASTALKING_API_KEY");
     const atUsername = Deno.env.get("AFRICASTALKING_USERNAME");
@@ -40,20 +58,99 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Africa's Talking configured: ${!!atApiKey && !!atUsername}`);
     console.log(`Twilio configured: ${!!twilioAccountSid && !!twilioAuthToken}`);
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // --- Authorization -----------------------------------------------------
+    // Normal calls require a verified user JWT plus an academic-staff DB role.
+    // Trusted internal calls (cron retry / email fallback) use the shared
+    // secret instead of impersonating a user; a bad secret is always denied.
+    if (req.headers.has("x-internal-secret")) {
+      const denied = requireInternalSecret(req);
+      if (denied) return denied;
+      console.log("SMS request authorized via internal secret");
+    } else {
+      const user = await getUser(req, supabaseUrl, supabaseAnonKey);
+      const denied = await requireRole(
+        user,
+        supabaseUrl,
+        supabaseServiceKey,
+        STAFF_ROLES,
+      );
+      if (denied) return denied;
+      console.log(`SMS request authorized for user: ${user!.id}`);
+    }
 
-    const { behaviorScoreId, studentId, score, date }: SmsRequest = await req.json();
+    // --- Input validation --------------------------------------------------
+    let body: Record<string, unknown>;
+    try {
+      const parsed = await req.json();
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return json({ error: "Invalid request body" }, 400);
+      }
+      body = parsed as Record<string, unknown>;
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+
+    const behaviorScoreId = body.behaviorScoreId;
+    const studentId = body.studentId;
+    const score = body.score;
+    const date = body.date;
+
+    if (!isUuid(behaviorScoreId)) {
+      return json({ error: "behaviorScoreId must be a valid UUID" }, 400);
+    }
+    if (!isUuid(studentId)) {
+      return json({ error: "studentId must be a valid UUID" }, 400);
+    }
+    if (typeof score !== "number" || !Number.isFinite(score)) {
+      return json({ error: "score must be a finite number" }, 400);
+    }
+    if (!isDateString(date)) {
+      return json({ error: "date must be a valid date string" }, 400);
+    }
+
     console.log(`Processing SMS for student: ${studentId}, score: ${score}`);
 
-    // Get student details
-    const { data: student } = await supabase
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // --- Trusted score data ------------------------------------------------
+    // Never trust a score supplied by the caller: re-read the real row and use
+    // its score, date and category. Reject mismatched student references.
+    const { data: behaviorScore, error: scoreError } = await supabase
+      .from("behavior_scores")
+      .select("id, student_id, score, score_date, category")
+      .eq("id", behaviorScoreId)
+      .maybeSingle();
+
+    if (scoreError) {
+      console.error("Error loading behavior score:", scoreError);
+      return json({ error: "Could not verify behavior score" }, 500);
+    }
+    if (!behaviorScore) {
+      return json({ error: "Behavior score not found" }, 404);
+    }
+    if (behaviorScore.student_id !== studentId) {
+      console.error("Behavior score/student mismatch");
+      return json({ error: "Behavior score does not belong to this student" }, 403);
+    }
+
+    const trustedScore = Number(behaviorScore.score);
+    if (!Number.isFinite(trustedScore)) {
+      return json({ error: "Stored behavior score is invalid" }, 500);
+    }
+    const trustedDate = String(behaviorScore.score_date ?? date).slice(0, 10);
+    let category = String((behaviorScore as any).category ?? "behavior");
+    let deduction = Math.abs(trustedScore);
+
+    // Get student details (service role): verify the referenced student exists.
+    const { data: student, error: studentError } = await supabase
       .from("students")
       .select("first_name, last_name, class:classes(name)")
       .eq("id", studentId)
       .single();
 
-    if (!student) {
-      throw new Error("Student not found");
+    if (studentError || !student) {
+      console.error("Student not found:", studentError);
+      return json({ error: "Student not found" }, 404);
     }
 
     console.log(`Student found: ${student.first_name} ${student.last_name}`);
@@ -67,13 +164,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!parentLinks || parentLinks.length === 0) {
       console.log("No primary contact parent found for student");
-      return new Response(
-        JSON.stringify({ message: "No primary contact parent found" }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
+      return json({ message: "No primary contact parent found" }, 200);
     }
 
     console.log(`Found ${parentLinks.length} primary contact parent(s)`);
@@ -87,22 +178,6 @@ const handler = async (req: Request): Promise<Response> => {
         continue;
       }
 
-      // Fetch the related behavior score record for category + accurate deduction
-      let category = "behavior";
-      let deduction = Math.abs(score);
-      try {
-        const { data: bsRow } = await supabase
-          .from("behavior_scores")
-          .select("category, score")
-          .eq("id", behaviorScoreId)
-          .maybeSingle();
-        if (bsRow) {
-          category = (bsRow as any).category || category;
-          deduction = Math.abs((bsRow as any).score ?? score);
-        }
-      } catch (_) { /* non-fatal */ }
-
-      const MAX_PER_CATEGORY = 40;
       const remainingInCategory = Math.max(0, MAX_PER_CATEGORY - deduction);
       const childName = `${student.first_name} ${student.last_name}`;
       const className = (student as any).class?.name || "N/A";
@@ -112,7 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
         `COLLEGE DE REBERO\n` +
         `Dear Parent,\n` +
         `Student: ${childName} (Class: ${className})\n` +
-        `Date: ${date}\n` +
+        `Date: ${trustedDate}\n` +
         `Category: ${category}\n` +
         `Deducted: ${deduction}/${MAX_PER_CATEGORY} marks\n` +
         `Remaining: ${remainingInCategory}/${MAX_PER_CATEGORY}\n` +
@@ -122,7 +197,7 @@ const handler = async (req: Request): Promise<Response> => {
         `COLLEGE DE REBERO\n` +
         `Mwiriwe Mubyeyi,\n` +
         `Umwana: ${childName} (Ishuri: ${className})\n` +
-        `Itariki: ${date}\n` +
+        `Itariki: ${trustedDate}\n` +
         `Icyiciro: ${category}\n` +
         `Yakuweho: ${deduction}/${MAX_PER_CATEGORY} amanota\n` +
         `Asigaye: ${remainingInCategory}/${MAX_PER_CATEGORY}\n` +
@@ -208,12 +283,12 @@ const handler = async (req: Request): Promise<Response> => {
         try {
           console.log(`Sending SMS to ${parent.phone} via Africa's Talking`);
           console.log(`Using username: ${atUsername}`);
-          
+
           // Use sandbox URL if username is 'sandbox', otherwise use live URL
-          const atBaseUrl = atUsername === 'sandbox' 
-            ? 'https://api.sandbox.africastalking.com' 
+          const atBaseUrl = atUsername === 'sandbox'
+            ? 'https://api.sandbox.africastalking.com'
             : 'https://api.africastalking.com';
-          
+
           const atResponse = await fetch(
             `${atBaseUrl}/version1/messaging`,
             {
@@ -286,27 +361,36 @@ const handler = async (req: Request): Promise<Response> => {
         console.error("Error inserting SMS notification:", insertError);
       }
 
-      // If SMS failed, try to send email as backup
+      // If SMS failed, try to send email as backup. The email function now
+      // requires the shared internal secret for trusted server-to-server calls.
       if (smsStatus === "failed" && parent.email) {
-        console.log(`SMS failed, attempting email backup to ${parent.email}`);
-        try {
-          const emailResponse = await supabase.functions.invoke("send-email-notification", {
-            body: {
-              behaviorScoreId: behaviorScoreId,
-              studentId: studentId,
-              score: score,
-              date: date,
-              isSmsBackup: true,
-            },
-          });
-          
-          if (emailResponse.error) {
-            console.error("Email backup also failed:", emailResponse.error);
-          } else {
-            console.log("Email backup sent successfully");
+        const internalSecret = Deno.env.get("INTERNAL_FUNCTION_SECRET");
+        if (!internalSecret) {
+          console.error("INTERNAL_FUNCTION_SECRET not configured; skipping email backup");
+        } else {
+          console.log(`SMS failed, attempting email backup to ${parent.email}`);
+          try {
+            const emailResponse = await supabase.functions.invoke("send-email-notification", {
+              body: {
+                behaviorScoreId: behaviorScoreId,
+                studentId: studentId,
+                score: trustedScore,
+                date: trustedDate,
+                isSmsBackup: true,
+              },
+              headers: {
+                "x-internal-secret": internalSecret,
+              },
+            });
+
+            if (emailResponse.error) {
+              console.error("Email backup also failed:", emailResponse.error);
+            } else {
+              console.log("Email backup sent successfully");
+            }
+          } catch (emailErr: any) {
+            console.error("Error calling email backup:", emailErr.message);
           }
-        } catch (emailErr: any) {
-          console.error("Error calling email backup:", emailErr.message);
         }
       }
 
@@ -318,16 +402,10 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, results }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    return json({ success: true, results }, 200);
   } catch (error: any) {
     console.error("Error in send-sms-notification function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    return json({ error: error.message }, 500);
   }
 };
 

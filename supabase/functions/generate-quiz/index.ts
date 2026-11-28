@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { getUser, json, requireRole } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,12 +6,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
   "Access-Control-Expose-Headers": "X-Lovable-AIG-Run-ID",
 };
-
-const json = (body: unknown, status = 200, extra: HeadersInit = {}) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, ...extra, "Content-Type": "application/json" },
-  });
 
 const schema = {
   type: "object",
@@ -44,15 +38,19 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const user = await getUser(req, supabaseUrl, supabaseAnonKey);
     if (!user) return json({ error: "Please sign in." }, 401);
-    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-    const allowed = (roles ?? []).some((r: { role: string }) => ["admin", "teacher", "dos"].includes(r.role));
-    if (!allowed) return json({ error: "Only teachers can generate quizzes." }, 403);
+    const denied = await requireRole(
+      user,
+      supabaseUrl,
+      serviceKey,
+      ["admin", "teacher", "dos"],
+      "Only authorized academic staff can generate quizzes",
+    );
+    if (denied) return denied;
 
     const body = await req.json().catch(() => ({}));
     const material = String(body.material ?? "").trim().slice(0, 20000);
@@ -81,7 +79,9 @@ Deno.serve(async (req) => {
       }),
     });
 
-    const aig: Record<string, string> = {};
+    const aig: Record<string, string> = {
+      "Access-Control-Expose-Headers": "X-Lovable-AIG-Run-ID",
+    };
     upstream.headers.forEach((v, k) => {
       if (k.toLowerCase().startsWith("x-lovable-aig-")) aig[k] = v;
     });

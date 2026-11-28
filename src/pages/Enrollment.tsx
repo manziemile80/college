@@ -2,6 +2,7 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, scopedById, type Scope } from '@/lib/scope';
 import { supabase } from '@/integrations/supabase/client';
 import { Enrollment, EnrollmentHistory, StudentWithClass, Class } from '@/types/database';
 import { toast } from 'sonner';
@@ -24,11 +25,12 @@ const statusBadge = (status: string) => {
 };
 
 export default function EnrollmentPage() {
-  const { role, user } = useAuth();
-  const isAdmin = role === 'admin';
-  const isDOS = role === 'dos';
-  const isTeacher = role === 'teacher';
-  const canManage = isAdmin || isDOS || isTeacher;
+  const { user, roles, can } = useAuth();
+  const [scope, setScope] = useState<Scope | null>(null);
+  const isAdmin = roles.includes('admin');
+  const isDOS = roles.includes('dos');
+  const isTeacher = roles.includes('teacher');
+  const canManage = can('enrollment.manage') && (isAdmin || isDOS || isTeacher);
 
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -46,20 +48,26 @@ export default function EnrollmentPage() {
   const [transferClass, setTransferClass] = useState('');
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    let cancelled = false;
+    buildScope(supabase, user?.id, roles).then((s) => { if (!cancelled) setScope(s); });
+    return () => { cancelled = true; };
+  }, [user?.id, roles]);
+
   const fetchClasses = useCallback(async () => {
-    const [classesRes, csRes] = await Promise.all([
-      supabase.from('classes').select('*').order('name'),
-      isTeacher
-        ? supabase.from('class_subjects').select('class_id').eq('teacher_id', user?.id || '')
-        : Promise.resolve({ data: null }),
-    ]);
-    const classList = (classesRes.data as Class[]) || [];
+    if (!scope) return;
+    const { data: classesRes } = await supabase.from('classes').select('*').order('name');
+    const classList = scope.classIds === null
+      ? (classesRes as Class[]) || []
+      : scopedById((classesRes as Class[]) || [], scope.classIds);
     setClasses(classList);
-    const assigned = csRes.data ? [...new Set((csRes.data as { class_id: string }[]).map((r) => r.class_id))] : [];
-    setAssignedClassIds(assigned);
-    const available = isTeacher ? classList.filter((c) => assigned.includes(c.id)) : classList;
-    if (available.length > 0) setClassId((prev) => prev || available[0].id);
-  }, [isTeacher, user?.id]);
+    setAssignedClassIds(scope.classIds ?? []);
+    if (classList.length > 0) {
+      setClassId((prev) => (prev && classList.some((c) => c.id === prev) ? prev : classList[0].id));
+    } else {
+      setClassId('');
+    }
+  }, [scope]);
 
   const fetchEnrollments = useCallback(async () => {
     if (!classId) return;
@@ -84,13 +92,11 @@ export default function EnrollmentPage() {
   useEffect(() => { fetchEnrollments(); }, [fetchEnrollments]);
 
   useEffect(() => {
-    if (!canManage) return;
-    supabase
-      .from('students')
-      .select('*, class:classes(*)')
-      .order('last_name')
+    if (!canManage || !scope) return;
+    const query = supabase.from('students').select('*, class:classes(*)').order('last_name');
+    (scope.studentIds === null ? query : query.in('id', scope.studentIds.length ? scope.studentIds : ['00000000-0000-0000-0000-000000000000']))
       .then(({ data }) => setAllStudents((data as StudentWithClass[]) || []));
-  }, [canManage]);
+  }, [canManage, scope]);
 
   const enrolledStudentIds = useMemo(
     () => new Set(enrollments.map((e) => e.student_id)),
@@ -112,8 +118,8 @@ export default function EnrollmentPage() {
   }, [allStudents, enrolledStudentIds, search]);
 
   const availableClasses = useMemo(
-    () => (isTeacher ? classes.filter((c) => assignedClassIds.includes(c.id)) : classes),
-    [classes, isTeacher, assignedClassIds]
+    () => (scope && scope.classIds !== null ? classes.filter((c) => scope.classIds!.includes(c.id)) : classes),
+    [classes, scope]
   );
 
   const handleEnrollAll = async () => {
@@ -464,7 +470,7 @@ export default function EnrollmentPage() {
                     <label className="form-label">Move to class</label>
                     <select className="form-select" value={transferClass} onChange={(e) => setTransferClass(e.target.value)}>
                       <option value="">Select target class</option>
-                      {classes
+                      {availableClasses
                         .filter((c) => c.id !== transferFor.class_id)
                         .map((c) => (
                           <option key={c.id} value={c.id}>{c.name} ({c.grade_level})</option>

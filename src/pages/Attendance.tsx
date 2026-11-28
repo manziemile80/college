@@ -3,6 +3,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, scopedById, type Scope } from '@/lib/scope';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { useEnrollment } from '@/hooks/useEnrollment';
 import { CalendarCheck, Save, Search } from '@/lib/icons';
@@ -27,7 +28,8 @@ const statusBadge = (status: Status) => {
 const statusLabel = (s: Status) => s[0].toUpperCase() + s.slice(1);
 
 export default function Attendance() {
-  const { user, role } = useAuth();
+  const { user, role, roles, can } = useAuth();
+  const [scope, setScope] = useState<Scope | null>(null);
   const { studentId, loading: studentLoading } = useCurrentStudent();
   const { enrolledClassIds, loading: enrollmentLoading, isEnrolled } = useEnrollment(studentId);
   const blockedStudent = role === 'student' && !studentLoading && !enrollmentLoading && !isEnrolled;
@@ -40,15 +42,27 @@ export default function Attendance() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const canEdit = role === 'admin' || role === 'teacher';
+  const isPrivileged = roles.includes('admin') || roles.includes('dos');
+  const canEdit = can('attendance.manage') && (isPrivileged || roles.includes('teacher'));
 
   useEffect(() => {
-    supabase.from('classes').select('id, name').order('name').then(({ data }) => setClasses(data || []));
-  }, []);
+    let cancelled = false;
+    buildScope(supabase, user?.id, roles).then((s) => { if (!cancelled) setScope(s); });
+    return () => { cancelled = true; };
+  }, [user?.id, roles]);
+
+  useEffect(() => {
+    if (!scope) return;
+    supabase.from('classes').select('id, name').order('name').then(({ data }) => {
+      const list = scopedById(data || [], scope.classIds);
+      setClasses(list);
+      setClassId((prev) => (prev && list.some((c) => c.id === prev) ? prev : list[0]?.id || ''));
+    });
+  }, [scope]);
 
   // Only students with an active enrollment in the selected class appear in roll call.
   useEffect(() => {
-    if (!classId || blockedStudent) { setStudents([]); return; }
+    if (!classId || !scope || blockedStudent || (scope.classIds !== null && !scope.classIds.includes(classId))) { setStudents([]); return; }
     (async () => {
       const { data: enrollments } = await supabase
         .from('enrollments')
@@ -62,9 +76,10 @@ export default function Attendance() {
         .select('id, first_name, last_name, student_id')
         .in('id', ids)
         .order('last_name');
-      setStudents((data as Student[]) || []);
+      const list = (data as Student[]) || [];
+      setStudents(scope.studentIds === null ? list : list.filter((s) => scope.studentIds!.includes(s.id)));
     })();
-  }, [classId, blockedStudent]);
+  }, [classId, blockedStudent, scope]);
 
   useEffect(() => {
     if (!classId || !date || blockedStudent) return;
@@ -86,7 +101,7 @@ export default function Attendance() {
   const setStatus = (id: string, s: Status) => setStatuses((p) => ({ ...p, [id]: s }));
 
   const saveAll = async () => {
-    if (!user) return;
+    if (!user || !canEdit || !classId || (scope && scope.classIds !== null && !scope.classIds.includes(classId))) return;
     setSaving(true);
     const enrolledIds = new Set(students.map((s) => s.id));
     const rows = Object.entries(statuses)

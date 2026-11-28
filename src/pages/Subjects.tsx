@@ -3,6 +3,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, scopedById, type Scope } from '@/lib/scope';
 import { BookOpen, Loader2, Pencil, Plus, Trash2, UserCheck } from '@/lib/icons';
 import { toast } from 'sonner';
 
@@ -18,8 +19,10 @@ const thisYear = () => {
 };
 
 export default function Subjects() {
-  const { role } = useAuth();
-  const isDos = role === 'dos';
+  const { user, roles, can } = useAuth();
+  const [scope, setScope] = useState<Scope | null>(null);
+  const isDos = roles.includes('dos');
+  const canManage = can('subjects.manage') && (isDos || roles.includes('admin'));
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -31,9 +34,16 @@ export default function Subjects() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [assignForm, setAssignForm] = useState({ class_id: '', subject_id: '', teacher_id: '', academic_year: thisYear() });
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    buildScope(supabase, user?.id, roles).then((s) => { if (!cancelled) setScope(s); });
+    return () => { cancelled = true; };
+  }, [user?.id, roles]);
+
+  useEffect(() => { if (scope) void fetchAll(); }, [scope]);
 
   const fetchAll = async () => {
+    if (!scope) return;
     setLoading(true);
     const [s, c, roles, cs] = await Promise.all([
       supabase.from('subjects').select('*').order('name'),
@@ -42,9 +52,14 @@ export default function Subjects() {
       supabase.from('class_subjects').select('*').order('created_at', { ascending: false }),
     ]);
     if (s.error) toast.error(s.error.message);
-    setSubjects((s.data as Subject[]) || []);
-    setClasses((c.data as ClassRow[]) || []);
-    setAssignments((cs.data as Assignment[]) || []);
+    setSubjects(scopedById((s.data as Subject[]) || [], scope.subjectIds));
+    setClasses(scopedById((c.data as ClassRow[]) || [], scope.classIds));
+    setAssignments(
+      ((cs.data as Assignment[]) || []).filter((a) =>
+        (scope.classIds === null || scope.classIds.includes(a.class_id))
+        && (scope.subjectIds === null || scope.subjectIds.includes(a.subject_id)),
+      ),
+    );
 
     const teacherIds = ((roles.data || []) as { user_id: string }[]).map((r) => r.user_id);
     if (teacherIds.length) {
@@ -71,7 +86,7 @@ export default function Subjects() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isDos) return toast.error('Only the Director of Studies can manage subjects');
+    if (!canManage) return toast.error('Only the Director of Studies can manage subjects');
     if (!form.name.trim() || !form.code.trim()) return toast.error('Name and code required');
     setSaving(true);
     const payload = {
@@ -92,7 +107,7 @@ export default function Subjects() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!isDos) return toast.error('Only the Director of Studies can delete subjects');
+    if (!canManage) return toast.error('Only the Director of Studies can delete subjects');
     if (!confirm('Delete this subject?')) return;
     const { error } = await supabase.from('subjects').delete().eq('id', id);
     if (error) return toast.error(error.message);
@@ -101,7 +116,7 @@ export default function Subjects() {
   };
 
   const assignTeacher = async () => {
-    if (!isDos) return toast.error('Only the Director of Studies can assign teachers');
+    if (!canManage) return toast.error('Only the Director of Studies can assign teachers');
     const { class_id, subject_id, teacher_id, academic_year } = assignForm;
     if (!class_id || !subject_id || !teacher_id) return toast.error('Choose a class, subject and teacher');
     setSaving(true);
@@ -117,7 +132,7 @@ export default function Subjects() {
   };
 
   const unassignTeacher = async (id: string) => {
-    if (!isDos) return toast.error('Only the Director of Studies can change assignments');
+    if (!canManage) return toast.error('Only the Director of Studies can change assignments');
     const { error } = await supabase.from('class_subjects').update({ teacher_id: null }).eq('id', id);
     if (error) return toast.error(error.message);
     toast.success('Teacher unassigned');
@@ -132,17 +147,17 @@ export default function Subjects() {
         <PageHeader
           eyebrow="School"
           title="Subjects"
-          description={isDos
+          description={canManage
             ? 'Create subjects and assign teachers to each class subject. Teachers then enroll students in their assigned classes.'
             : 'View the subjects offered by the school. Subject changes are made by the Director of Studies.'}
-          actions={isDos ? (
+          actions={canManage ? (
             <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={openCreate}>
               <Plus /> Add Subject
             </button>
           ) : undefined}
         />
 
-        {isDos && (
+        {canManage && (
           <div className="card">
             <div className="card-header py-3">
               <h5 className="mb-0 fw-semibold text-main d-flex align-items-center gap-2"><UserCheck className="text-success" /> Assign Teachers to Class Subjects</h5>
@@ -207,7 +222,7 @@ export default function Subjects() {
               <div className="empty-state">
                 <BookOpen className="empty-state-icon text-secondary" />
                 <h3 className="fw-semibold text-main mb-1">No subjects yet</h3>
-                <p className="text-muted bd-fs-sm mb-0">{isDos ? 'Create the first subject for your school.' : 'Ask the Director of Studies to create subjects.'}</p>
+                <p className="text-muted bd-fs-sm mb-0">{canManage ? 'Create the first subject for your school.' : 'Ask the Director of Studies to create subjects.'}</p>
               </div>
             ) : (
               <div className="table-responsive">
@@ -215,7 +230,7 @@ export default function Subjects() {
                   <thead>
                     <tr className="border-bottom border-secondary-subtle">
                       <th scope="col">Name</th><th scope="col">Code</th><th scope="col">Description</th>
-                      {isDos && <th scope="col" className="text-end">Actions</th>}
+                      {canManage && <th scope="col" className="text-end">Actions</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -224,7 +239,7 @@ export default function Subjects() {
                         <td className="fw-medium text-main">{s.name}</td>
                         <td><span className="badge bg-secondary-subtle">{s.code}</span></td>
                         <td className="text-muted bd-fs-sm">{s.description || '-'}</td>
-                        {isDos && (
+                        {canManage && (
                           <td className="text-end">
                             <div className="d-flex justify-content-end gap-1">
                               <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center" aria-label="Edit subject" onClick={() => openEdit(s)}><Pencil /></button>
@@ -241,7 +256,7 @@ export default function Subjects() {
           </div>
         </div>
 
-        {open && isDos && (
+        {open && canManage && (
           <>
             <div className="bd-modal-backdrop" />
             <div className="bd-modal show">

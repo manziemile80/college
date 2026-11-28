@@ -3,18 +3,20 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, scopedById, type Scope } from '@/lib/scope';
 import { ClipboardList, Loader2, Save, Search } from '@/lib/icons';
 import { toast } from 'sonner';
 
 interface Student { id: string; first_name: string; last_name: string; student_id: string; class_id: string | null; }
 interface Subject { id: string; name: string; code: string; }
 interface ClassRow { id: string; name: string; }
-interface MarkRow { id?: string; student_id: string; cat_score: number; exam_score: number; remarks: string | null; }
+interface MarkRow { id?: string; student_id: string; cat_score: number; exam_score: number; remarks: string | null; teacher_id?: string; }
 
 const TERM_LABELS: Record<string, string> = { term1: 'Term 1', term2: 'Term 2', term3: 'Term 3' };
 
 export default function Marks() {
-  const { user, role } = useAuth();
+  const { user, roles, can } = useAuth();
+  const [scope, setScope] = useState<Scope | null>(null);
   const currentYear = `${new Date().getFullYear()}`;
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -28,42 +30,54 @@ export default function Marks() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const canEdit = role === 'admin' || role === 'teacher';
+  const isPrivileged = roles.includes('admin') || roles.includes('dos');
+  const canEdit = can('marks.enter') && (isPrivileged || roles.includes('teacher'));
 
   useEffect(() => {
+    let cancelled = false;
+    buildScope(supabase, user?.id, roles).then((s) => { if (!cancelled) setScope(s); });
+    return () => { cancelled = true; };
+  }, [user?.id, roles]);
+
+  useEffect(() => {
+    if (!scope) return;
     (async () => {
       const [c, s] = await Promise.all([
         supabase.from('classes').select('id, name').order('name'),
         supabase.from('subjects').select('id, name, code').order('name'),
       ]);
-      setClasses(c.data || []);
-      setSubjects(s.data || []);
+      setClasses(scopedById(c.data || [], scope.classIds));
+      setSubjects(scopedById(s.data || [], scope.subjectIds));
     })();
-  }, []);
+  }, [scope]);
 
   useEffect(() => {
-    if (!classId) { setStudents([]); return; }
+    if (scope && classId && scope.classIds !== null && !scope.classIds.includes(classId)) setClassId('');
+  }, [scope, classId]);
+
+  useEffect(() => {
+    if (!classId || !scope) { setStudents([]); return; }
     (async () => {
       const { data } = await supabase.from('students').select('id, first_name, last_name, student_id, class_id').eq('class_id', classId).order('last_name');
-      setStudents(data || []);
+      setStudents(scope.studentIds === null ? data || [] : (data || []).filter((s) => scope.studentIds!.includes(s.id)));
     })();
-  }, [classId]);
+  }, [classId, scope]);
 
   useEffect(() => {
-    if (!classId || !subjectId) return;
+    if (!classId || !subjectId || !scope) return;
     fetchMarks();
-  }, [classId, subjectId, term, year]);
+  }, [classId, subjectId, term, year, scope]);
 
   const fetchMarks = async () => {
-    if (!classId || !subjectId) return;
+    if (!classId || !subjectId || !scope) return;
     setLoading(true);
     const { data: studs } = await supabase.from('students').select('id').eq('class_id', classId);
-    const ids = (studs || []).map((s) => s.id);
+    const ids = (studs || []).filter((s) => scope.studentIds === null || scope.studentIds.includes(s.id)).map((s) => s.id);
     if (ids.length === 0) { setMarks({}); setLoading(false); return; }
     const { data } = await supabase.from('marks').select('*').in('student_id', ids).eq('subject_id', subjectId).eq('term', term).eq('academic_year', year);
     const map: Record<string, MarkRow> = {};
     (data || []).forEach((m: any) => {
-      map[m.student_id] = { id: m.id, student_id: m.student_id, cat_score: Number(m.cat_score), exam_score: Number(m.exam_score), remarks: m.remarks };
+      map[m.student_id] = { id: m.id, student_id: m.student_id, cat_score: Number(m.cat_score), exam_score: Number(m.exam_score), remarks: m.remarks, teacher_id: m.teacher_id };
     });
     setMarks(map);
     setLoading(false);
@@ -80,7 +94,9 @@ export default function Marks() {
   };
 
   const saveAll = async () => {
-    if (!user || !subjectId) return;
+    if (!user || !subjectId || !canEdit || !scope) return;
+    if (scope.classIds !== null && !scope.classIds.includes(classId)) return toast.error('You are not assigned to this class');
+    if (scope.subjectIds !== null && !scope.subjectIds.includes(subjectId)) return toast.error('You are not assigned to this subject');
     const invalid = Object.values(marks).find(
       (m) =>
         Number(m.cat_score) < 0 ||
@@ -91,18 +107,26 @@ export default function Marks() {
     if (invalid) {
       return toast.error('Invalid marks: CAT must be 0–40 and Exam must be 0–60');
     }
+    // Never overwrite marks recorded by another teacher.
+    const editable = Object.values(marks).filter((m) =>
+      !m.id || !m.teacher_id || isPrivileged || m.teacher_id === user.id,
+    );
+    if (editable.length !== Object.values(marks).length) {
+      toast.warning('Marks recorded by other teachers were left unchanged');
+    }
     setSaving(true);
-    const rows = Object.values(marks).map((m) => ({
+    const rows = editable.map((m) => ({
       ...(m.id ? { id: m.id } : {}),
       student_id: m.student_id,
       subject_id: subjectId,
-      teacher_id: user.id,
+      teacher_id: m.teacher_id || user.id,
       term,
       academic_year: year,
       cat_score: Math.max(0, Math.min(40, Number(m.cat_score) || 0)),
       exam_score: Math.max(0, Math.min(60, Number(m.exam_score) || 0)),
       remarks: m.remarks || null,
     }));
+    if (rows.length === 0) { setSaving(false); return; }
     const { error } = await supabase.from('marks').upsert(rows, { onConflict: 'student_id,subject_id,term,academic_year' });
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -200,6 +224,7 @@ export default function Marks() {
                     <tbody>
                       {filteredStudents.map((s) => {
                         const m = marks[s.id] || { student_id: s.id, cat_score: 0, exam_score: 0, remarks: '' };
+                        const rowLocked = !!m.id && !!m.teacher_id && !isPrivileged && m.teacher_id !== user?.id;
                         const total = Number(m.cat_score || 0) + Number(m.exam_score || 0);
                         return (
                           <tr key={s.id} className="border-bottom border-secondary-subtle">
@@ -212,7 +237,7 @@ export default function Marks() {
                                 style={{ maxWidth: '6rem' }}
                                 min={0} max={40} step={0.5}
                                 value={m.cat_score}
-                                disabled={!canEdit}
+                                disabled={!canEdit || rowLocked}
                                 onChange={(e) => {
                                   const v = Math.max(0, Math.min(40, Number(e.target.value) || 0));
                                   updateMark(s.id, 'cat_score', v);
@@ -226,7 +251,7 @@ export default function Marks() {
                                 style={{ maxWidth: '6rem' }}
                                 min={0} max={60} step={0.5}
                                 value={m.exam_score}
-                                disabled={!canEdit}
+                                disabled={!canEdit || rowLocked}
                                 onChange={(e) => {
                                   const v = Math.max(0, Math.min(60, Number(e.target.value) || 0));
                                   updateMark(s.id, 'exam_score', v);
@@ -240,7 +265,7 @@ export default function Marks() {
                               <input
                                 className="form-control w-100"
                                 value={m.remarks || ''}
-                                disabled={!canEdit}
+                                disabled={!canEdit || rowLocked}
                                 onChange={(e) => updateMark(s.id, 'remarks', e.target.value)}
                                 placeholder="Optional"
                               />

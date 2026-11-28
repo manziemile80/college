@@ -2,6 +2,7 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, type Scope } from '@/lib/scope';
 import { supabase } from '@/integrations/supabase/client';
 import { DisciplineIncident, DisciplineRule, StudentWithClass } from '@/types/database';
 import { toast } from 'sonner';
@@ -29,12 +30,15 @@ const severityBadge = (severity: string) => {
 };
 
 export default function Discipline() {
-  const { role, user } = useAuth();
-  const isDOD = role === 'dod';
-  const isAdmin = role === 'admin';
-  const isStaff = isAdmin || isDOD || role === 'teacher' || role === 'dos';
-  const canReview = isAdmin || isDOD;
-  const canManageRules = isAdmin || isDOD;
+  const { user, roles, can } = useAuth();
+  const [scope, setScope] = useState<Scope | null>(null);
+  const isDOD = roles.includes('dod');
+  const isAdmin = roles.includes('admin');
+  const isDos = roles.includes('dos');
+  const isStaff = isAdmin || isDOD || isDos || roles.includes('teacher');
+  const canReview = can('discipline.review') && (isAdmin || isDOD);
+  const canManageRules = can('discipline.manage') && (isAdmin || isDOD);
+  const canReport = can('discipline.manage') && (isAdmin || isDOD || roles.includes('teacher'));
 
   const [loading, setLoading] = useState(true);
   const [incidents, setIncidents] = useState<DisciplineIncident[]>([]);
@@ -63,22 +67,39 @@ export default function Discipline() {
   const [ruleSeverity, setRuleSeverity] = useState('minor');
   const [ruleDesc, setRuleDesc] = useState('');
 
+  useEffect(() => {
+    let cancelled = false;
+    buildScope(supabase, user?.id, roles).then((s) => { if (!cancelled) setScope(s); });
+    return () => { cancelled = true; };
+  }, [user?.id, roles]);
+
   const fetchAll = useCallback(async () => {
+    if (!scope) return;
     setLoading(true);
     try {
+      const incidentQuery = supabase
+        .from('discipline_incidents')
+        .select('*, student:students(*, class:classes(*)), rule:discipline_rules(*)')
+        .order('created_at', { ascending: false });
       const [incRes, rulesRes, studentsRes] = await Promise.all([
-        supabase
-          .from('discipline_incidents')
-          .select('*, student:students(*, class:classes(*)), rule:discipline_rules(*)')
-          .order('created_at', { ascending: false }),
+        scope.studentIds === null ? incidentQuery : incidentQuery.in('student_id', scope.studentIds.length ? scope.studentIds : ['00000000-0000-0000-0000-000000000000']),
         canManageRules
           ? supabase.from('discipline_rules').select('*').order('title')
           : Promise.resolve({ data: null }),
         isStaff
-          ? supabase.from('students').select('*, class:classes(*)').order('last_name')
+          ? (() => {
+              const q = supabase.from('students').select('*, class:classes(*)').order('last_name');
+              return scope.studentIds === null
+                ? q
+                : q.in('id', scope.studentIds.length ? scope.studentIds : ['00000000-0000-0000-0000-000000000000']);
+            })()
           : Promise.resolve({ data: null }),
       ]);
-      setIncidents((incRes.data as unknown as DisciplineIncident[]) || []);
+      const allowed = new Set(scope.studentIds ?? []);
+      setIncidents(
+        ((incRes.data as unknown as DisciplineIncident[]) || [])
+          .filter((i) => scope.studentIds === null || allowed.has(i.student_id)),
+      );
       setRules((rulesRes.data as DisciplineRule[]) || []);
       setStudents((studentsRes.data as StudentWithClass[]) || []);
     } catch (e: any) {
@@ -86,7 +107,7 @@ export default function Discipline() {
     } finally {
       setLoading(false);
     }
-  }, [canManageRules, isStaff]);
+  }, [canManageRules, isStaff, scope]);
 
   useEffect(() => {
     fetchAll();
@@ -364,7 +385,7 @@ export default function Discipline() {
           title="Discipline"
           description={isStaff ? 'Report, review and follow up on student discipline incidents.' : 'Discipline incidents recorded for your records.'}
           actions={
-            isStaff ? (
+            canReport ? (
               <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={() => setReportOpen(true)}>
                 <Plus /> Report Incident
               </button>

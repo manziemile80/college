@@ -3,13 +3,20 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, type Scope } from '@/lib/scope';
 import { Class } from '@/types/database';
-import { Plus, Search, BookOpen, Loader2, Users, Trash2, Pencil, ArrowUpRight } from '@/lib/icons';
+import { Plus, Search, BookOpen, Users, Trash2, Pencil, ArrowUpRight } from '@/lib/icons';
+import Forbidden from './Forbidden';
 import { toast } from 'sonner';
 
+const VIEW_ROLES = ['admin', 'dos', 'teacher', 'student', 'parent', 'viewer'];
+
 export default function Classes() {
-  const { user, role } = useAuth();
-  const canManage = role === 'admin' || role === 'teacher';
+  const { user, roles, can, loading: authLoading } = useAuth();
+  const [scope, setScope] = useState<Scope | null>(null);
+  const denied = roles.length > 0 && !roles.some((r) => VIEW_ROLES.includes(r));
+  const isStaffRole = roles.some((r) => r === 'admin' || r === 'dos' || r === 'teacher');
+  const canManage = can('classes.manage') && isStaffRole;
   const [classes, setClasses] = useState<Class[]>([]);
   const [studentCounts, setStudentCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -33,29 +40,44 @@ export default function Classes() {
   const [eligibleCount, setEligibleCount] = useState<number>(0);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (authLoading || denied) return;
+    let active = true;
+    buildScope(supabase, user?.id, roles).then((s) => {
+      if (active) setScope(s);
+    });
+    return () => { active = false; };
+  }, [authLoading, denied, user?.id, roles]);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    if (scope) void fetchData(scope);
+  }, [scope]);
+
+  const fetchData = async (currentScope: Scope) => {
     try {
-      const { data: classesData } = await supabase
-        .from('classes')
-        .select('*')
-        .order('name');
-
-      if (classesData) {
-        setClasses(classesData as Class[]);
-
-        const counts: Record<string, number> = {};
-        for (const cls of classesData) {
-          const { count } = await supabase
-            .from('students')
-            .select('*', { count: 'exact', head: true })
-            .eq('class_id', cls.id);
-          counts[cls.id] = count || 0;
-        }
-        setStudentCounts(counts);
+      // An empty scope means "no records" — never let .in([]) widen the query.
+      if (currentScope.classIds !== null && currentScope.classIds.length === 0) {
+        setClasses([]);
+        setStudentCounts({});
+        return;
       }
+
+      let query = supabase.from('classes').select('*').order('name');
+      if (currentScope.classIds !== null) query = query.in('id', currentScope.classIds);
+      const { data: classesData, error } = await query;
+      if (error) throw error;
+
+      const visible = (classesData as Class[]) || [];
+      setClasses(visible);
+
+      const counts: Record<string, number> = {};
+      for (const cls of visible) {
+        const { count } = await supabase
+          .from('students')
+          .select('*', { count: 'exact', head: true })
+          .eq('class_id', cls.id);
+        counts[cls.id] = count || 0;
+      }
+      setStudentCounts(counts);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load classes');
@@ -64,8 +86,13 @@ export default function Classes() {
     }
   };
 
+  // Teachers may only touch the classes they teach; admin/DOS are unrestricted.
+  const canEditClass = (cls: Class) =>
+    canManage && (scope?.classIds == null || scope.classIds.includes(cls.id));
+
   const handleAddClass = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManage) return;
     setFormLoading(true);
 
     try {
@@ -96,6 +123,7 @@ export default function Classes() {
   };
 
   const handleDeleteClass = async (cls: Class) => {
+    if (!canEditClass(cls)) return;
     if (!confirm(`Delete class "${cls.name}"? Students linked to it will be unassigned.`)) return;
     const { error } = await supabase.from('classes').delete().eq('id', cls.id);
     if (error) return toast.error('Failed to delete', { description: error.message });
@@ -111,7 +139,7 @@ export default function Classes() {
   };
 
   const handleEditSave = async () => {
-    if (!editing) return;
+    if (!editing || !canEditClass(editing)) return;
     const { error } = await supabase
       .from('classes')
       .update({ name: editName, grade_level: editGrade, academic_year: editYear })
@@ -128,8 +156,13 @@ export default function Classes() {
   }, [fromClass, studentCounts]);
 
   const handlePromote = async () => {
+    if (!canManage) return;
     if (!fromClass || !toClass || fromClass === toClass) {
       return toast.error('Select different source and destination classes');
+    }
+    if (scope?.classIds != null &&
+        (!scope.classIds.includes(fromClass) || !scope.classIds.includes(toClass))) {
+      return toast.error('You can only promote students between your assigned classes');
     }
     if (!confirm(`Promote ALL ${eligibleCount} student(s) from this class to the new class?`)) return;
     setPromoting(true);
@@ -149,6 +182,8 @@ export default function Classes() {
     cls.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     cls.grade_level.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (denied) return <Forbidden />;
 
   return (
     <DashboardLayout>
@@ -235,7 +270,7 @@ export default function Classes() {
                           <Users className="text-success" />{studentCounts[cls.id] || 0} students
                         </span>
                       </td>
-                      {canManage && (
+                      {canEditClass(cls) && (
                         <td className="text-end">
                           <div className="d-flex justify-content-end gap-1">
                             <button className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => openEdit(cls)}>

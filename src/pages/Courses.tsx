@@ -2,13 +2,15 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildScope, type Scope } from '@/lib/scope';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, BookOpen, PlayCircle, Loader2, FileText, X } from '@/lib/icons';
+import { Plus, Pencil, Trash2, BookOpen, PlayCircle, FileText, X } from '@/lib/icons';
+import Forbidden from './Forbidden';
 
 interface Course {
   id: string;
@@ -19,6 +21,7 @@ interface Course {
   term: string | null;
   academic_year: string;
   is_published: boolean;
+  teacher_id?: string | null;
 }
 
 interface Lesson {
@@ -42,9 +45,14 @@ const emptyCourse = {
 };
 
 export default function Courses() {
-  const { role, user } = useAuth();
+  const { user, roles, can, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const isStaff = role === 'admin' || role === 'teacher';
+  const [scope, setScope] = useState<Scope | null>(null);
+  const isPrivileged = roles.some((r) => r === 'admin' || r === 'dos');
+  const isTeacher = roles.includes('teacher');
+  const canView = isPrivileged || can('courses.view');
+  const denied = !authLoading && !canView;
+  const canManage = can('courses.manage') && (isPrivileged || isTeacher);
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
@@ -61,21 +69,68 @@ export default function Courses() {
   const [lessonForm, setLessonForm] = useState({ title: '', content: '', video_url: '' });
 
   useEffect(() => {
-    fetchAll();
-  }, []);
+    if (authLoading || denied) return;
+    let active = true;
+    buildScope(supabase, user?.id, roles).then((s) => {
+      if (active) setScope(s);
+    });
+    return () => { active = false; };
+  }, [authLoading, denied, user?.id, roles]);
 
-  const fetchAll = async () => {
+  useEffect(() => {
+    if (scope) void fetchAll(scope);
+  }, [scope]);
+
+  const fetchAll = async (currentScope: Scope) => {
     setLoading(true);
+    // [] means no records — skip the .in() query entirely.
+    if (currentScope.classIds !== null && currentScope.classIds.length === 0) {
+      setCourses([]);
+      setSubjects([]);
+      setClasses([]);
+      setLoading(false);
+      return;
+    }
+
+    const isReader = !isPrivileged && !isTeacher;
+    let coursesQuery = supabase
+      .from('courses')
+      .select('*')
+      .order('created_at', { ascending: false });
+    // Students/parents must never receive drafts, even from the cache.
+    if (isReader) coursesQuery = coursesQuery.eq('is_published', true);
+
     const [c, s, cl] = await Promise.all([
-      supabase.from('courses').select('*').order('created_at', { ascending: false }),
+      coursesQuery,
       supabase.from('subjects').select('id, name').order('name'),
       supabase.from('classes').select('id, name').order('name'),
     ]);
-    setCourses((c.data as Course[]) || []);
+
+    let visible = (c.data as Course[]) || [];
+    if (isTeacher) {
+      visible = visible.filter((course) =>
+        course.teacher_id === user?.id ||
+        (course.class_id != null && currentScope.classIds?.includes(course.class_id)));
+    } else if (isReader) {
+      visible = visible.filter((course) =>
+        course.is_published &&
+        (course.class_id === null || (currentScope.classIds || []).includes(course.class_id)));
+    }
+    const visibleClasses = (cl.data || []).filter((item) =>
+      currentScope.classIds === null || currentScope.classIds.includes(item.id));
+
+    setCourses(visible);
     setSubjects(s.data || []);
-    setClasses(cl.data || []);
+    setClasses(visibleClasses);
     setLoading(false);
   };
+
+  const canEditCourse = (course: Course) =>
+    canManage && (
+      isPrivileged ||
+      course.teacher_id === user?.id ||
+      (course.class_id != null && (scope?.classIds || []).includes(course.class_id))
+    );
 
   const openNew = () => {
     setEditingId(null);
@@ -98,8 +153,20 @@ export default function Courses() {
   };
 
   const saveCourse = async () => {
+    if (!canManage) return;
     if (!form.title.trim()) {
       toast({ title: 'Title is required', variant: 'destructive' });
+      return;
+    }
+    if (editingId) {
+      const target = courses.find((item) => item.id === editingId);
+      if (!target || !canEditCourse(target)) {
+        toast({ title: 'You can only edit your own courses', variant: 'destructive' });
+        return;
+      }
+    } else if (form.class_id && scope?.classIds !== null && scope?.classIds !== undefined &&
+               !scope.classIds.includes(form.class_id)) {
+      toast({ title: 'You can only create courses for your assigned classes', variant: 'destructive' });
       return;
     }
     const payload = {
@@ -121,17 +188,18 @@ export default function Courses() {
     }
     toast({ title: editingId ? 'Course updated' : 'Course created' });
     setDialogOpen(false);
-    fetchAll();
+    if (scope) void fetchAll(scope);
   };
 
-  const deleteCourse = async (id: string) => {
-    const { error } = await supabase.from('courses').delete().eq('id', id);
+  const deleteCourse = async (course: Course) => {
+    if (!canEditCourse(course)) return;
+    const { error } = await supabase.from('courses').delete().eq('id', course.id);
     if (error) {
       toast({ title: 'Could not delete course', description: error.message, variant: 'destructive' });
       return;
     }
     toast({ title: 'Course deleted' });
-    fetchAll();
+    if (scope) void fetchAll(scope);
   };
 
   const openLessons = async (course: Course) => {
@@ -146,7 +214,7 @@ export default function Courses() {
   };
 
   const addLesson = async () => {
-    if (!lessonCourse || !lessonForm.title.trim()) return;
+    if (!lessonCourse || !canEditCourse(lessonCourse) || !lessonForm.title.trim()) return;
     const { error } = await supabase.from('lessons').insert({
       course_id: lessonCourse.id,
       title: lessonForm.title.trim().slice(0, 150),
@@ -163,8 +231,10 @@ export default function Courses() {
   };
 
   const deleteLesson = async (id: string) => {
-    await supabase.from('lessons').delete().eq('id', id);
-    if (lessonCourse) openLessons(lessonCourse);
+    if (!lessonCourse || !canEditCourse(lessonCourse)) return;
+    const { error } = await supabase.from('lessons').delete().eq('id', id);
+    if (error) toast({ title: 'Could not delete lesson', description: error.message, variant: 'destructive' });
+    if (lessonCourse) void openLessons(lessonCourse);
   };
 
   const subjectName = (id: string | null) => subjects.find((s) => s.id === id)?.name;
@@ -175,6 +245,8 @@ export default function Courses() {
     (subjectName(c.subject_id) || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (className(c.class_id) || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (denied) return <Forbidden />;
 
   const courseCard = (course: Course) => (
     <div className="card h-100 d-flex flex-column">
@@ -204,10 +276,10 @@ export default function Courses() {
           <button type="button" className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onClick={() => openLessons(course)}>
             <PlayCircle /> Lessons
           </button>
-          {isStaff && (
+          {canEditCourse(course) && (
             <>
               <button type="button" className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center" aria-label="Edit course" onClick={() => openEdit(course)}><Pencil /></button>
-              <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete course" onClick={() => deleteCourse(course.id)}><Trash2 /></button>
+              <button type="button" className="btn btn-outline-danger btn-sm d-inline-flex align-items-center" aria-label="Delete course" onClick={() => deleteCourse(course)}><Trash2 /></button>
             </>
           )}
         </div>
@@ -222,7 +294,7 @@ export default function Courses() {
           eyebrow="E-Learning"
           title="Courses"
           description="Online courses with lessons, videos and reading content for each subject and class."
-          actions={isStaff ? (
+          actions={canManage ? (
             <button type="button" className="btn btn-primary d-inline-flex align-items-center gap-1" onClick={openNew}>
               <Plus /> New Course
             </button>
@@ -250,7 +322,7 @@ export default function Courses() {
             <div className="card-body d-flex flex-column align-items-center py-12 text-center">
               <BookOpen className="fs-3 mb-3 text-secondary" />
               <p className="fw-semibold text-main mb-2">No courses yet</p>
-              <p className="text-muted bd-fs-sm mb-0">{isStaff ? 'Create your first course to start publishing lessons.' : 'Courses will appear here once published.'}</p>
+              <p className="text-muted bd-fs-sm mb-0">{canManage ? 'Create your first course to start publishing lessons.' : 'Courses will appear here once published.'}</p>
             </div>
           </div>
         ) : (
